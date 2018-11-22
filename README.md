@@ -1,5 +1,10 @@
 # Report.ixi
 
-This is an example ixi plugin for ict.
+ixi plugin for ict to report current node information. The data is used for visualization.
 
-Copy this directory "Report.ixi" to "Ict/ixi".
+## Installing
+
+```
+$ cd Ict/ixi
+$ git clone https://github.com/trifel/Report.ixi.git
+```
