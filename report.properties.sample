@@ -1,5 +1,0 @@
-reportServerHost = ?.?.?.?
-reportServerPort = 14265
-
-//optional: '<discord username>#<userid> (ict-<index>)'
-nodeName = 
