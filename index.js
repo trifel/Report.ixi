@@ -7,6 +7,7 @@ var MessageDigest = Java.type('java.security.MessageDigest');
 var Inet4Address = Java.type('java.net.Inet4Address');
 var StringBuffer = Java.type('java.lang.StringBuffer');
 var Integer = Java.type('java.lang.Integer');
+var StringEscapeUtils = Java.type('org.apache.commons.lang3.StringEscapeUtils');
 var StandardCharsets = Java.type('java.nio.charset.StandardCharsets');
 var Properties = Java.type('java.util.Properties');
 var FileInputStream = Java.type('java.io.FileInputStream');
@@ -14,7 +15,6 @@ var FileOutputStream = Java.type('java.io.FileOutputStream');
 var OutputStreamWriter = Java.type('java.io.OutputStreamWriter');
 var DatagramPacket = Java.type('java.net.DatagramPacket');
 var DatagramSocket = Java.type('java.net.DatagramSocket');
-var URLEncoder = Java.type('java.net.URLEncoder');
 var UUID = Java.type('java.util.UUID');
 
 var PROPERTY_FILE = "ixi/Report.ixi/report.properties";
@@ -90,7 +90,7 @@ function initReportTimer() {
         + nodeUUID + "\"," 
         + nodeExternalPort + ",\"" 
         + sha256(nodeInternalAddress) + "\",\"" 
-        + URLEncoder.encode(nodeName) + "\",\"" 
+        + StringEscapeUtils.unescapeHtml4(nodeName) + "\",\"" 
         + VERSION + "\",[";
     var neighborInfo;
     var neighbor;
