@@ -80,6 +80,7 @@ function loadProperties() {
   nodeName = properties.getProperty("nodeName", nodeName).trim();
   reportServerHost = properties.getProperty("reportServerHost", reportServerHost).trim();
   reportServerPort = properties.getProperty("reportServerPort", reportServerPort).trim();
+  nodeExternalPort = properties.getProperty("nodeExternalPort", nodeExternalPort).trim();
 }
 
 function initReportTimer() {
