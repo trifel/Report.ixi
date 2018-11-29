@@ -17,6 +17,9 @@ var DatagramPacket = Java.type('java.net.DatagramPacket');
 var DatagramSocket = Java.type('java.net.DatagramSocket');
 var UUID = Java.type('java.util.UUID');
 
+var Callable = Java.type('cfb.ict.service.CallableRequest');
+var Response = Java.type('cfb.ict.service.dto.IXIResponse');
+
 var PROPERTY_FILE = "ixi/Report.ixi/report.properties";
 
 var reportTimer;
@@ -147,6 +150,12 @@ function sha256(base) {
   }
 }
 
+function getMetadata() {
+  return Response.create({
+    uuid: "placeholder"
+  });
+}
+
 init();
 
 IXICycle.put("shutdown", new Runnable(function () {
@@ -162,3 +171,5 @@ IXICycle.put("shutdown", new Runnable(function () {
     reportTimer.purge();
   }
 }));
+
+API.put("getMetadata", new Callable({ call: getMetadata }))
