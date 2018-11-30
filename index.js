@@ -158,9 +158,9 @@ function initReportTimer() {
         neighborInfo = new JsonObject();
         metrics = new JsonObject();
         neighborInfo.addProperty("uuid", (nodeUUIDMap.containsKey(neighbor.getAddress().toString()) ? nodeUUIDMap.get(neighbor.getAddress().toString()) : ""));
-        metrics.addProperty("numberOfNewTransactions", neighbor.getNumberOfNewTransactions());
-        metrics.addProperty("numberOfInvalidTransactions", neighbor.getNumberOfInvalidTransactions());
-        metrics.addProperty("numberOfAllTransactions", neighbor.getNumberOfAllTransactions());
+        metrics.addProperty("numberOfNewTransactions", neighbor.getPrevNumberOfNewTransactions());
+        metrics.addProperty("numberOfInvalidTransactions", neighbor.getPrevNumberOfInvalidTransactions());
+        metrics.addProperty("numberOfAllTransactions", neighbor.getPrevNumberOfAllTransactions());
         neighborInfo.add("metrics", metrics);
        
         neighborJSONArray.add(neighborInfo);
