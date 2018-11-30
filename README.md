@@ -19,9 +19,6 @@ $ git clone https://github.com/trifel/Report.ixi.git
 Copy and configure `report.properties.template` as `report.properties`.
 
 ```
-reportServerHost = {IP of remote report collector service}
-reportServerPort = {Port of remote report collector service}
 nodeName = {Choose a nickname for this ICT node}
-nodeExternalPort = {The external port this ICT operates on}
 ```
 _The `report.properties` is ignored by VCS and will not be overwritten upon ICT update._
