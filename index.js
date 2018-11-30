@@ -88,7 +88,6 @@ function loadProperties() {
 }
 
 function initFetchMetadataTimer() {
-  var new_nodeUUIDMap = new HashMap();
   fetchMetadataTimer = new Timer();
   fetchMetadataTimer.schedule(function () {
     var neighbors = NODE.getNeighbors();
@@ -97,10 +96,9 @@ function initFetchMetadataTimer() {
 
       var neighborUUID = fetchMetadata(neighborAddress.getHostName(), neighborAddress.getPort());
 
-      new_nodeUUIDMap.put(neighborAddress.toString(), neighborUUID);
+      if (!neighborUUID.equals("")) nodeUUIDMap.put(neighborAddress.toString(), neighborUUID);
     }
-    nodeUUIDMap.clear();
-    nodeUUIDMap = new_nodeUUIDMap;
+    
   }, 2000, 300000);
 }
 
