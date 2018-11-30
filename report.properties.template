@@ -1,8 +1,2 @@
-reportServerHost = 
-reportServerPort = 
-
 //optional: '<discord username>#<userid> (ict-<index>)'
 nodeName = 
-
-//necessary for identification: if you run more then one ict instance on the same public ip address
-nodeExternalPort = 14265
