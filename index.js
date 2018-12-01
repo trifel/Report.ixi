@@ -132,7 +132,7 @@ function fetchMetadata(address, port) {
 
     uuid = gson.fromJson(dataArray.get("ixi").get("uuid"), String.class);
   } catch (exception) {
-    print("ixi api of neighbor '" + address + ":" + port + "' is not available: " + exception);
+    //print("ixi api of neighbor '" + address + ":" + port + "' is not available: " + exception);
   }
   return uuid;
 }
