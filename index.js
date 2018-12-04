@@ -212,6 +212,10 @@ IXICycle.put("shutdown", new Runnable(function () {
     reportTimer.cancel();
     reportTimer.purge();
   }
+  if (fetchMetadataTimer != undefined) {
+    fetchMetadataTimer.cancel();
+    fetchMetadataTimer.purge();
+  }
 }));
 
 API.put("getMetadata", new Callable({
