@@ -104,9 +104,9 @@ function initFetchMetadataTimer() {
 
 function fetchMetadata(address, port) {
   var uuid = "";
-
+  var socket = null;
   try {
-    var socket = new Socket(address, port);
+    socket = new Socket(address, port);
     var data = "{\"command\": \"Report.ixi.getMetadata\"}";
     var path = "/servlet";
     var wr = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF8"));
@@ -132,7 +132,11 @@ function fetchMetadata(address, port) {
 
     uuid = gson.fromJson(dataArray.get("ixi").get("uuid"), String.class);
   } catch (exception) {
-    //print("ixi api of neighbor '" + address + ":" + port + "' is not available: " + exception);
+    //print("Report.ixi api of neighbor '" + address + ":" + port + "' is not available: " + exception);
+  } finally {
+    try {
+      if (socket != null) socket.close();
+    } catch(exception) {}
   }
   return uuid;
 }
@@ -177,10 +181,12 @@ function initReportTimer() {
       packet.setSocketAddress(reportServerAddress);
       nodeSocket.send(packet);
 
-      if (!nodeSocket.isClosed()) nodeSocket.close();
-
     } catch (exception) {
       print(exception);
+    } finally {
+      try {
+        if (nodeSocket != null) nodeSocket.close();
+      } catch(exception) {}
     }
 
   }, 10000, 60000);
@@ -195,7 +201,7 @@ function getMetadata() {
 init();
 
 IXICycle.put("shutdown", new Runnable(function () {
-  if (nodeSocket != undefined) {
+  if (nodeSocket != null) {
     try {
       if (!nodeSocket.isClosed()) nodeSocket.close();
     } catch (exception) {
