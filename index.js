@@ -26,16 +26,19 @@ var Response = Java.type('cfb.ict.service.dto.IXIResponse');
 var PROPERTY_FILE = "ixi/Report.ixi/report.properties";
 var METADATA_FILE = "report.ixi.metadata";
 
-var reportTimer;
-var fetchMetadataTimer;
+var reportTimer = null;
+var fetchMetadataTimer = null;
+var pingLocalhostTimer = null;
 var reportServerHost = "api.ictreport.com";
 var reportServerPort = "14265";
 
 var nodeName = "";
 var nodeUUID = null;
-var nodeSocketAddress = "0.0.0.0";
-var nodeSocketPort = "14200";
-var nodeSocket = null;
+var reportNodeSocketPort = "14200";
+var reportNodeSocket = null;
+
+var pingLocalhostSocketPort = "14201";
+var pingLocalhostSocket = null;
 
 var nodeUUIDMap = new HashMap();
 
@@ -45,6 +48,7 @@ function init() {
     loadProperties();
     initFetchMetadataTimer();
     initReportTimer();
+    initPingLocalhostTimer();
   } catch (exception) {
     print(exception);
   }
@@ -174,22 +178,48 @@ function initReportTimer() {
       var messageByteArray = gson.toJson(nodeInfo).getBytes();
 
       var packet = new DatagramPacket(messageByteArray, messageByteArray.length);
-      nodeSocket = new DatagramSocket(nodeSocketPort, InetAddress.getByName(nodeSocketAddress));
+      reportNodeSocket = new DatagramSocket(reportNodeSocketPort, InetAddress.getByName(NODE.getProperties().getHost()));
 
       var reportServerAddress = new InetSocketAddress(reportServerHost, reportServerPort);
 
       packet.setSocketAddress(reportServerAddress);
-      nodeSocket.send(packet);
+      reportNodeSocket.send(packet);
 
     } catch (exception) {
       print(exception);
     } finally {
       try {
-        if (nodeSocket != null) nodeSocket.close();
+        if (reportNodeSocket != null) reportNodeSocket.close();
       } catch(exception) {}
     }
 
   }, 10000, 60000);
+}
+
+function initPingLocalhostTimer() {
+  pingLocalhostTimer = new Timer();
+  pingLocalhostTimer.schedule(function () {
+    try {
+     
+      var messageByteArray = new String("PING").getBytes();
+
+      var packet = new DatagramPacket(messageByteArray, messageByteArray.length);
+      pingLocalhostSocket = new DatagramSocket(pingLocalhostSocketPort, InetAddress.getByName(NODE.getProperties().getHost()));
+
+      var reportServerAddress = new InetSocketAddress(NODE.getProperties().getHost(), NODE.getProperties().getPort());
+
+      packet.setSocketAddress(reportServerAddress);
+      pingLocalhostSocket.send(packet);
+
+    } catch (exception) {
+      print(exception);
+    } finally {
+      try {
+        if (pingLocalhostSocket != null) pingLocalhostSocket.close();
+      } catch(exception) {}
+    }
+
+  }, 60000, 60000);
 }
 
 function getMetadata() {
@@ -201,20 +231,31 @@ function getMetadata() {
 init();
 
 IXICycle.put("shutdown", new Runnable(function () {
-  if (nodeSocket != null) {
+  if (reportTimer != null) {
+    reportTimer.cancel();
+    reportTimer.purge();
+  }
+  if (fetchMetadataTimer != null) {
+    fetchMetadataTimer.cancel();
+    fetchMetadataTimer.purge();
+  }
+  if (pingLocalhostTimer != null) {
+    pingLocalhostTimer.cancel();
+    pingLocalhostTimer.purge();
+  }
+  if (reportNodeSocket != null) {
     try {
-      if (!nodeSocket.isClosed()) nodeSocket.close();
+      if (!reportNodeSocket.isClosed()) reportNodeSocket.close();
     } catch (exception) {
       print(exception);
     }
   }
-  if (reportTimer != undefined) {
-    reportTimer.cancel();
-    reportTimer.purge();
-  }
-  if (fetchMetadataTimer != undefined) {
-    fetchMetadataTimer.cancel();
-    fetchMetadataTimer.purge();
+  if (pingLocalhostSocket != null) {
+    try {
+      if (!pingLocalhostSocket.isClosed()) pingLocalhostSocket.close();
+    } catch (exception) {
+      print(exception);
+    }
   }
 }));
 
