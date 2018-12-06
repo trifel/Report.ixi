@@ -103,7 +103,7 @@ function initFetchMetadataTimer() {
       if (!neighborUUID.equals("")) nodeUUIDMap.put(neighborAddress.toString(), neighborUUID);
     }
     
-  }, 2000, 300000);
+  }, 5000, 300000);
 }
 
 function fetchMetadata(address, port) {
