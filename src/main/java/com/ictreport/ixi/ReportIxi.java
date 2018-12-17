@@ -1,6 +1,5 @@
 package com.ictreport.ixi;
 
-import org.iota.ict.utils.Properties;
 import org.iota.ict.ixi.IxiModule;
 import org.iota.ict.network.event.GossipReceiveEvent;
 import org.iota.ict.network.event.GossipSubmitEvent;
@@ -14,6 +13,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.UUID;
 
+import com.ictreport.ixi.utils.Properties;
+
 public class ReportIxi extends IxiModule {
 
     private static final Logger log = LoggerFactory.getLogger(ReportIxi.class);
@@ -23,10 +24,9 @@ public class ReportIxi extends IxiModule {
     private static final String DEFAULT_METADATA_FILE_PATH = "report.ixi.metadata";
     private static final String DEFAULT_ICT_PROPERTY_FILE_PATH = "ict.cfg";
 
-    private Properties ictProperties;
-    private String ictName = "";
+    private Properties properties = new Properties();
 
-    private String nodeUUID = null;
+    private static Api api = null;
 
     public static void main(String[] args) {
         new ReportIxi();
@@ -38,8 +38,19 @@ public class ReportIxi extends IxiModule {
         log.info("Just add '"+NAME+"' to 'ixis' in your ict.cfg file and restart your Ict.\n");
 
         initialize();
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+              log.debug("Running Shutdown Hook");
+
+              if (api != null) api.shutDown();
+            }
+        });
     }
 
+    /**
+     * General initializing when the module is loaded.
+     */
     private void initialize() {
         loadIctProperties();
         loadOrCreateMetadata();
@@ -47,7 +58,8 @@ public class ReportIxi extends IxiModule {
 
     private void loadIctProperties() {
         if (new File(DEFAULT_ICT_PROPERTY_FILE_PATH).exists()) {
-            this.ictProperties = Properties.fromFile(DEFAULT_ICT_PROPERTY_FILE_PATH);
+            org.iota.ict.utils.Properties ictProperties = org.iota.ict.utils.Properties.fromFile(DEFAULT_ICT_PROPERTY_FILE_PATH);
+            properties.loadFromIctProperties(ictProperties);
         } else {
             log.error("The file 'ict.cfg' could not be found.");
             System.exit(0);
@@ -60,21 +72,23 @@ public class ReportIxi extends IxiModule {
      * in the ICT root directory.
      */
     private void loadOrCreateMetadata() {
+        String nodeUuid = null;
+
         try {
             java.util.Properties metaData = new java.util.Properties();
             FileInputStream metaDataInputStream = new FileInputStream(DEFAULT_METADATA_FILE_PATH);
             metaData.load(metaDataInputStream);
-            nodeUUID = metaData.getProperty("uuid", nodeUUID);
+            nodeUuid = metaData.getProperty("uuid", nodeUuid);
         } catch (IOException exception) {}
     
-        if (nodeUUID != null) {
-            nodeUUID = nodeUUID.trim();
+        if (nodeUuid != null) {
+            nodeUuid = nodeUuid.trim();
         } else {
-            nodeUUID = UUID.randomUUID().toString();
+            nodeUuid = UUID.randomUUID().toString();
             try {
                 FileOutputStream metaDataOutputStream = new FileOutputStream(DEFAULT_METADATA_FILE_PATH);
                 java.util.Properties metaData = new java.util.Properties();
-                metaData.put("uuid", nodeUUID);
+                metaData.put("uuid", nodeUuid);
                 metaData.store(metaDataOutputStream, "Report.ixi");
                 metaDataOutputStream.close();
             } catch (IOException exception) {
@@ -83,13 +97,17 @@ public class ReportIxi extends IxiModule {
                 System.exit(0);
             }
         }
+
+        properties.setUuid(nodeUuid);
     }
 
     @Override
     public void onIctConnect(String name) {
         log.info("Ict '" + name + "' connected");
-        this.ictName = name;
+        properties.setName(name);
 
+        api = new Api(properties);
+        api.init();
     }
 
     @Override
@@ -101,4 +119,6 @@ public class ReportIxi extends IxiModule {
     public void onTransactionSubmitted(GossipSubmitEvent event) {
         
     }
+
+    
 }
