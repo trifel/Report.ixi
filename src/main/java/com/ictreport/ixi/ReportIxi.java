@@ -126,8 +126,7 @@ public class ReportIxi extends IxiModule {
     @Override
     public void onIctConnect(String name) {
         log.info("Ict '" + name + "' connected");
-        properties.setName(name);
-
+        
         api = new Api(properties);
         api.init();
     }

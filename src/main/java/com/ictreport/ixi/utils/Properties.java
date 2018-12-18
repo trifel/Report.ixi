@@ -7,8 +7,9 @@ import java.util.List;
 
 public class Properties {
 
-    final static String[] CONST_NEIGHBOR_REPORT_PORTS = { "neighborReportPortA", "neighborReportPortB", "neighborReportPortC" };
+    final static String CONST_NAME = "name";
     final static String CONST_REPORT_PORT = "reportPort";
+    final static String[] CONST_NEIGHBOR_REPORT_PORTS = { "neighborReportPortA", "neighborReportPortB", "neighborReportPortC" };
 
     private String name = null;
     private String uuid = null;
@@ -128,10 +129,9 @@ public class Properties {
 
     public void loadFromReportProperties(java.util.Properties reportProperties)
             throws InvalidPropertiesFormatException {
-        String name = reportProperties.getProperty("name", "").trim();
+        String name = reportProperties.getProperty(CONST_NAME, "").trim();
         if (!name.matches(".+\\s\\(ict-\\d+\\)")) {
-            throw new InvalidPropertiesFormatException("name-property in report.template incorrectly formatted. "
-                    + "Please follow the naming convention: \"<name> (ict-<number>)\"");
+            throw createNewInvalidPropertiesFormatException(CONST_NAME, "Please follow the naming convention: \"<name> (ict-<number>)\"");
         }
         setName(name);
 
@@ -139,12 +139,10 @@ public class Properties {
         try {
             reportPort = Integer.parseInt(reportProperties.getProperty(CONST_REPORT_PORT, "1338"));
         } catch (NumberFormatException exception) {
-            throw new InvalidPropertiesFormatException(
-                    CONST_REPORT_PORT + "-property in report.template incorrectly formatted.");
+            throw createNewInvalidPropertiesFormatException(CONST_REPORT_PORT);
         }
         if (reportPort <= 0) {
-            throw new InvalidPropertiesFormatException(
-                    CONST_REPORT_PORT + "-property in report.template incorrectly formatted.");
+            throw createNewInvalidPropertiesFormatException(CONST_REPORT_PORT);
         }
         setReportPort(reportPort);
 
@@ -152,16 +150,23 @@ public class Properties {
             try {
                 int neighborPort = Integer.parseInt(reportProperties.getProperty(CONST_NEIGHBOR_REPORT_PORTS[i], "1338"));
                 if (neighborPort <= 0) {
-                    throw new InvalidPropertiesFormatException(
-                            CONST_NEIGHBOR_REPORT_PORTS[i] + "-property in report.template incorrectly formatted.");
+                    throw createNewInvalidPropertiesFormatException(CONST_NEIGHBOR_REPORT_PORTS[i]);
                 }
                 getReportNeighbors().add(new InetSocketAddress(ictNeighbors.get(i).getAddress(), neighborPort));
             } catch (NumberFormatException exception) {
-                throw new InvalidPropertiesFormatException(
-                        CONST_NEIGHBOR_REPORT_PORTS[i] + "-property in report.template incorrectly formatted.");
+                throw createNewInvalidPropertiesFormatException(CONST_NEIGHBOR_REPORT_PORTS[i]);
             }
         }
 
+    }
+
+    private InvalidPropertiesFormatException createNewInvalidPropertiesFormatException(String property) {
+        return createNewInvalidPropertiesFormatException(property, null);
+    }
+
+    private InvalidPropertiesFormatException createNewInvalidPropertiesFormatException(String property, String errorMessage) {
+        return new InvalidPropertiesFormatException(
+            property + "-property in report.ixi.cfg incorrectly formatted." + (errorMessage != null ? errorMessage : ""));
     }
 
 }
