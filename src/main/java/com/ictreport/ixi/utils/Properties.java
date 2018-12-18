@@ -1,47 +1,81 @@
 package com.ictreport.ixi.utils;
 
 import java.net.InetSocketAddress;
+import java.util.InvalidPropertiesFormatException;
 import java.util.LinkedList;
 import java.util.List;
 
 public class Properties {
 
-    private String name = "";
+    final static String[] CONST_NEIGHBOR_REPORT_PORTS = { "neighborReportPortA", "neighborReportPortB", "neighborReportPortC" };
+    final static String CONST_REPORT_PORT = "reportPort";
+
+    private String name = null;
     private String uuid = null;
     private String host = "localhost";
-    private int port = 1337;
-    private List<InetSocketAddress> neighbors = new LinkedList<>();
+    private int reportPort = 1338;
+    private int ictPort = 1337;
+    private List<InetSocketAddress> ictNeighbors = new LinkedList<>();
+    private List<InetSocketAddress> reportNeighbors = new LinkedList<>();
 
     public Properties() {
 
     }
 
     /**
-     * @return the neighbors
+     * @return the reportNeighbors
      */
-    public List<InetSocketAddress> getNeighbors() {
-        return neighbors;
+    public List<InetSocketAddress> getReportNeighbors() {
+        return reportNeighbors;
     }
 
     /**
-     * @param neighbors the neighbors to set
+     * @param reportNeighbors the reportNeighbors to set
      */
-    public void setNeighbors(List<InetSocketAddress> neighbors) {
-        this.neighbors = neighbors;
+    public void setReportNeighbors(List<InetSocketAddress> reportNeighbors) {
+        this.reportNeighbors = reportNeighbors;
     }
 
     /**
-     * @return the port
+     * @return the ictNeighbors
      */
-    public int getPort() {
-        return port;
+    public List<InetSocketAddress> getIctNeighbors() {
+        return ictNeighbors;
     }
 
     /**
-     * @param port the port to set
+     * @param ictNeighbors the ictNeighbors to set
      */
-    public void setPort(int port) {
-        this.port = port;
+    public void setIctNeighbors(List<InetSocketAddress> ictNeighbors) {
+        this.ictNeighbors = ictNeighbors;
+    }
+
+    /**
+     * @return the ictPort
+     */
+    public int getIctPort() {
+        return ictPort;
+    }
+
+    /**
+     * @param ictPort the ictPort to set
+     */
+    public void setIctPort(int ictPort) {
+        this.ictPort = ictPort;
+    }
+
+    /**
+     * @return the reportPort
+     */
+    public int getReportPort() {
+        return reportPort;
+    }
+
+    /**
+     * @param reportPort the reportPort to set
+     */
+    public void setReportPort(int reportPort) {
+        this.reportPort = reportPort;
     }
 
     /**
@@ -59,20 +93,6 @@ public class Properties {
     }
 
     /**
-     * @return the name
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * @param name the name to set
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
      * @return the uuid
      */
     public String getUuid() {
@@ -86,10 +106,62 @@ public class Properties {
         this.uuid = uuid;
     }
 
-	public void loadFromIctProperties(org.iota.ict.utils.Properties ictProperties) {
+    /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void loadFromIctProperties(org.iota.ict.utils.Properties ictProperties) {
         setHost(ictProperties.host);
-        setPort(ictProperties.port);
-        setNeighbors(ictProperties.neighbors);
-	}   
+        setIctPort(ictProperties.port);
+        setIctNeighbors(ictProperties.neighbors);
+    }
+
+    public void loadFromReportProperties(java.util.Properties reportProperties)
+            throws InvalidPropertiesFormatException {
+        String name = reportProperties.getProperty("name", "").trim();
+        if (!name.matches(".+\\s\\(ict-\\d+\\)")) {
+            throw new InvalidPropertiesFormatException("name-property in report.template incorrectly formatted. "
+                    + "Please follow the naming convention: \"<name> (ict-<number>)\"");
+        }
+        setName(name);
+
+        int reportPort;
+        try {
+            reportPort = Integer.parseInt(reportProperties.getProperty(CONST_REPORT_PORT, "1338"));
+        } catch (NumberFormatException exception) {
+            throw new InvalidPropertiesFormatException(
+                    CONST_REPORT_PORT + "-property in report.template incorrectly formatted.");
+        }
+        if (reportPort <= 0) {
+            throw new InvalidPropertiesFormatException(
+                    CONST_REPORT_PORT + "-property in report.template incorrectly formatted.");
+        }
+        setReportPort(reportPort);
+
+        for (int i = 0; i < ictNeighbors.size(); i++) {
+            try {
+                int neighborPort = Integer.parseInt(reportProperties.getProperty(CONST_NEIGHBOR_REPORT_PORTS[i], "1338"));
+                if (neighborPort <= 0) {
+                    throw new InvalidPropertiesFormatException(
+                            CONST_NEIGHBOR_REPORT_PORTS[i] + "-property in report.template incorrectly formatted.");
+                }
+                getReportNeighbors().add(new InetSocketAddress(ictNeighbors.get(i).getAddress(), neighborPort));
+            } catch (NumberFormatException exception) {
+                throw new InvalidPropertiesFormatException(
+                        CONST_NEIGHBOR_REPORT_PORTS[i] + "-property in report.template incorrectly formatted.");
+            }
+        }
+
+    }
 
 }

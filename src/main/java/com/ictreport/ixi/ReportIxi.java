@@ -22,6 +22,7 @@ public class ReportIxi extends IxiModule {
     private static final String NAME = "Report.ixi";
 
     private static final String DEFAULT_METADATA_FILE_PATH = "report.ixi.metadata";
+    private static final String DEFAULT_PROPERTY_FILE_PATH = "report.ixi.cfg";
     private static final String DEFAULT_ICT_PROPERTY_FILE_PATH = "ict.cfg";
 
     private Properties properties = new Properties();
@@ -53,6 +54,7 @@ public class ReportIxi extends IxiModule {
      */
     private void initialize() {
         loadIctProperties();
+        loadReportProperties();
         loadOrCreateMetadata();
     }
 
@@ -66,10 +68,31 @@ public class ReportIxi extends IxiModule {
         }
     }
 
+    private void loadReportProperties() {
+        try {
+            if (new File(DEFAULT_PROPERTY_FILE_PATH).exists()) {
+
+                java.util.Properties reportProperties = new java.util.Properties();
+                FileInputStream dataInputStream = new FileInputStream(DEFAULT_PROPERTY_FILE_PATH);
+                reportProperties.load(dataInputStream);
+
+                properties.loadFromReportProperties(reportProperties);
+
+                dataInputStream.close();
+            } else {
+                log.error("The file 'report.ixi.cfg' could not be found.");
+                System.exit(0);
+            }
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            log.error("The file '" + DEFAULT_PROPERTY_FILE_PATH + "' could not be loaded.");
+            System.exit(0);
+        }
+    }
+
     /**
      * Loading the unique identifier that has been generated upon initial start of 
-     * the Report.ixi-module. This uuid is stored within the“report.ixi.metadata”-file located 
-     * in the ICT root directory.
+     * the Report.ixi-module. This uuid is stored within the“report.ixi.metadata”-file.
      */
     private void loadOrCreateMetadata() {
         String nodeUuid = null;
