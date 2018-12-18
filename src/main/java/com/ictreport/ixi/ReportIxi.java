@@ -1,5 +1,6 @@
 package com.ictreport.ixi;
 
+import com.ictreport.ixi.utils.Cryptography;
 import org.iota.ict.ixi.IxiModule;
 import org.iota.ict.network.event.GossipReceiveEvent;
 import org.iota.ict.network.event.GossipSubmitEvent;
@@ -7,10 +8,8 @@ import org.iota.ict.network.event.GossipSubmitEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.security.*;
 import java.util.UUID;
 
 import com.ictreport.ixi.utils.Properties;
@@ -68,7 +67,7 @@ public class ReportIxi extends IxiModule {
 
     /**
      * Loading the unique identifier that has been generated upon initial start of 
-     * the Report.ixi-module. This uuid is stored within the“report.ixi.metadata”-file located 
+     * the Report.ixi-module. This uuid is stored within the "report.ixi.metadata"-file located
      * in the ICT root directory.
      */
     private void loadOrCreateMetadata() {

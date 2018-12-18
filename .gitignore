@@ -14,7 +14,11 @@
 # Mac
 .DS_Store
 
+# Gradle
+.gradle
+
 # Report.ixi
 *.jar
 ict.cfg
 report.ixi.metadata
+out
