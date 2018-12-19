@@ -1,6 +1,6 @@
 package com.ictreport.ixi;
 
-import com.ictreport.ixi.utils.Cryptography;
+import com.ictreport.ixi.api.Api;
 import org.iota.ict.ixi.IxiModule;
 import org.iota.ict.network.event.GossipReceiveEvent;
 import org.iota.ict.network.event.GossipSubmitEvent;
@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.security.*;
 import java.util.UUID;
 
 import com.ictreport.ixi.utils.Properties;
