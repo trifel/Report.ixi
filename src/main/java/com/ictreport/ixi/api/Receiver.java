@@ -9,28 +9,36 @@ import java.net.DatagramSocket;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ictreport.ixi.ReportIxi;
+import com.ictreport.ixi.model.Neighbor;
+
 public class Receiver extends Thread {
 
     private static final Logger log = LoggerFactory.getLogger(Receiver.class);
 
+    private final ReportIxi reportIxi;
     private final DatagramSocket socket;
     private boolean isReceiving = false;
 
     private List<IIncomingPacketListener> onIncomingPacketListeners = new ArrayList<>();
 
-    public Receiver(DatagramSocket socket) {
+    public Receiver(ReportIxi reportIxi, DatagramSocket socket) {
         super("Receiver");
+        this.reportIxi = reportIxi;
         this.socket = socket;
 
         // Default onIncomingPacketListener
         addOnIncomingPacketListener(new IIncomingPacketListener() {
             @Override
             public void OnIncomingPacket(DatagramPacket packet) {
-
-                String data = new String(packet.getData(), 0, packet.getLength());
-                log.info(String.format("Received data: %s from [%s]", data, packet.getSocketAddress()));
-                // TODO: Unpack the content of the packet.
-                // TODO: Determine what kind of further actions to take upon the received packet.
+                for (final Neighbor neighbor : getReportIxi().getNeighbors()) {
+                    if (packet.getAddress().equals(neighbor.getAddress()) && packet.getPort() == neighbor.getReportPort()) {
+                        String data = new String(packet.getData(), 0, packet.getLength());
+                        log.info(String.format("Received data: %s from [%s]", data, packet.getSocketAddress()));
+                        // TODO: Unpack the content of the packet.
+                        // TODO: Determine what kind of further actions to take upon the received packet.
+                    }
+                }
             }
         });
     }
@@ -79,5 +87,12 @@ public class Receiver extends Thread {
 
     public interface IIncomingPacketListener {
         void OnIncomingPacket(DatagramPacket packet);
+    }
+
+    /**
+     * @return the reportIxi
+     */
+    public ReportIxi getReportIxi() {
+        return reportIxi;
     }
 }

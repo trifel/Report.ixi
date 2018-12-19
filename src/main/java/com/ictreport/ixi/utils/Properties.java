@@ -5,6 +5,8 @@ import java.util.InvalidPropertiesFormatException;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.ictreport.ixi.model.Neighbor;
+
 public class Properties {
 
     final static String CONST_NAME = "name";
@@ -16,40 +18,10 @@ public class Properties {
     private String host = "localhost";
     private int reportPort = 1338;
     private int ictPort = 1337;
-    private List<InetSocketAddress> ictNeighbors = new LinkedList<>();
-    private List<InetSocketAddress> reportNeighbors = new LinkedList<>();
 
     public Properties() {
 
-    }
-
-    /**
-     * @return the reportNeighbors
-     */
-    public List<InetSocketAddress> getReportNeighbors() {
-        return reportNeighbors;
-    }
-
-    /**
-     * @param reportNeighbors the reportNeighbors to set
-     */
-    public void setReportNeighbors(List<InetSocketAddress> reportNeighbors) {
-        this.reportNeighbors = reportNeighbors;
-    }
-
-    /**
-     * @return the ictNeighbors
-     */
-    public List<InetSocketAddress> getIctNeighbors() {
-        return ictNeighbors;
-    }
-
-    /**
-     * @param ictNeighbors the ictNeighbors to set
-     */
-    public void setIctNeighbors(List<InetSocketAddress> ictNeighbors) {
-        this.ictNeighbors = ictNeighbors;
-    }
+    }  
 
     /**
      * @return the ictPort
@@ -121,13 +93,16 @@ public class Properties {
         this.name = name;
     }
 
-    public void loadFromIctProperties(org.iota.ict.utils.Properties ictProperties) {
+    public void loadFromIctProperties(org.iota.ict.utils.Properties ictProperties, List<Neighbor> neighbors) {
         setHost(ictProperties.host);
         setIctPort(ictProperties.port);
-        setIctNeighbors(ictProperties.neighbors);
+
+        for(InetSocketAddress ictNeighbor : ictProperties.neighbors){
+            neighbors.add(new Neighbor(ictNeighbor.getAddress(), ictNeighbor.getPort()));
+        }
     }
 
-    public void loadFromReportProperties(java.util.Properties reportProperties)
+    public void loadFromReportProperties(java.util.Properties reportProperties, List<Neighbor> neighbors)
             throws InvalidPropertiesFormatException {
         String name = reportProperties.getProperty(CONST_NAME, "").trim();
         if (!name.matches(".+\\s\\(ict-\\d+\\)")) {
@@ -146,18 +121,17 @@ public class Properties {
         }
         setReportPort(reportPort);
 
-        for (int i = 0; i < ictNeighbors.size(); i++) {
+        for (int i = 0; i < neighbors.size(); i++) {
             try {
                 int neighborPort = Integer.parseInt(reportProperties.getProperty(CONST_NEIGHBOR_REPORT_PORTS[i], "1338"));
                 if (neighborPort <= 0) {
                     throw createNewInvalidPropertiesFormatException(CONST_NEIGHBOR_REPORT_PORTS[i]);
                 }
-                getReportNeighbors().add(new InetSocketAddress(ictNeighbors.get(i).getAddress(), neighborPort));
+                neighbors.get(i).setReportPort(neighborPort);
             } catch (NumberFormatException exception) {
                 throw createNewInvalidPropertiesFormatException(CONST_NEIGHBOR_REPORT_PORTS[i]);
             }
         }
-
     }
 
     private InvalidPropertiesFormatException createNewInvalidPropertiesFormatException(String property) {
@@ -168,5 +142,6 @@ public class Properties {
         return new InvalidPropertiesFormatException(
             property + "-property in report.ixi.cfg incorrectly formatted." + (errorMessage != null ? errorMessage : ""));
     }
+
 
 }

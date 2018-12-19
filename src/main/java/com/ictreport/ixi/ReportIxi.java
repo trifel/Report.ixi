@@ -1,6 +1,8 @@
 package com.ictreport.ixi;
 
 import com.ictreport.ixi.api.Api;
+import com.ictreport.ixi.model.Neighbor;
+
 import org.iota.ict.ixi.IxiModule;
 import org.iota.ict.network.event.GossipReceiveEvent;
 import org.iota.ict.network.event.GossipSubmitEvent;
@@ -9,6 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.InetSocketAddress;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
 import com.ictreport.ixi.utils.Properties;
@@ -24,7 +29,7 @@ public class ReportIxi extends IxiModule {
     private static final String DEFAULT_ICT_PROPERTY_FILE_PATH = "ict.cfg";
 
     private Properties properties = new Properties();
-
+    private final List<Neighbor> neighbors = new LinkedList<>();
     private static Api api = null;
 
     public static void main(String[] args) {
@@ -59,9 +64,9 @@ public class ReportIxi extends IxiModule {
     private void loadIctProperties() {
         if (new File(DEFAULT_ICT_PROPERTY_FILE_PATH).exists()) {
             org.iota.ict.utils.Properties ictProperties = org.iota.ict.utils.Properties.fromFile(DEFAULT_ICT_PROPERTY_FILE_PATH);
-            properties.loadFromIctProperties(ictProperties);
+            properties.loadFromIctProperties(ictProperties, neighbors);
         } else {
-            log.error("The file 'ict.cfg' could not be found.");
+            log.error("The file '" + DEFAULT_ICT_PROPERTY_FILE_PATH + "' could not be found.");
             System.exit(0);
         }
     }
@@ -74,11 +79,11 @@ public class ReportIxi extends IxiModule {
                 FileInputStream dataInputStream = new FileInputStream(DEFAULT_PROPERTY_FILE_PATH);
                 reportProperties.load(dataInputStream);
 
-                properties.loadFromReportProperties(reportProperties);
+                properties.loadFromReportProperties(reportProperties, neighbors);
 
                 dataInputStream.close();
             } else {
-                log.error("The file 'report.ixi.cfg' could not be found.");
+                log.error("The file '" + DEFAULT_PROPERTY_FILE_PATH + "' could not be found.");
                 System.exit(0);
             }
         } catch (Exception exception) {
@@ -122,11 +127,19 @@ public class ReportIxi extends IxiModule {
         properties.setUuid(nodeUuid);
     }
 
+    public Properties getProperties() {
+        return this.properties;
+    }
+
+    public List<Neighbor> getNeighbors() {
+        return this.neighbors;
+    }
+
     @Override
     public void onIctConnect(String name) {
         log.info("Ict '" + name + "' connected");
         
-        api = new Api(properties);
+        api = new Api(this);
         api.init();
     }
 

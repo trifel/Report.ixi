@@ -20,8 +20,8 @@ public class ApiTest {
         final Object waitObject = new Object();
         final boolean[] isPacketReceived = {false};
 
-        Properties properties = new Properties();
-        Api api = new Api(properties);
+        ReportIxi reportIxi = new ReportIxi();
+        Api api = new Api(reportIxi);
         api.init();
 
         api.getReceiver().addOnIncomingPacketListener(new Receiver.IIncomingPacketListener() {
