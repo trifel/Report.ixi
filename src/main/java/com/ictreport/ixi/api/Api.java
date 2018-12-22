@@ -3,15 +3,15 @@ package com.ictreport.ixi.api;
 import com.ictreport.ixi.ReportIxi;
 import com.ictreport.ixi.utils.Properties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 
 public class Api {
-    private static final Logger log = LoggerFactory.getLogger(Api.class);
+    public final static Logger LOGGER = LogManager.getLogger(Api.class);
 
     private final ReportIxi reportIxi;
     private final InetSocketAddress address;

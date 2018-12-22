@@ -7,11 +7,10 @@ import org.iota.ict.ixi.IxiModule;
 import org.iota.ict.network.event.GossipReceiveEvent;
 import org.iota.ict.network.event.GossipSubmitEvent;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
-import java.net.InetSocketAddress;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -19,8 +18,7 @@ import java.util.UUID;
 import com.ictreport.ixi.utils.Properties;
 
 public class ReportIxi extends IxiModule {
-
-    private static final Logger log = LoggerFactory.getLogger(ReportIxi.class);
+    public final static Logger LOGGER = LogManager.getLogger(ReportIxi.class);
 
     private static final String NAME = "Report.ixi";
 
@@ -38,14 +36,14 @@ public class ReportIxi extends IxiModule {
 
     public ReportIxi() {
         super(NAME);
-        log.info(NAME + " started, waiting for Ict to connect ...");
-        log.info("Just add '"+NAME+"' to 'ixis' in your ict.cfg file and restart your Ict.\n");
+        LOGGER.info(NAME + " started, waiting for Ict to connect ...");
+        LOGGER.info("Just add '"+NAME+"' to 'ixis' in your ict.cfg file and restart your Ict.\n");
 
         initialize();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-              log.debug("Running Shutdown Hook");
+              LOGGER.debug("Running Shutdown Hook");
 
               if (api != null) api.shutDown();
             }
@@ -66,7 +64,7 @@ public class ReportIxi extends IxiModule {
             org.iota.ict.utils.Properties ictProperties = org.iota.ict.utils.Properties.fromFile(DEFAULT_ICT_PROPERTY_FILE_PATH);
             properties.loadFromIctProperties(ictProperties, neighbors);
         } else {
-            log.error("The file '" + DEFAULT_ICT_PROPERTY_FILE_PATH + "' could not be found.");
+            LOGGER.error("The file '" + DEFAULT_ICT_PROPERTY_FILE_PATH + "' could not be found.");
             System.exit(0);
         }
     }
@@ -83,12 +81,12 @@ public class ReportIxi extends IxiModule {
 
                 dataInputStream.close();
             } else {
-                log.error("The file '" + DEFAULT_PROPERTY_FILE_PATH + "' could not be found.");
+                LOGGER.error("The file '" + DEFAULT_PROPERTY_FILE_PATH + "' could not be found.");
                 System.exit(0);
             }
         } catch (Exception exception) {
             exception.printStackTrace();
-            log.error("The file '" + DEFAULT_PROPERTY_FILE_PATH + "' could not be loaded.");
+            LOGGER.error("The file '" + DEFAULT_PROPERTY_FILE_PATH + "' could not be loaded.");
             System.exit(0);
         }
     }
@@ -119,7 +117,7 @@ public class ReportIxi extends IxiModule {
                 metaDataOutputStream.close();
             } catch (IOException exception) {
                 exception.printStackTrace();
-                log.error("The file '" + DEFAULT_METADATA_FILE_PATH + "' could not be saved.");
+                LOGGER.error("The file '" + DEFAULT_METADATA_FILE_PATH + "' could not be saved.");
                 System.exit(0);
             }
         }
@@ -137,7 +135,7 @@ public class ReportIxi extends IxiModule {
 
     @Override
     public void onIctConnect(String name) {
-        log.info("Ict '" + name + "' connected");
+        LOGGER.info("Ict '" + name + "' connected");
         
         api = new Api(this);
         api.init();

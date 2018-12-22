@@ -1,7 +1,7 @@
 package com.ictreport.ixi.api;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -13,8 +13,7 @@ import com.ictreport.ixi.ReportIxi;
 import com.ictreport.ixi.model.Neighbor;
 
 public class Receiver extends Thread {
-
-    private static final Logger log = LoggerFactory.getLogger(Receiver.class);
+    public final static Logger LOGGER = LogManager.getLogger(Receiver.class);
 
     private final ReportIxi reportIxi;
     private final DatagramSocket socket;
@@ -34,7 +33,7 @@ public class Receiver extends Thread {
                 for (final Neighbor neighbor : getReportIxi().getNeighbors()) {
                     if (packet.getAddress().equals(neighbor.getAddress()) && packet.getPort() == neighbor.getReportPort()) {
                         String data = new String(packet.getData(), 0, packet.getLength());
-                        log.info(String.format("Received data: %s from [%s]", data, packet.getSocketAddress()));
+                        LOGGER.info(String.format("Received data: %s from [%s]", data, packet.getSocketAddress()));
                         // TODO: Unpack the content of the packet.
                         // TODO: Determine what kind of further actions to take upon the received packet.
                     }
