@@ -33,9 +33,14 @@ public class Receiver extends Thread {
                 for (final Neighbor neighbor : getReportIxi().getNeighbors()) {
                     if (packet.getAddress().equals(neighbor.getAddress()) && packet.getPort() == neighbor.getReportPort()) {
                         String data = new String(packet.getData(), 0, packet.getLength());
+
                         LOGGER.info(String.format("Received data: %s from [%s]", data, packet.getSocketAddress()));
-                        // TODO: Unpack the content of the packet.
-                        // TODO: Determine what kind of further actions to take upon the received packet.
+
+                        if (data.contains("uuid:")) {
+                            neighbor.setUuid(data.substring(5));
+                            LOGGER.info(neighbor.getUuid());
+                        }
+
                     }
                 }
             }

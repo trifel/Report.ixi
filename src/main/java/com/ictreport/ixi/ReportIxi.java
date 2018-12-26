@@ -143,7 +143,8 @@ public class ReportIxi extends IxiModule {
 
     @Override
     public void onTransactionReceived(GossipReceiveEvent event) {
-        
+        LOGGER.info("message '" + event.getTransaction().decodedSignatureFragments );
+
     }
 
     @Override

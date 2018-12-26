@@ -17,6 +17,7 @@ public class Api {
     private final InetSocketAddress address;
     private final DatagramSocket socket;
     private final Receiver receiver;
+    private final Sender sender;
 
     public Api(ReportIxi reportIxi) {
         this.reportIxi = reportIxi;
@@ -29,18 +30,25 @@ public class Api {
         }
 
         this.receiver = new Receiver(reportIxi, socket);
+        this.sender = new Sender(reportIxi, socket);
     }
 
     public void init() {
         receiver.start();
+        sender.start();
 	}
 
 	public void shutDown() {
         receiver.shutDown();
+        sender.shutDown();
 	}
 
     public Receiver getReceiver() {
         return receiver;
+    }
+
+    public Sender getPingSender() {
+        return sender;
     }
 
     public InetSocketAddress getAddress() {
