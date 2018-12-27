@@ -5,7 +5,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Random;
 
-public class RandomString {
+public class RandomStringGenerator {
 
     /**
      * Generate a random string.
@@ -30,7 +30,7 @@ public class RandomString {
 
     private final char[] buf;
 
-    public RandomString(int length, Random random, String symbols) {
+    public RandomStringGenerator(int length, Random random, String symbols) {
         if (length < 1) throw new IllegalArgumentException();
         if (symbols.length() < 2) throw new IllegalArgumentException();
         this.random = Objects.requireNonNull(random);
@@ -41,21 +41,21 @@ public class RandomString {
     /**
      * Create an alphanumeric string generator.
      */
-    public RandomString(int length, Random random) {
+    public RandomStringGenerator(int length, Random random) {
         this(length, random, alphanum);
     }
 
     /**
      * Create an alphanumeric strings from a secure generator.
      */
-    public RandomString(int length) {
+    public RandomStringGenerator(int length) {
         this(length, new SecureRandom());
     }
 
     /**
      * Create session identifiers.
      */
-    public RandomString() {
+    public RandomStringGenerator() {
         this(21);
     }
 

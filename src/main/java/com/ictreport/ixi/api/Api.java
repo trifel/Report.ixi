@@ -47,7 +47,7 @@ public class Api {
         return receiver;
     }
 
-    public Sender getPingSender() {
+    public Sender getSender() {
         return sender;
     }
 

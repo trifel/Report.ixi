@@ -18,6 +18,8 @@ import java.util.UUID;
 import com.ictreport.ixi.utils.Properties;
 
 public class ReportIxi extends IxiModule {
+    public static final String VERSION = "0.1";
+
     public final static Logger LOGGER = LogManager.getLogger(ReportIxi.class);
 
     private static final String NAME = "Report.ixi";
@@ -142,9 +144,10 @@ public class ReportIxi extends IxiModule {
     }
 
     @Override
-    public void onTransactionReceived(GossipReceiveEvent event) {
-        LOGGER.info("message '" + event.getTransaction().decodedSignatureFragments );
-
+    public void onTransactionReceived(GossipReceiveEvent event) {        
+        if (api != null) {
+            api.getSender().reportTransactionReceived(event.getTransaction().decodedSignatureFragments);
+        }
     }
 
     @Override
