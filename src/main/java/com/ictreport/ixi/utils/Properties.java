@@ -41,6 +41,12 @@ public class Properties extends java.util.Properties {
     private final static String DEFAULT_NEIGHBOR_C_HOST = "";
     private final static int    DEFAULT_NEIGHBOR_C_PORT = 1338;
 
+    public Properties() {
+
+        // Add required properties
+        setRequiredProps();
+    }
+
     public Properties(final String propertiesFilePath) {
 
         // Load properties from filesystem
@@ -48,9 +54,6 @@ public class Properties extends java.util.Properties {
 
         // Add required properties
         setRequiredProps();
-
-        // Save properties to filesystem
-        store(propertiesFilePath);
     }
 
     /**

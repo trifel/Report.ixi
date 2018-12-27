@@ -30,6 +30,7 @@ public class ReportIxi extends IxiModule {
 
         final String propertiesFilePath = (args.length == 0 ? "report.ixi.cfg" : args[0]);
         final Properties properties = new Properties(propertiesFilePath);
+        properties.store(propertiesFilePath);
 
         new ReportIxi(properties);
     }
