@@ -34,11 +34,8 @@ public class Receiver extends Thread {
                     if (packet.getAddress().equals(neighbor.getAddress()) && packet.getPort() == neighbor.getReportPort()) {
                         String data = new String(packet.getData(), 0, packet.getLength());
 
-                        LOGGER.info(String.format("Received data: %s from [%s]", data, packet.getSocketAddress()));
-
                         if (data.contains("uuid:")) {
                             neighbor.setUuid(data.substring(5));
-                            LOGGER.info(neighbor.getUuid());
                         }
 
                     }

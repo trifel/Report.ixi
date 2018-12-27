@@ -4,6 +4,7 @@ import com.ictreport.ixi.api.Api;
 import com.ictreport.ixi.model.Neighbor;
 
 import org.iota.ict.ixi.IxiModule;
+import org.iota.ict.network.event.GossipFilter;
 import org.iota.ict.network.event.GossipReceiveEvent;
 import org.iota.ict.network.event.GossipSubmitEvent;
 
@@ -139,12 +140,18 @@ public class ReportIxi extends IxiModule {
     public void onIctConnect(String name) {
         LOGGER.info("Ict '" + name + "' connected");
         
+        GossipFilter filter = new GossipFilter();
+        filter.setWatchingAll(true);
+        filter.watchAddress("IXI9REPORT99999999999999999999999999999999999999999999999999999999999999999999999");
+        setGossipFilter(filter);
+
         api = new Api(this);
         api.init();
     }
 
     @Override
     public void onTransactionReceived(GossipReceiveEvent event) {        
+        LOGGER.info("message received '" + event.getTransaction().decodedSignatureFragments );
         if (api != null) {
             api.getSender().reportTransactionReceived(event.getTransaction().decodedSignatureFragments);
         }

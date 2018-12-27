@@ -2,6 +2,7 @@ package com.ictreport.ixi.api;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.iota.ict.model.TransactionBuilder;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -94,7 +95,10 @@ public class Sender {
                 try {
                     String randomString = randomStringGenerator.nextString();
                     
-                    reportIxi.submit(randomString);
+                    TransactionBuilder t = new TransactionBuilder();
+                    t.address = "IXI9REPORT99999999999999999999999999999999999999999999999999999999999999999999999";
+                    t.asciiMessage(randomString);
+                    reportIxi.submit(t.build());
 
                     Gson gson = new Gson();
 
