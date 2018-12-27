@@ -6,14 +6,13 @@ import java.security.PublicKey;
 public class Neighbor {
 
     private InetAddress address;
-    private int ictPort;
     private int reportPort = -1;
     private String uuid = null;
     private PublicKey publicKey = null;
 
-    public Neighbor(InetAddress address, int ictPort) {
+    public Neighbor(InetAddress address, int reportPort) {
         this.address = address;
-        this.ictPort = ictPort;
+        this.reportPort = reportPort;
     }
 
     /**
@@ -56,20 +55,6 @@ public class Neighbor {
      */
     public void setReportPort(int reportPort) {
         this.reportPort = reportPort;
-    }
-
-    /**
-     * @return the ictPort
-     */
-    public int getIctPort() {
-        return ictPort;
-    }
-
-    /**
-     * @param ictPort the ictPort to set
-     */
-    public void setIctPort(int ictPort) {
-        this.ictPort = ictPort;
     }
 
     /**

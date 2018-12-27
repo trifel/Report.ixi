@@ -19,9 +19,10 @@ import com.ictreport.ixi.model.Neighbor;
 import com.ictreport.ixi.utils.RandomStringGenerator;
 
 public class Sender {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private final ReportIxi reportIxi;
     private final DatagramSocket socket;
-    private static final Logger LOGGER = LogManager.getLogger();
     private Timer uuidSenderTimer = new Timer();
     private Timer reportTimer = new Timer();
     private Timer submitRandomTransactionTimer = new Timer();
@@ -96,7 +97,7 @@ public class Sender {
                     String randomString = randomStringGenerator.nextString();
                     
                     TransactionBuilder t = new TransactionBuilder();
-                    t.address = "IXI9REPORT99999999999999999999999999999999999999999999999999999999999999999999999";
+                    t.tag = "REPORT9IXI99999999999999999";
                     t.asciiMessage(randomString);
                     reportIxi.submit(t.build());
 
