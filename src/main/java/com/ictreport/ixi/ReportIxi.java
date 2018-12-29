@@ -32,12 +32,18 @@ public class ReportIxi extends IxiModule {
         final Properties properties = new Properties(propertiesFilePath);
         properties.store(propertiesFilePath);
 
-        new ReportIxi(properties);
+        try {
+            new ReportIxi(properties);
+        } catch (RuntimeException e) {
+            LOGGER.info(String.format("Can't connect to Ict '%s'. Make sure that the Ict Client is running. Check 'ictName' in report.ixi.cfg and 'ixi_enabled=true' in ict.cfg.",
+                properties.getIctName()));
+            System.exit(0);
+        }
     }
 
     public ReportIxi(Properties properties) {
 
-        super(properties.getModuleName());
+        super(properties.getModuleName(), properties.getIctName());
 
         this.properties = properties;
 
@@ -47,11 +53,13 @@ public class ReportIxi extends IxiModule {
         neighbors.add(new Neighbor(neighborASocketAddress.getAddress(), properties.getNeighborAPort()));
         neighbors.add(new Neighbor(neighborBSocketAddress.getAddress(), properties.getNeighborBPort()));
         neighbors.add(new Neighbor(neighborCSocketAddress.getAddress(), properties.getNeighborCPort()));
-
-        LOGGER.info(String.format("%s started, waiting for Ict to connect ...",
-                properties.getModuleName()));
-        LOGGER.info(String.format("Just add '%s' to 'ixis' in your ict.cfg file and restart your Ict.\n",
-                properties.getModuleName()));
+              
+        GossipFilter filter = new GossipFilter();
+        filter.watchTag("REPORT9IXI99999999999999999");
+        setGossipFilter(filter);
+        
+        api = new Api(this);
+        api.init();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
@@ -60,6 +68,7 @@ public class ReportIxi extends IxiModule {
               if (api != null) api.shutDown();
             }
         });
+        
     }
 
     public Properties getProperties() {
@@ -68,18 +77,6 @@ public class ReportIxi extends IxiModule {
 
     public List<Neighbor> getNeighbors() {
         return this.neighbors;
-    }
-
-    @Override
-    public void onIctConnect(String name) {
-        LOGGER.info("Ict '" + name + "' connected");
-        
-        GossipFilter filter = new GossipFilter();
-        filter.watchTag("REPORT9IXI99999999999999999");
-        setGossipFilter(filter);
-
-        api = new Api(this);
-        api.init();
     }
 
     @Override

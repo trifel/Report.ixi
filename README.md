@@ -20,11 +20,10 @@ gradle fatJar
 
 ### Adjust the Ict config file
 
-In your **ict.cfg** file, add `Report.ixi` to `ixis` and make sure that `ixi_enabled` is set to `true`:
+In your **ict.cfg** file, make sure that `ixi_enabled` is set to `true`:
 
 ```
-ixis=Report.ixi
-ixi_enabled = true
+ixi_enabled=true
 ```
 
 ### Create and adjust the Report.ixi config file
@@ -36,6 +35,11 @@ Create or open the **report.ixi.cfg** file and complete the settings.
 // If the IP address is 0.0.0.0, the socket will be bound to the wildcard address, 
 // an IP address chosen by the kernel. Mostly you don`t need to change the host IP.
 host=0.0.0.0
+
+// The name of your Ict Client which is configured in the ict.cfg file. This name
+// is only used for the RMI connection between Report.ixi and the Ict Client.
+// The default value is set to "ict".
+ictName=ict
 
 // The additional port of the Report.ixi application of your instance. 
 // This additional port is not the Ict port.
@@ -72,7 +76,11 @@ uuid=61c134d5-915e-457b-999e-e91fd2aa8fe3
 
 ## Run Report.ixi
 
-### Step 1: Stop your Ict Client
+### Step 1: Start your Ict Client
+
+```shell
+java -jar ict-{VERSION}.jar
+```
 
 ### Step 2: Start Report.ixi
 
@@ -82,16 +90,4 @@ java -jar report.ixi-{VERSION}.jar
 If your **report.ixi.cfg** file is not in the same directory, you can set the path as argument:
 ```shell
 java -jar report.ixi-{VERSION}.jar ../report.ixi.cfg
-```
-
-### Step 3: Start your Ict Client
-
-```shell
-java -jar ict-{VERSION}.jar
-```
-
-The Report.ixi application should print this line if the Ict is connected successfully:
-
-```
-Ict '{name}' connected
 ```
