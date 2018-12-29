@@ -7,7 +7,7 @@ IXI plugin for [Ict](https://github.com/iotaledger/ict) to report node informati
 
 ## Installation
 
-Go to [releases](https://github.com/trifel/Report.ixi/releases) and download `report.ixi-{VERSION}.jar**` from the most recent release. 
+Go to [releases](https://github.com/trifel/Report.ixi/releases) and download `report.ixi-{VERSION}.jar` from the most recent release. 
 
 Alternatively, you can build the .jar file from the source code (advanced users). **Git** and **Gradle** is required for the following steps:
 ```shell
