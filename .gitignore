@@ -20,7 +20,6 @@
 # Report.ixi
 *.jar
 ict.cfg
-report.ixi.metadata
 report.ixi.cfg
 out
 build
