@@ -1,8 +1,12 @@
 package com.ictreport.ixi;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.ictreport.ixi.api.Api;
 import com.ictreport.ixi.model.Neighbor;
 
+import com.ictreport.ixi.utils.Cryptography;
+import org.apache.commons.codec.binary.Base64;
 import org.iota.ict.ixi.IxiModule;
 import org.iota.ict.network.event.GossipFilter;
 import org.iota.ict.network.event.GossipReceiveEvent;
@@ -12,6 +16,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,6 +32,7 @@ public class ReportIxi extends IxiModule {
     private Properties properties;
     private final List<Neighbor> neighbors = new LinkedList<>();
     private static Api api = null;
+    private KeyPair keyPair = null;
 
     public static void main(String[] args) {
 
@@ -40,6 +48,12 @@ public class ReportIxi extends IxiModule {
         super(properties.getModuleName());
 
         this.properties = properties;
+
+        try {
+            keyPair = Cryptography.generateKeyPair(1024);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
 
         InetSocketAddress neighborASocketAddress = new InetSocketAddress(properties.getNeighborAHost(), properties.getNeighborAPort());
         InetSocketAddress neighborBSocketAddress = new InetSocketAddress(properties.getNeighborBHost(), properties.getNeighborBPort());
@@ -70,6 +84,10 @@ public class ReportIxi extends IxiModule {
         return this.neighbors;
     }
 
+    public KeyPair getKeyPair() {
+        return keyPair;
+    }
+
     @Override
     public void onIctConnect(String name) {
         LOGGER.info("Ict '" + name + "' connected");
@@ -87,6 +105,52 @@ public class ReportIxi extends IxiModule {
         LOGGER.info(String.format("message received '%s'",
                 event.getTransaction().tag ));
         if (api != null) {
+
+            final String message = event.getTransaction().decodedSignatureFragments;
+
+            Gson gson = new Gson();
+
+            final JsonObject jsonObject = gson.fromJson(message, JsonObject.class);
+            final JsonObject payloadObject = jsonObject.getAsJsonObject("payload");
+
+            byte[] dataBytes = gson.toJson(payloadObject).getBytes(StandardCharsets.UTF_8);
+
+            final String uuid = payloadObject.getAsJsonPrimitive("uuid").getAsString();
+            System.out.println("Extracted uuid: " + uuid);
+
+            final String signatureBase64 = jsonObject.getAsJsonPrimitive("payloadSignature").getAsString();
+            System.out.println("Extracted signature: " + signatureBase64);
+            final byte[] signatureBytes = Base64.decodeBase64(signatureBase64);
+
+            Neighbor matchedNeighbor = null;
+            for (Neighbor neighbor : neighbors) {
+                if (neighbor.getUuid() != null && neighbor.getUuid().equals(uuid)) {
+                    matchedNeighbor = neighbor;
+                    break;
+                }
+            }
+
+            if (matchedNeighbor != null) {
+
+                System.out.println("The sender of this packet is my direct neighbor");
+
+                if (matchedNeighbor.getPublicKey() != null) {
+
+                    // Verify signature
+                    if (Cryptography.verify(dataBytes, signatureBytes, matchedNeighbor.getPublicKey())) {
+
+                        System.out.println("This packet signature is valid");
+                    } else {
+
+                        System.out.println("This packet signature is invalid");
+                    }
+                }
+            } else {
+
+                System.out.println("The sender of this packet is not my direct neighbor");
+            }
+
+
             api.getSender().reportTransactionReceived(event.getTransaction().decodedSignatureFragments);
         }
     }

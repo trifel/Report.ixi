@@ -1,11 +1,17 @@
 package com.ictreport.ixi.api;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.ictreport.ixi.utils.Cryptography;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,10 +40,30 @@ public class Receiver extends Thread {
                     if (packet.getAddress().equals(neighbor.getAddress()) && packet.getPort() == neighbor.getReportPort()) {
                         String data = new String(packet.getData(), 0, packet.getLength());
 
-                        if (data.contains("uuid:")) {
-                            neighbor.setUuid(data.substring(5));
-                        }
+                        Gson gson = new Gson();
 
+                        JsonObject metadata = gson.fromJson(data, JsonObject.class);
+
+                        if (metadata != null) {
+
+                            String uuid = metadata.getAsJsonPrimitive("uuid").getAsString();
+                            String encodedPublicKeyBase64 = metadata.getAsJsonPrimitive("publicKey").getAsString();
+
+                            if (!uuid.isEmpty()) {
+                                neighbor.setUuid(uuid);
+                            }
+                            if (!encodedPublicKeyBase64.isEmpty()) {
+
+                                try {
+                                    final byte[] encodedPublicKey = Base64.decodeBase64(encodedPublicKeyBase64.getBytes());
+                                    PublicKey publicKey = Cryptography.getPublicKeyFromBytes(encodedPublicKey);
+                                    System.out.println("Successfully decoded public key and set it for neighbor: " + neighbor.getUuid());
+                                    neighbor.setPublicKey(publicKey);
+                                } catch (InvalidKeySpecException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -51,7 +77,7 @@ public class Receiver extends Thread {
 
         while (isReceiving) {
 
-            byte[] buf = new byte[256];
+            byte[] buf = new byte[1024];
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
 
             try {
