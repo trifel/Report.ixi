@@ -74,6 +74,10 @@ neighborCPort=1338
 uuid=61c134d5-915e-457b-999e-e91fd2aa8fe3
 ```
 
+### Port forwarding, firewall settings
+
+The Report.ixi application will only operate correctly, if you open or forward the additional UDP port (`reportPort`, which is defined in the file `report.ixi.cfg`) in your router and/or firewall settings.
+
 ## Run Report.ixi
 
 ### Step 1: Start your Ict Client
