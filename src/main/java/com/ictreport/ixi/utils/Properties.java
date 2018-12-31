@@ -7,13 +7,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.InvalidPropertiesFormatException;
-import java.util.Vector;
+import java.net.InetSocketAddress;
+import java.util.*;
 
 public class Properties extends java.util.Properties {
     private final static Logger LOGGER = LogManager.getLogger(Properties.class);
+
+    private static final String LIST_DELIMITER = ",";
 
     // Property names
     private final static String MODULE_NAME = "moduleName";
@@ -22,6 +22,7 @@ public class Properties extends java.util.Properties {
     private final static String UUID = "uuid";
     private final static String HOST = "host";
     private final static String REPORT_PORT = "reportPort";
+    private final static String NEIGHBORS = "neighbors";
     private final static String NEIGHBOR_A_HOST = "neighborAHost";
     private final static String NEIGHBOR_A_PORT = "neighborAPort";
     private final static String NEIGHBOR_B_HOST = "neighborBHost";
@@ -36,6 +37,7 @@ public class Properties extends java.util.Properties {
     private final static String DEFAULT_UUID = java.util.UUID.randomUUID().toString();
     private final static String DEFAULT_HOST = "0.0.0.0";
     private final static int    DEFAULT_REPORT_PORT = 1338;
+    private final static String DEFAULT_NEIGHBORS = "";
     private final static String DEFAULT_NEIGHBOR_A_HOST = "";
     private final static int    DEFAULT_NEIGHBOR_A_PORT = 1338;
     private final static String DEFAULT_NEIGHBOR_B_HOST = "";
@@ -56,6 +58,8 @@ public class Properties extends java.util.Properties {
 
         // Add required properties
         setRequiredProps();
+
+        LOGGER.info("Neighbors: " + getNeighborAddresses());
     }
 
     /**
@@ -160,64 +164,9 @@ public class Properties extends java.util.Properties {
         put(NAME, name);
     }
 
-    public String getNeighborAHost() {
+    public List<InetSocketAddress> getNeighborAddresses() {
 
-        return getProperty(NEIGHBOR_A_HOST, DEFAULT_NEIGHBOR_A_HOST).trim();
-    }
-
-    public void setNeighborAHost(final String host) {
-
-        put(NEIGHBOR_A_HOST, host);
-    }
-
-    public int getNeighborAPort() {
-
-        return Integer.parseInt(getProperty(NEIGHBOR_A_PORT, Integer.toString(DEFAULT_NEIGHBOR_A_PORT)).trim());
-    }
-
-    public void setNeighborAPort(final int port) {
-
-        put(NEIGHBOR_A_PORT, Integer.toString(port));
-    }
-
-    public String getNeighborBHost() {
-
-        return getProperty(NEIGHBOR_B_HOST, DEFAULT_NEIGHBOR_B_HOST).trim();
-    }
-
-    public void setNeighborBHost(final String host) {
-
-        put(NEIGHBOR_B_HOST, host);
-    }
-
-    public int getNeighborBPort() {
-
-        return Integer.parseInt(getProperty(NEIGHBOR_B_PORT, Integer.toString(DEFAULT_NEIGHBOR_B_PORT)).trim());
-    }
-
-    public void setNeighborBPort(final int port) {
-
-        put(NEIGHBOR_B_PORT, Integer.toString(port));
-    }
-
-    public String getNeighborCHost() {
-
-        return getProperty(NEIGHBOR_C_HOST, DEFAULT_NEIGHBOR_C_HOST).trim();
-    }
-
-    public void setNeighborCHost(final String host) {
-
-        put(NEIGHBOR_C_HOST, host);
-    }
-
-    public int getNeighborCPort() {
-
-        return Integer.parseInt(getProperty(NEIGHBOR_C_PORT, Integer.toString(DEFAULT_NEIGHBOR_C_PORT)).trim());
-    }
-
-    public void setNeighborCPort(final int port) {
-
-        put(NEIGHBOR_C_PORT, Integer.toString(port));
+        return neighborsFromString(getProperty(NEIGHBORS));
     }
 
     public void load(String propertiesFilePath) {
@@ -289,6 +238,9 @@ public class Properties extends java.util.Properties {
         if (get(REPORT_PORT) == null) {
             put(REPORT_PORT, Integer.toString(DEFAULT_REPORT_PORT));
         }
+        if (get(NEIGHBORS) == null) {
+            put(NEIGHBORS, DEFAULT_NEIGHBORS);
+        }
         if (get(NEIGHBOR_A_HOST) == null) {
             put(NEIGHBOR_A_HOST, DEFAULT_NEIGHBOR_A_HOST);
         }
@@ -318,5 +270,37 @@ public class Properties extends java.util.Properties {
         }
         Collections.sort(keyList);
         return keyList.elements();
+    }
+
+    private static List<InetSocketAddress> neighborsFromString(String string) {
+        List<String> addresses = stringListFromString(string);
+
+        List<InetSocketAddress> neighbors = new LinkedList<>();
+        for (String address : addresses) {
+            try {
+                neighbors.add(inetSocketAddressFromString(address));
+            } catch (Throwable t) {
+                LOGGER.error(String.format("Invalid neighbor address: '%s'", address));
+            }
+        }
+        return neighbors;
+    }
+
+    private static List<String> stringListFromString(String string) {
+        List<String> stringList = new LinkedList<>();
+        for (String element : string.split(LIST_DELIMITER)) {
+            if (element.length() == 0)
+                continue;
+            stringList.add(element);
+        }
+        return stringList;
+    }
+
+    private static InetSocketAddress inetSocketAddressFromString(String address) {
+        int portColonIndex;
+        for (portColonIndex = address.length() - 1; address.charAt(portColonIndex) != ':'; portColonIndex--) ;
+        String hostString = address.substring(0, portColonIndex);
+        int port = Integer.parseInt(address.substring(portColonIndex + 1, address.length()));
+        return new InetSocketAddress(hostString, port);
     }
 }

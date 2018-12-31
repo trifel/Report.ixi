@@ -1,12 +1,10 @@
 package com.ictreport.ixi;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.ictreport.ixi.api.Api;
+import com.ictreport.ixi.exchange.*;
 import com.ictreport.ixi.model.Neighbor;
 
 import com.ictreport.ixi.utils.Cryptography;
-import org.apache.commons.codec.binary.Base64;
 import org.iota.ict.ixi.IxiModule;
 import org.iota.ict.network.event.GossipFilter;
 import org.iota.ict.network.event.GossipReceiveEvent;
@@ -16,7 +14,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
@@ -35,6 +32,8 @@ public class ReportIxi extends IxiModule {
     private KeyPair keyPair = null;
 
     public static void main(String[] args) {
+
+        LOGGER.info(String.format("Report.ixi %s started.", ReportIxi.VERSION));
 
         final String propertiesFilePath = (args.length == 0 ? "report.ixi.cfg" : args[0]);
         final Properties properties = new Properties(propertiesFilePath);
@@ -61,12 +60,9 @@ public class ReportIxi extends IxiModule {
             e.printStackTrace();
         }
 
-        InetSocketAddress neighborASocketAddress = new InetSocketAddress(properties.getNeighborAHost(), properties.getNeighborAPort());
-        InetSocketAddress neighborBSocketAddress = new InetSocketAddress(properties.getNeighborBHost(), properties.getNeighborBPort());
-        InetSocketAddress neighborCSocketAddress = new InetSocketAddress(properties.getNeighborCHost(), properties.getNeighborCPort());
-        neighbors.add(new Neighbor(neighborASocketAddress.getAddress(), properties.getNeighborAPort()));
-        neighbors.add(new Neighbor(neighborBSocketAddress.getAddress(), properties.getNeighborBPort()));
-        neighbors.add(new Neighbor(neighborCSocketAddress.getAddress(), properties.getNeighborCPort()));
+        for (InetSocketAddress neighborAddress : properties.getNeighborAddresses()) {
+            neighbors.add(new Neighbor(neighborAddress.getAddress(), neighborAddress.getPort()));
+        }
               
         GossipFilter filter = new GossipFilter();
         filter.watchTag("REPORT9IXI99999999999999999");
@@ -99,54 +95,10 @@ public class ReportIxi extends IxiModule {
 
     @Override
     public void onTransactionReceived(GossipReceiveEvent event) {
-        LOGGER.info(String.format("message received '%s'",
-                event.getTransaction().tag ));
         if (api != null) {
 
-            final String message = event.getTransaction().decodedSignatureFragments;
-
-            Gson gson = new Gson();
-
-            final JsonObject jsonObject = gson.fromJson(message, JsonObject.class);
-            final JsonObject payloadObject = jsonObject.getAsJsonObject("payload");
-
-            byte[] dataBytes = gson.toJson(payloadObject).getBytes(StandardCharsets.UTF_8);
-
-            final String uuid = payloadObject.getAsJsonPrimitive("uuid").getAsString();
-            System.out.println("Extracted uuid: " + uuid);
-
-            final String signatureBase64 = jsonObject.getAsJsonPrimitive("payloadSignature").getAsString();
-            System.out.println("Extracted signature: " + signatureBase64);
-            final byte[] signatureBytes = Base64.decodeBase64(signatureBase64);
-
-            Neighbor matchedNeighbor = null;
-            for (Neighbor neighbor : neighbors) {
-                if (neighbor.getUuid() != null && neighbor.getUuid().equals(uuid)) {
-                    matchedNeighbor = neighbor;
-                    break;
-                }
-            }
-
-            if (matchedNeighbor != null) {
-
-                System.out.println("The sender of this packet is my direct neighbor");
-
-                if (matchedNeighbor.getPublicKey() != null) {
-
-                    // Verify signature
-                    if (Cryptography.verify(dataBytes, signatureBytes, matchedNeighbor.getPublicKey())) {
-
-                        System.out.println("This packet signature is valid");
-                    } else {
-
-                        System.out.println("This packet signature is invalid");
-                    }
-                }
-            } else {
-
-                System.out.println("The sender of this packet is not my direct neighbor");
-            }
-
+            Payload payload = Payload.deserialize(event.getTransaction().decodedSignatureFragments);
+            api.getReceiver().processPayload(null, payload);
 
             api.getSender().reportTransactionReceived(event.getTransaction().decodedSignatureFragments);
         }
@@ -154,8 +106,6 @@ public class ReportIxi extends IxiModule {
 
     @Override
     public void onTransactionSubmitted(GossipSubmitEvent event) {
-        LOGGER.info(String.format("message submitted '%s'",
-                event.getTransaction().tag ));
         
     }
 
