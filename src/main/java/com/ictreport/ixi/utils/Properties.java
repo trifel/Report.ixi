@@ -17,6 +17,7 @@ public class Properties extends java.util.Properties {
 
     // Property names
     private final static String MODULE_NAME = "moduleName";
+    private final static String ICT_NAME = "ictName";
     private final static String NAME = "name";
     private final static String UUID = "uuid";
     private final static String HOST = "host";
@@ -30,6 +31,7 @@ public class Properties extends java.util.Properties {
 
     // Property defaults
     private final static String DEFAULT_MODULE_NAME = "Report.ixi";
+    private final static String DEFAULT_ICT_NAME = "ict";
     private final static String DEFAULT_NAME = "";
     private final static String DEFAULT_UUID = java.util.UUID.randomUUID().toString();
     private final static String DEFAULT_HOST = "0.0.0.0";
@@ -70,6 +72,22 @@ public class Properties extends java.util.Properties {
     public void setModuleName(final String moduleName) {
 
         put(MODULE_NAME, moduleName);
+    }
+
+    /**
+     * @return the ict name
+     */
+    public String getIctName() {
+
+        return getProperty(ICT_NAME, DEFAULT_ICT_NAME).trim();
+    }
+
+    /**
+     * @param ictName the ict name to set
+     */
+    public void setIctName(final String ictName) {
+
+        put(ICT_NAME, ictName);
     }
 
     /**
@@ -256,7 +274,9 @@ public class Properties extends java.util.Properties {
     }
 
     private void setRequiredProps() {
-
+        if (get(ICT_NAME) == null) {
+            put(ICT_NAME, DEFAULT_ICT_NAME);
+        }
         if (get(UUID) == null) {
             put(UUID, DEFAULT_UUID);
         }
