@@ -47,7 +47,7 @@ public class Sender {
                         DatagramPacket packet = new DatagramPacket(messageByteArray, messageByteArray.length);
                         packet.setSocketAddress(new InetSocketAddress(neighbor.getAddress(), neighbor.getReportPort()));
                         socket.send(packet);
-                    } catch (IOException e) {
+                    } catch (IOException | RuntimeException e) {
                         e.printStackTrace();
                     }
                 }
@@ -84,7 +84,7 @@ public class Sender {
                     packet.setSocketAddress(reportServerAddress);
                     socket.send(packet);
 
-                } catch (IOException e) {
+                } catch (IOException | RuntimeException e) {
                     e.printStackTrace();
                 }
             }
@@ -116,7 +116,7 @@ public class Sender {
                     InetSocketAddress reportServerAddress = new InetSocketAddress(reportServerHost, reportServerPort);
                     packet.setSocketAddress(reportServerAddress);
                     socket.send(packet);
-                } catch (IOException e) {
+                } catch (IOException | RuntimeException e) {
                     e.printStackTrace();
                 }
             }
@@ -140,7 +140,7 @@ public class Sender {
             InetSocketAddress reportServerAddress = new InetSocketAddress(reportServerHost, reportServerPort);
             packet.setSocketAddress(reportServerAddress);
             socket.send(packet);
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             e.printStackTrace();
         }
     }
