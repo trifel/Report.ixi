@@ -47,6 +47,9 @@ public class Properties extends java.util.Properties {
         // Add required properties
         setRequiredProps();
 
+        // Validate the properties
+        validateProps();
+
         LOGGER.info("Neighbors: " + getNeighborAddresses());
     }
 
@@ -141,13 +144,7 @@ public class Properties extends java.util.Properties {
     /**
      * @param name the name to set
      */
-    public void setName(final String name) throws InvalidPropertiesFormatException {
-
-        if (!name.matches(".+\\s\\(ict-\\d+\\)")) {
-            throw new InvalidPropertiesFormatException(String.format("Unable to set %s. Please follow the naming convention: %s",
-                    NAME,
-                    "\"<name> (ict-<number>)\""));
-        }
+    public void setName(final String name) {
 
         put(NAME, name);
     }
@@ -228,6 +225,18 @@ public class Properties extends java.util.Properties {
         }
         if (get(NEIGHBORS) == null) {
             put(NEIGHBORS, DEFAULT_NEIGHBORS);
+        }
+    }
+
+    private void validateProps() {
+        if (!getName().matches(".+\\s\\(ict-\\d+\\)")) {
+            try {
+                throw new InvalidPropertiesFormatException(String.format("Unable to set %s. Please follow the naming convention: %s",
+                        NAME,
+                        "\"<name> (ict-<number>)\""));
+            } catch (InvalidPropertiesFormatException e) {
+                e.printStackTrace();
+            }
         }
     }
 
