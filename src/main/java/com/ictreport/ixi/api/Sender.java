@@ -61,6 +61,8 @@ public class Sender {
                     Constants.VERSION,
                     neighborUuids);
                 send(statusPayload, Constants.RCS_HOST, Constants.RCS_PORT);
+
+                Metrics.logMetrics(reportIxi);
             }
         }, 0, 60000);
 

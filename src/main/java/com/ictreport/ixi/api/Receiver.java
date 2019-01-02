@@ -78,6 +78,7 @@ public class Receiver extends Thread {
             if (nb.sentPacketFromSameIP(packet))
                 return nb;
         LOGGER.warn("Received packet from unknown address: " + packet.getAddress());
+        Metrics.setNonNeighborInvalidCount(Metrics.getNonNeighborInvalidCount()+1);
         return null;
     }
 
@@ -114,6 +115,8 @@ public class Receiver extends Thread {
             LOGGER.info(String.format("Received new publicKey from neighbor[%s]",
                     neighbor.getAddress()));
         }
+
+        neighbor.setMetadataCount(neighbor.getMetadataCount()+1);
     }
 
     public void processSignedPayload(final SignedPayload signedPayload) {
@@ -132,12 +135,11 @@ public class Receiver extends Thread {
             PingPayload pingPayload = (PingPayload) signedPayload.getPayload();
             ReceivedPingPayload receivedPingPayload;
             if (signee != null) {
-                LOGGER.info(String.format("Received signed ping from neighbor [%s]",
-                        signee.getAddress()));
-
                 receivedPingPayload = new ReceivedPingPayload(reportIxi.getProperties().getUuid(), pingPayload, true);
+                signee.setPingCount(signee.getPingCount()+1);
             } else {
                 receivedPingPayload = new ReceivedPingPayload(reportIxi.getProperties().getUuid(), pingPayload, false);
+                Metrics.setNonNeighborPingCount(Metrics.getNonNeighborPingCount()+1);
             }
             reportIxi.getApi().getSender().send(receivedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
         }

@@ -11,6 +11,9 @@ public class Neighbor {
     private String uuid = null;
     private PublicKey publicKey = null;
     private String reportIxiVersion = null;
+    private int pingCount = 0;
+    private int metadataCount = 0;
+    private int invalidCount = 0;
 
     public Neighbor(InetSocketAddress address) {
         this.address = address;
@@ -75,5 +78,29 @@ public class Neighbor {
 
     public void setReportIxiVersion(String reportIxiVersion) {
         this.reportIxiVersion = reportIxiVersion;
+    }
+
+    public int getPingCount() {
+        return pingCount;
+    }
+
+    public void setPingCount(int pingCount) {
+        this.pingCount = pingCount;
+    }
+
+    public int getMetadataCount() {
+        return metadataCount;
+    }
+
+    public void setMetadataCount(int metadataCount) {
+        this.metadataCount = metadataCount;
+    }
+
+    public int getInvalidCount() {
+        return invalidCount;
+    }
+
+    public void setInvalidCount(int invalidCount) {
+        this.invalidCount = invalidCount;
     }
 }
