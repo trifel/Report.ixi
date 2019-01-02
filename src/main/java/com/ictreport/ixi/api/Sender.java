@@ -8,6 +8,7 @@ import org.iota.ict.model.TransactionBuilder;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,19 +41,10 @@ public class Sender {
             @Override
             public void run() {
                 for (final Neighbor neighbor : reportIxi.getNeighbors()) {
-                    try {
-
-                        MetadataPayload metadataPayload = new MetadataPayload(reportIxi.getProperties().getUuid(),
-                                reportIxi.getKeyPair().getPublic(),
-                                Constants.VERSION);
-
-                        byte[] messageByteArray = Payload.serialize(metadataPayload).getBytes();
-                        DatagramPacket packet = new DatagramPacket(messageByteArray, messageByteArray.length);
-                        packet.setSocketAddress(new InetSocketAddress(neighbor.getAddress(), neighbor.getReportPort()));
-                        socket.send(packet);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    MetadataPayload metadataPayload = new MetadataPayload(reportIxi.getProperties().getUuid(),
+                            reportIxi.getKeyPair().getPublic(),
+                            Constants.VERSION);
+                    send (metadataPayload, neighbor.getAddress(), neighbor.getReportPort());
                 }
             }
         }, 0, 60000);
@@ -60,67 +52,54 @@ public class Sender {
         reportTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                try {
-                    List<String> neighborUuids = new LinkedList<String>();
-                    for (final Neighbor neighbor : reportIxi.getNeighbors()) {
-                        neighborUuids.add(neighbor.getUuid() != null ? neighbor.getUuid() : "");
-                    }
-                    StatusPayload statusPayload = new StatusPayload(
-                        reportIxi.getProperties().getUuid(),
-                        reportIxi.getProperties().getName(),
-                        Constants.VERSION,
-                        neighborUuids);
-
-                    byte[] messageByteArray = Payload.serialize(statusPayload).getBytes();
-                    DatagramPacket packet = new DatagramPacket(messageByteArray, messageByteArray.length);
-                    InetSocketAddress reportServerAddress = new InetSocketAddress(Constants.RCS_HOST, Constants.RCS_PORT);
-                    packet.setSocketAddress(reportServerAddress);
-                    socket.send(packet);
-                } catch (IOException e) {
-                    e.printStackTrace();
+                List<String> neighborUuids = new LinkedList<>();
+                for (final Neighbor neighbor : reportIxi.getNeighbors()) {
+                    neighborUuids.add(neighbor.getUuid() != null ? neighbor.getUuid() : "");
                 }
+                StatusPayload statusPayload = new StatusPayload(
+                    reportIxi.getProperties().getUuid(),
+                    reportIxi.getProperties().getName(),
+                    Constants.VERSION,
+                    neighborUuids);
+                send(statusPayload, Constants.RCS_HOST, Constants.RCS_PORT);
             }
         }, 0, 60000);
 
         submitRandomTransactionTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                try {
-                    // Prepare a signed ping payload
-                    PingPayload pingPayload = new PingPayload(randomStringGenerator.nextString());
-                    SignedPayload signedPayload = new SignedPayload(pingPayload, reportIxi.getKeyPair().getPrivate());
+                // Prepare a signed ping payload
+                PingPayload pingPayload = new PingPayload(randomStringGenerator.nextString());
+                SignedPayload signedPayload = new SignedPayload(pingPayload, reportIxi.getKeyPair().getPrivate());
 
-                    String json = Payload.serialize(signedPayload);
+                String json = Payload.serialize(signedPayload);
 
-                    // Broadcast to neighbors
-                    TransactionBuilder t = new TransactionBuilder();
-                    t.tag = "REPORT9IXI99999999999999999";
-                    t.asciiMessage(json);
-                    reportIxi.submit(t.build());
+                // Broadcast to neighbors
+                TransactionBuilder t = new TransactionBuilder();
+                t.tag = "REPORT9IXI99999999999999999";
+                t.asciiMessage(json);
+                reportIxi.submit(t.build());
 
-                    // Send to RCS
-                    SubmittedPingPayload submittedPingPayload = new SubmittedPingPayload(reportIxi.getProperties().getUuid(), pingPayload);
-                    byte[] messageByteArray = Payload.serialize(submittedPingPayload).getBytes();
-                    DatagramPacket packet = new DatagramPacket(messageByteArray, messageByteArray.length);
-                    InetSocketAddress reportServerAddress = new InetSocketAddress(Constants.RCS_HOST, Constants.RCS_PORT);
-                    packet.setSocketAddress(reportServerAddress);
-                    socket.send(packet);
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                // Send to RCS
+                SubmittedPingPayload submittedPingPayload = new SubmittedPingPayload(reportIxi.getProperties().getUuid(), pingPayload);
+                send(submittedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
             }
         }, 0, 60000);
     }
 
-    public void reportReceivedPingPayload(ReceivedPingPayload receivedPingPayload) {
+    public void send(Payload payload, InetAddress address, int port) {
+        send(payload, new InetSocketAddress(address, port));
+    }
+
+    public void send(Payload payload, String host, int port) {
+        send(payload, new InetSocketAddress(host, port));
+    }
+
+    public void send(Payload payload, InetSocketAddress address) {
         try {
-            byte[] messageByteArray = Payload.serialize(receivedPingPayload).getBytes();
-            DatagramPacket packet = new DatagramPacket(messageByteArray, messageByteArray.length);
-            InetSocketAddress reportServerAddress = new InetSocketAddress(Constants.RCS_HOST, Constants.RCS_PORT);
-            packet.setSocketAddress(reportServerAddress);
-            socket.send(packet);
-        } catch (IOException e) {
+            byte[] messageByteArray = Payload.serialize(payload).getBytes();
+            socket.send(new DatagramPacket(messageByteArray, messageByteArray.length, address));
+        } catch (IOException | RuntimeException e) {
             e.printStackTrace();
         }
     }

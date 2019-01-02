@@ -5,6 +5,7 @@ import com.ictreport.ixi.exchange.Payload;
 import com.ictreport.ixi.exchange.PingPayload;
 import com.ictreport.ixi.exchange.ReceivedPingPayload;
 import com.ictreport.ixi.exchange.SignedPayload;
+import com.ictreport.ixi.utils.Constants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -132,7 +133,7 @@ public class Receiver extends Thread {
             } else {
                 receivedPingPayload = new ReceivedPingPayload(reportIxi.getProperties().getUuid(), pingPayload, false);
             }
-            reportIxi.getApi().getSender().reportReceivedPingPayload(receivedPingPayload);
+            reportIxi.getApi().getSender().send(receivedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
         }
     }
 
