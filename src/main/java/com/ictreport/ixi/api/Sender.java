@@ -1,5 +1,6 @@
 package com.ictreport.ixi.api;
 
+import com.ictreport.ixi.exchange.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.iota.ict.model.TransactionBuilder;
@@ -7,15 +8,16 @@ import org.iota.ict.model.TransactionBuilder;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.ictreport.ixi.ReportIxi;
 import com.ictreport.ixi.model.Neighbor;
+import com.ictreport.ixi.utils.Constants;
 import com.ictreport.ixi.utils.RandomStringGenerator;
 
 public class Sender {
@@ -28,9 +30,6 @@ public class Sender {
     private Timer submitRandomTransactionTimer = new Timer();
     private RandomStringGenerator randomStringGenerator = new RandomStringGenerator();
 
-    private final static String reportServerHost = "api.ictreport.com";
-    private final static int reportServerPort = 14265;
-
     public Sender(final ReportIxi reportIxi, DatagramSocket socket) {
         this.reportIxi = reportIxi;
         this.socket = socket;
@@ -38,18 +37,13 @@ public class Sender {
 
     public void start() {
         uuidSenderTimer.schedule(new TimerTask() {
-
             @Override
             public void run() {
                 for (final Neighbor neighbor : reportIxi.getNeighbors()) {
-                    try {
-                        byte[] messageByteArray = new String("uuid:" + reportIxi.getProperties().getUuid()).getBytes();
-                        DatagramPacket packet = new DatagramPacket(messageByteArray, messageByteArray.length);
-                        packet.setSocketAddress(new InetSocketAddress(neighbor.getAddress(), neighbor.getReportPort()));
-                        socket.send(packet);
-                    } catch (IOException | RuntimeException e) {
-                        e.printStackTrace();
-                    }
+                    MetadataPayload metadataPayload = new MetadataPayload(reportIxi.getProperties().getUuid(),
+                            reportIxi.getKeyPair().getPublic(),
+                            Constants.VERSION);
+                    send (metadataPayload, neighbor.getAddress(), neighbor.getReportPort());
                 }
             }
         }, 0, 60000);
@@ -57,89 +51,53 @@ public class Sender {
         reportTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                try {
-                    Gson gson = new Gson();
-            
-                    JsonObject nodeInfo = new JsonObject();
-                    nodeInfo.addProperty("uuid", reportIxi.getProperties().getUuid());
-                    nodeInfo.addProperty("name", reportIxi.getProperties().getName());
-                    nodeInfo.addProperty("version", ReportIxi.VERSION);
-                    
-                    JsonArray neighborJSONArray = new JsonArray();
-                    for (final Neighbor neighbor : reportIxi.getNeighbors()) {
-                        JsonObject neighborInfo = new JsonObject();
-                        neighborInfo.addProperty("uuid", neighbor.getUuid() != null ? neighbor.getUuid() : "");
-                        
-                        neighborJSONArray.add(neighborInfo);
-                    }
-                    nodeInfo.add("neighbors", neighborJSONArray);
-
-                    JsonObject action = new JsonObject();
-                    action.addProperty("action", "setNodeStatus");
-                    action.add("value", nodeInfo);
-
-                    byte[] messageByteArray = gson.toJson(action).getBytes();
-                    DatagramPacket packet = new DatagramPacket(messageByteArray, messageByteArray.length);
-                    InetSocketAddress reportServerAddress = new InetSocketAddress(reportServerHost, reportServerPort);
-                    packet.setSocketAddress(reportServerAddress);
-                    socket.send(packet);
-
-                } catch (IOException | RuntimeException e) {
-                    e.printStackTrace();
+                List<String> neighborUuids = new LinkedList<>();
+                for (final Neighbor neighbor : reportIxi.getNeighbors()) {
+                    neighborUuids.add(neighbor.getUuid() != null ? neighbor.getUuid() : "");
                 }
+                StatusPayload statusPayload = new StatusPayload(
+                    reportIxi.getProperties().getUuid(),
+                    reportIxi.getProperties().getName(),
+                    Constants.VERSION,
+                    neighborUuids);
+                send(statusPayload, Constants.RCS_HOST, Constants.RCS_PORT);
             }
         }, 0, 60000);
 
         submitRandomTransactionTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                try {
-                    String randomString = randomStringGenerator.nextString();
-                    
-                    TransactionBuilder t = new TransactionBuilder();
-                    t.tag = "REPORT9IXI99999999999999999";
-                    t.asciiMessage(randomString);
-                    reportIxi.submit(t.build());
+                // Prepare a signed ping payload
+                PingPayload pingPayload = new PingPayload(randomStringGenerator.nextString());
+                SignedPayload signedPayload = new SignedPayload(pingPayload, reportIxi.getKeyPair().getPrivate());
 
-                    Gson gson = new Gson();
+                String json = Payload.serialize(signedPayload);
 
-                    JsonObject transaction = new JsonObject();
-                    transaction.addProperty("uuid", reportIxi.getProperties().getUuid());
-                    transaction.addProperty("message", randomString);
+                // Broadcast to neighbors
+                TransactionBuilder t = new TransactionBuilder();
+                t.tag = "REPORT9IXI99999999999999999";
+                t.asciiMessage(json);
+                reportIxi.submit(t.build());
 
-                    JsonObject action = new JsonObject();
-                    action.addProperty("action", "onTransactionSubmitted");
-                    action.add("value", transaction);
-
-                    byte[] messageByteArray = gson.toJson(action).getBytes();
-                    DatagramPacket packet = new DatagramPacket(messageByteArray, messageByteArray.length);
-                    InetSocketAddress reportServerAddress = new InetSocketAddress(reportServerHost, reportServerPort);
-                    packet.setSocketAddress(reportServerAddress);
-                    socket.send(packet);
-                } catch (IOException | RuntimeException e) {
-                    e.printStackTrace();
-                }
+                // Send to RCS
+                SubmittedPingPayload submittedPingPayload = new SubmittedPingPayload(reportIxi.getProperties().getUuid(), pingPayload);
+                send(submittedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
             }
         }, 0, 60000);
     }
 
-    public void reportTransactionReceived(String message) {
-        try {
-            Gson gson = new Gson();
+    public void send(Payload payload, InetAddress address, int port) {
+        send(payload, new InetSocketAddress(address, port));
+    }
 
-            JsonObject transaction = new JsonObject();
-            transaction.addProperty("uuid", reportIxi.getProperties().getUuid());
-            transaction.addProperty("message", message);
-    
-            JsonObject action = new JsonObject();
-            action.addProperty("action", "onTransactionReceived");
-            action.add("value", transaction);
-    
-            byte[] messageByteArray = gson.toJson(action).getBytes();
-            DatagramPacket packet = new DatagramPacket(messageByteArray, messageByteArray.length);
-            InetSocketAddress reportServerAddress = new InetSocketAddress(reportServerHost, reportServerPort);
-            packet.setSocketAddress(reportServerAddress);
-            socket.send(packet);
+    public void send(Payload payload, String host, int port) {
+        send(payload, new InetSocketAddress(host, port));
+    }
+
+    public void send(Payload payload, InetSocketAddress address) {
+        try {
+            byte[] messageByteArray = Payload.serialize(payload).getBytes();
+            socket.send(new DatagramPacket(messageByteArray, messageByteArray.length, address));
         } catch (IOException | RuntimeException e) {
             e.printStackTrace();
         }

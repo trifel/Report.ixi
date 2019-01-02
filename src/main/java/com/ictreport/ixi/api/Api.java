@@ -1,7 +1,6 @@
 package com.ictreport.ixi.api;
 
 import com.ictreport.ixi.ReportIxi;
-import com.ictreport.ixi.utils.Properties;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -1,13 +1,17 @@
 package com.ictreport.ixi.api;
 
+import com.ictreport.ixi.exchange.MetadataPayload;
+import com.ictreport.ixi.exchange.Payload;
+import com.ictreport.ixi.exchange.PingPayload;
+import com.ictreport.ixi.exchange.ReceivedPingPayload;
+import com.ictreport.ixi.exchange.SignedPayload;
+import com.ictreport.ixi.utils.Constants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.ictreport.ixi.ReportIxi;
 import com.ictreport.ixi.model.Neighbor;
@@ -19,29 +23,10 @@ public class Receiver extends Thread {
     private final DatagramSocket socket;
     private boolean isReceiving = false;
 
-    private List<IIncomingPacketListener> onIncomingPacketListeners = new ArrayList<>();
-
     public Receiver(ReportIxi reportIxi, DatagramSocket socket) {
         super("Receiver");
         this.reportIxi = reportIxi;
         this.socket = socket;
-
-        // Default onIncomingPacketListener
-        addOnIncomingPacketListener(new IIncomingPacketListener() {
-            @Override
-            public void OnIncomingPacket(DatagramPacket packet) {
-                for (final Neighbor neighbor : getReportIxi().getNeighbors()) {
-                    if (packet.getAddress().equals(neighbor.getAddress()) && packet.getPort() == neighbor.getReportPort()) {
-                        String data = new String(packet.getData(), 0, packet.getLength());
-
-                        if (data.contains("uuid:")) {
-                            neighbor.setUuid(data.substring(5));
-                        }
-
-                    }
-                }
-            }
-        });
     }
 
     @Override
@@ -51,12 +36,12 @@ public class Receiver extends Thread {
 
         while (isReceiving) {
 
-            byte[] buf = new byte[256];
+            byte[] buf = new byte[1024];
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
 
             try {
-                this.socket.receive(packet);
-                notifyOnIncomingPacketListeners(packet);
+                socket.receive(packet);
+                processPacket(packet);
             } catch (IOException e) {
                 if (isReceiving)
                     e.printStackTrace();
@@ -68,26 +53,88 @@ public class Receiver extends Thread {
         isReceiving = false;
     }
 
-    public void addOnIncomingPacketListener(IIncomingPacketListener onIncomingPacketListener) {
-        if (!onIncomingPacketListeners.contains(onIncomingPacketListener)) {
-            onIncomingPacketListeners.add(onIncomingPacketListener);
+    public void processPacket(final DatagramPacket packet) {
+
+        for (final Neighbor neighbor : getReportIxi().getNeighbors()) {
+            if (packet.getAddress().equals(neighbor.getAddress()) && packet.getPort() == neighbor.getReportPort()) {
+                String data = new String(packet.getData(), 0, packet.getLength());
+
+                try {
+                    final Payload payload = Payload.deserialize(data);
+                    processPayload(neighbor, payload);
+                } catch (Exception e) {
+                    LOGGER.info(String.format("Received invalid packet from Neighbor[%s:%s]",
+                    neighbor.getAddress(),
+                    neighbor.getReportPort()));
+                }
+            }
         }
     }
 
-    public void removeOnIncomingPacketListener(IIncomingPacketListener onIncomingPacketListener) {
-        if (onIncomingPacketListeners.contains(onIncomingPacketListener)) {
-            onIncomingPacketListeners.remove(onIncomingPacketListener);
+    public void processPayload(final Neighbor neighbor, final Payload payload) {
+
+        if (payload instanceof MetadataPayload) {
+            processMetadataPacket(neighbor, (MetadataPayload) payload);
+        }
+        if (payload instanceof SignedPayload) {
+            processSignedPayload((SignedPayload) payload);
         }
     }
 
-    private void notifyOnIncomingPacketListeners(DatagramPacket packet) {
-        for (IIncomingPacketListener listener : onIncomingPacketListeners) {
-            listener.OnIncomingPacket(packet);
+    public void processMetadataPacket(final Neighbor neighbor, final MetadataPayload metadataPayload) {
+
+        if (neighbor.getReportIxiVersion() == null ||
+                !neighbor.getReportIxiVersion().equals(metadataPayload.getReportIxiVersion())) {
+            neighbor.setReportIxiVersion(metadataPayload.getReportIxiVersion());
+            LOGGER.info(String.format("Neighbor[%s:%s] operates Report.ixi version: %s",
+                    neighbor.getAddress(),
+                    neighbor.getReportPort(),
+                    neighbor.getReportIxiVersion()));
+        }
+
+        if (neighbor.getUuid() == null ||
+                !neighbor.getUuid().equals(metadataPayload.getUuid())) {
+            neighbor.setUuid(metadataPayload.getUuid());
+            LOGGER.info(String.format("Received new uuid from neighbor[%s:%s]",
+                    neighbor.getAddress(),
+                    neighbor.getReportPort()));
+        }
+
+        if (neighbor.getPublicKey() == null ||
+                !neighbor.getPublicKey().equals(metadataPayload.getPublicKey())) {
+            neighbor.setPublicKey(metadataPayload.getPublicKey());
+            LOGGER.info(String.format("Received new publicKey from neighbor[%s:%s]",
+                    neighbor.getAddress(),
+                    neighbor.getReportPort()));
         }
     }
 
-    public interface IIncomingPacketListener {
-        void OnIncomingPacket(DatagramPacket packet);
+    public void processSignedPayload(final SignedPayload signedPayload) {
+
+        Neighbor signee = null;
+        for (Neighbor neighbor : reportIxi.getNeighbors()) {
+
+            if (neighbor.getPublicKey() != null && signedPayload.verify(neighbor.getPublicKey())) {
+
+                signee = neighbor;
+                break;
+            }
+        }
+
+        if (signedPayload.getPayload() instanceof PingPayload) {
+            PingPayload pingPayload = (PingPayload) signedPayload.getPayload();
+            ReceivedPingPayload receivedPingPayload;
+            if (signee != null) {
+                LOGGER.info(String.format("Received signed ping from neighbor [%s:%s]",
+                        signee.getAddress(),
+                        signee.getReportPort()));
+
+                receivedPingPayload = new ReceivedPingPayload(reportIxi.getProperties().getUuid(), pingPayload, true);
+            } else {
+                receivedPingPayload = new ReceivedPingPayload(reportIxi.getProperties().getUuid(), pingPayload, false);
+            }
+            reportIxi.getApi().getSender().send(receivedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
+        }
     }
 
     /**

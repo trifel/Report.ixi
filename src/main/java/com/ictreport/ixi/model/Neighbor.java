@@ -9,6 +9,7 @@ public class Neighbor {
     private int reportPort = -1;
     private String uuid = null;
     private PublicKey publicKey = null;
+    private String reportIxiVersion = null;
 
     public Neighbor(InetAddress address, int reportPort) {
         this.address = address;
@@ -71,4 +72,11 @@ public class Neighbor {
         this.address = address;
     }
 
+    public String getReportIxiVersion() {
+        return reportIxiVersion;
+    }
+
+    public void setReportIxiVersion(String reportIxiVersion) {
+        this.reportIxiVersion = reportIxiVersion;
+    }
 }

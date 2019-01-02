@@ -1,8 +1,10 @@
 package com.ictreport.ixi;
 
 import com.ictreport.ixi.api.Api;
+import com.ictreport.ixi.exchange.*;
 import com.ictreport.ixi.model.Neighbor;
-
+import com.ictreport.ixi.utils.Constants;
+import com.ictreport.ixi.utils.Cryptography;
 import org.iota.ict.ixi.IxiModule;
 import org.iota.ict.network.event.GossipFilter;
 import org.iota.ict.network.event.GossipReceiveEvent;
@@ -12,21 +14,24 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.ictreport.ixi.utils.Properties;
 
 public class ReportIxi extends IxiModule {
-    public static final String VERSION = "0.1";
-
     public final static Logger LOGGER = LogManager.getLogger(ReportIxi.class);
 
     private Properties properties;
     private final List<Neighbor> neighbors = new LinkedList<>();
     private static Api api = null;
+    private KeyPair keyPair = null;
 
     public static void main(String[] args) {
+
+        LOGGER.info(String.format("Report.ixi %s started.", Constants.VERSION));
 
         final String propertiesFilePath = (args.length == 0 ? "report.ixi.cfg" : args[0]);
         final Properties properties = new Properties(propertiesFilePath);
@@ -47,12 +52,15 @@ public class ReportIxi extends IxiModule {
 
         this.properties = properties;
 
-        InetSocketAddress neighborASocketAddress = new InetSocketAddress(properties.getNeighborAHost(), properties.getNeighborAPort());
-        InetSocketAddress neighborBSocketAddress = new InetSocketAddress(properties.getNeighborBHost(), properties.getNeighborBPort());
-        InetSocketAddress neighborCSocketAddress = new InetSocketAddress(properties.getNeighborCHost(), properties.getNeighborCPort());
-        neighbors.add(new Neighbor(neighborASocketAddress.getAddress(), properties.getNeighborAPort()));
-        neighbors.add(new Neighbor(neighborBSocketAddress.getAddress(), properties.getNeighborBPort()));
-        neighbors.add(new Neighbor(neighborCSocketAddress.getAddress(), properties.getNeighborCPort()));
+        try {
+            keyPair = Cryptography.generateKeyPair(1024);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
+        for (InetSocketAddress neighborAddress : properties.getNeighborAddresses()) {
+            neighbors.add(new Neighbor(neighborAddress.getAddress(), neighborAddress.getPort()));
+        }
               
         GossipFilter filter = new GossipFilter();
         filter.watchTag("REPORT9IXI99999999999999999");
@@ -79,19 +87,24 @@ public class ReportIxi extends IxiModule {
         return this.neighbors;
     }
 
+    public KeyPair getKeyPair() {
+        return keyPair;
+    }
+
+    public Api getApi() {
+        return api;
+    }
+
     @Override
     public void onTransactionReceived(GossipReceiveEvent event) {
-        LOGGER.info(String.format("message received '%s'",
-                event.getTransaction().tag ));
         if (api != null) {
-            api.getSender().reportTransactionReceived(event.getTransaction().decodedSignatureFragments);
+            Payload payload = Payload.deserialize(event.getTransaction().decodedSignatureFragments);
+            api.getReceiver().processPayload(null, payload);
         }
     }
 
     @Override
     public void onTransactionSubmitted(GossipSubmitEvent event) {
-        LOGGER.info(String.format("message submitted '%s'",
-                event.getTransaction().tag ));
         
     }
 
