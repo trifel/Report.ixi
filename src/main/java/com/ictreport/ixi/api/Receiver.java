@@ -55,20 +55,30 @@ public class Receiver extends Thread {
 
     public void processPacket(final DatagramPacket packet) {
 
-        for (final Neighbor neighbor : getReportIxi().getNeighbors()) {
-            if (packet.getAddress().equals(neighbor.getAddress()) && packet.getPort() == neighbor.getReportPort()) {
-                String data = new String(packet.getData(), 0, packet.getLength());
+        Neighbor neighbor = determineNeighborWhoSent(packet);
+        if (neighbor == null)
+            return;
 
-                try {
-                    final Payload payload = Payload.deserialize(data);
-                    processPayload(neighbor, payload);
-                } catch (Exception e) {
-                    LOGGER.info(String.format("Received invalid packet from Neighbor[%s:%s]",
-                    neighbor.getAddress(),
-                    neighbor.getReportPort()));
-                }
-            }
+        String data = new String(packet.getData(), 0, packet.getLength());
+
+        try {
+            final Payload payload = Payload.deserialize(data);
+            processPayload(neighbor, payload);
+        } catch (Exception e) {
+            LOGGER.info(String.format("Received invalid packet from Neighbor[%s]",
+            neighbor.getAddress()));
         }
+    }
+
+    private Neighbor determineNeighborWhoSent(DatagramPacket packet) {
+        for (Neighbor nb : getReportIxi().getNeighbors())
+            if (nb.sentPacket(packet))
+                return nb;
+        for (Neighbor nb : getReportIxi().getNeighbors())
+            if (nb.sentPacketFromSameIP(packet))
+                return nb;
+        LOGGER.warn("Received packet from unknown address: " + packet.getAddress());
+        return null;
     }
 
     public void processPayload(final Neighbor neighbor, final Payload payload) {
@@ -86,26 +96,23 @@ public class Receiver extends Thread {
         if (neighbor.getReportIxiVersion() == null ||
                 !neighbor.getReportIxiVersion().equals(metadataPayload.getReportIxiVersion())) {
             neighbor.setReportIxiVersion(metadataPayload.getReportIxiVersion());
-            LOGGER.info(String.format("Neighbor[%s:%s] operates Report.ixi version: %s",
+            LOGGER.info(String.format("Neighbor[%s] operates Report.ixi version: %s",
                     neighbor.getAddress(),
-                    neighbor.getReportPort(),
                     neighbor.getReportIxiVersion()));
         }
 
         if (neighbor.getUuid() == null ||
                 !neighbor.getUuid().equals(metadataPayload.getUuid())) {
             neighbor.setUuid(metadataPayload.getUuid());
-            LOGGER.info(String.format("Received new uuid from neighbor[%s:%s]",
-                    neighbor.getAddress(),
-                    neighbor.getReportPort()));
+            LOGGER.info(String.format("Received new uuid from neighbor[%s]",
+                    neighbor.getAddress()));
         }
 
         if (neighbor.getPublicKey() == null ||
                 !neighbor.getPublicKey().equals(metadataPayload.getPublicKey())) {
             neighbor.setPublicKey(metadataPayload.getPublicKey());
-            LOGGER.info(String.format("Received new publicKey from neighbor[%s:%s]",
-                    neighbor.getAddress(),
-                    neighbor.getReportPort()));
+            LOGGER.info(String.format("Received new publicKey from neighbor[%s]",
+                    neighbor.getAddress()));
         }
     }
 
@@ -125,9 +132,8 @@ public class Receiver extends Thread {
             PingPayload pingPayload = (PingPayload) signedPayload.getPayload();
             ReceivedPingPayload receivedPingPayload;
             if (signee != null) {
-                LOGGER.info(String.format("Received signed ping from neighbor [%s:%s]",
-                        signee.getAddress(),
-                        signee.getReportPort()));
+                LOGGER.info(String.format("Received signed ping from neighbor [%s]",
+                        signee.getAddress()));
 
                 receivedPingPayload = new ReceivedPingPayload(reportIxi.getProperties().getUuid(), pingPayload, true);
             } else {

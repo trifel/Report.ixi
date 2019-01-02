@@ -23,12 +23,6 @@ public class Properties extends java.util.Properties {
     private final static String HOST = "host";
     private final static String REPORT_PORT = "reportPort";
     private final static String NEIGHBORS = "neighbors";
-    private final static String NEIGHBOR_A_HOST = "neighborAHost";
-    private final static String NEIGHBOR_A_PORT = "neighborAPort";
-    private final static String NEIGHBOR_B_HOST = "neighborBHost";
-    private final static String NEIGHBOR_B_PORT = "neighborBPort";
-    private final static String NEIGHBOR_C_HOST = "neighborCHost";
-    private final static String NEIGHBOR_C_PORT = "neighborCPort";
 
     // Property defaults
     private final static String DEFAULT_MODULE_NAME = "Report.ixi";
@@ -38,12 +32,6 @@ public class Properties extends java.util.Properties {
     private final static String DEFAULT_HOST = "0.0.0.0";
     private final static int    DEFAULT_REPORT_PORT = 1338;
     private final static String DEFAULT_NEIGHBORS = "";
-    private final static String DEFAULT_NEIGHBOR_A_HOST = "";
-    private final static int    DEFAULT_NEIGHBOR_A_PORT = 1338;
-    private final static String DEFAULT_NEIGHBOR_B_HOST = "";
-    private final static int    DEFAULT_NEIGHBOR_B_PORT = 1338;
-    private final static String DEFAULT_NEIGHBOR_C_HOST = "";
-    private final static int    DEFAULT_NEIGHBOR_C_PORT = 1338;
 
     public Properties() {
 
@@ -240,24 +228,6 @@ public class Properties extends java.util.Properties {
         }
         if (get(NEIGHBORS) == null) {
             put(NEIGHBORS, DEFAULT_NEIGHBORS);
-        }
-        if (get(NEIGHBOR_A_HOST) == null) {
-            put(NEIGHBOR_A_HOST, DEFAULT_NEIGHBOR_A_HOST);
-        }
-        if (get(NEIGHBOR_A_PORT) == null) {
-            put(NEIGHBOR_A_PORT, Integer.toString(DEFAULT_NEIGHBOR_A_PORT));
-        }
-        if (get(NEIGHBOR_B_HOST) == null) {
-            put(NEIGHBOR_B_HOST, DEFAULT_NEIGHBOR_B_HOST);
-        }
-        if (get(NEIGHBOR_B_PORT) == null) {
-            put(NEIGHBOR_B_PORT, Integer.toString(DEFAULT_NEIGHBOR_B_PORT));
-        }
-        if (get(NEIGHBOR_C_HOST) == null) {
-            put(NEIGHBOR_C_HOST, DEFAULT_NEIGHBOR_C_HOST);
-        }
-        if (get(NEIGHBOR_C_PORT) == null) {
-            put(NEIGHBOR_C_PORT, Integer.toString(DEFAULT_NEIGHBOR_C_PORT));
         }
     }
 

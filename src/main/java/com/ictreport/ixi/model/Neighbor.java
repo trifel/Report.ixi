@@ -1,19 +1,30 @@
 package com.ictreport.ixi.model;
 
+import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.security.PublicKey;
 
 public class Neighbor {
 
-    private InetAddress address;
-    private int reportPort = -1;
+    private InetSocketAddress address;
     private String uuid = null;
     private PublicKey publicKey = null;
     private String reportIxiVersion = null;
 
-    public Neighbor(InetAddress address, int reportPort) {
+    public Neighbor(InetSocketAddress address) {
         this.address = address;
-        this.reportPort = reportPort;
+    }
+
+
+    public boolean sentPacket(DatagramPacket packet) {
+        boolean sameIP = sentPacketFromSameIP(packet);
+        boolean samePort = address.getPort() == packet.getPort();
+        return sameIP && samePort;
+    }
+
+    public boolean sentPacketFromSameIP(DatagramPacket packet) {
+        return address.getAddress().getHostAddress().equals(packet.getAddress().getHostAddress());
     }
 
     /**
@@ -45,30 +56,16 @@ public class Neighbor {
     }
 
     /**
-     * @return the reportPort
-     */
-    public int getReportPort() {
-        return reportPort;
-    }
-
-    /**
-     * @param reportPort the reportPort to set
-     */
-    public void setReportPort(int reportPort) {
-        this.reportPort = reportPort;
-    }
-
-    /**
      * @return the address
      */
-    public InetAddress getAddress() {
+    public InetSocketAddress getAddress() {
         return address;
     }
 
     /**
      * @param address the address to set
      */
-    public void setAddress(InetAddress address) {
+    public void setAddress(InetSocketAddress address) {
         this.address = address;
     }
 

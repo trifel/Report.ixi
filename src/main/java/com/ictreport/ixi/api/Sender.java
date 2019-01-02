@@ -43,7 +43,7 @@ public class Sender {
                     MetadataPayload metadataPayload = new MetadataPayload(reportIxi.getProperties().getUuid(),
                             reportIxi.getKeyPair().getPublic(),
                             Constants.VERSION);
-                    send (metadataPayload, neighbor.getAddress(), neighbor.getReportPort());
+                    send (metadataPayload, neighbor.getAddress());
                 }
             }
         }, 0, 60000);

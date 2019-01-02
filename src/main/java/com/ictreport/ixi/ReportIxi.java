@@ -59,7 +59,7 @@ public class ReportIxi extends IxiModule {
         }
 
         for (InetSocketAddress neighborAddress : properties.getNeighborAddresses()) {
-            neighbors.add(new Neighbor(neighborAddress.getAddress(), neighborAddress.getPort()));
+            neighbors.add(new Neighbor(neighborAddress));
         }
               
         GossipFilter filter = new GossipFilter();
