@@ -1,6 +1,7 @@
 package com.ictreport.ixi.exchange;
 
 import com.ictreport.ixi.ReportIxi;
+import com.ictreport.ixi.utils.Constants;
 import com.ictreport.ixi.utils.Cryptography;
 import org.junit.Assert;
 import org.junit.Test;
@@ -17,7 +18,7 @@ public class PayloadTest {
 
             final KeyPair keyPair = Cryptography.generateKeyPair(1024);
 
-            MetadataPayload metadataPayload = new MetadataPayload("abc", keyPair.getPublic(), ReportIxi.VERSION);
+            MetadataPayload metadataPayload = new MetadataPayload("abc", keyPair.getPublic(), Constants.VERSION);
 
             final String json = Payload.serialize(metadataPayload);
 
@@ -52,7 +53,7 @@ public class PayloadTest {
 
             if (deserializedPayload instanceof PingPayload) {
                 PingPayload deserializedPingPayload = (PingPayload) deserializedPayload;
-                Assert.assertEquals(deserializedPingPayload.getUuid(), pingPayload.getUuid());
+                Assert.assertEquals(deserializedPingPayload.getMessage(), pingPayload.getMessage());
             } else {
                 Assert.fail("Deserialization of polymorphism object failed.");
             }
@@ -88,7 +89,7 @@ public class PayloadTest {
                 if (deserializedSignedPayload.getPayload() instanceof PingPayload) {
                     PingPayload deserializedPingPayload = (PingPayload) deserializedSignedPayload.getPayload();
 
-                    Assert.assertEquals(deserializedPingPayload.getUuid(), pingPayload.getUuid());
+                    Assert.assertEquals(deserializedPingPayload.getMessage(), pingPayload.getMessage());
                 }
             } else {
                 Assert.fail("Deserialization of polymorphism object failed.");

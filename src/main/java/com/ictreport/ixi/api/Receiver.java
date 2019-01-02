@@ -3,6 +3,7 @@ package com.ictreport.ixi.api;
 import com.ictreport.ixi.exchange.MetadataPayload;
 import com.ictreport.ixi.exchange.Payload;
 import com.ictreport.ixi.exchange.PingPayload;
+import com.ictreport.ixi.exchange.ReceivedPingPayload;
 import com.ictreport.ixi.exchange.SignedPayload;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -57,8 +58,14 @@ public class Receiver extends Thread {
             if (packet.getAddress().equals(neighbor.getAddress()) && packet.getPort() == neighbor.getReportPort()) {
                 String data = new String(packet.getData(), 0, packet.getLength());
 
-                final Payload payload = Payload.deserialize(data);
-                processPayload(neighbor, payload);
+                try {
+                    final Payload payload = Payload.deserialize(data);
+                    processPayload(neighbor, payload);
+                } catch (Exception e) {
+                    LOGGER.info(String.format("Received invalid packet from Neighbor[%s:%s]",
+                    neighbor.getAddress(),
+                    neighbor.getReportPort()));
+                }
             }
         }
     }
@@ -115,15 +122,17 @@ public class Receiver extends Thread {
 
         if (signedPayload.getPayload() instanceof PingPayload) {
             PingPayload pingPayload = (PingPayload) signedPayload.getPayload();
-
+            ReceivedPingPayload receivedPingPayload;
             if (signee != null) {
                 LOGGER.info(String.format("Received signed ping from neighbor [%s:%s]",
                         signee.getAddress(),
                         signee.getReportPort()));
-                // TODO: Notify RCS that we received a PingPayload from a direct neighbor.
+
+                receivedPingPayload = new ReceivedPingPayload(reportIxi.getProperties().getUuid(), pingPayload, true);
             } else {
-                // TODO: Notify RCS that we received a PingPayload from an indirect neighbor.
+                receivedPingPayload = new ReceivedPingPayload(reportIxi.getProperties().getUuid(), pingPayload, false);
             }
+            reportIxi.getApi().getSender().reportReceivedPingPayload(receivedPingPayload);
         }
     }
 

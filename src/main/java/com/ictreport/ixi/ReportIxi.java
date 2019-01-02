@@ -3,7 +3,7 @@ package com.ictreport.ixi;
 import com.ictreport.ixi.api.Api;
 import com.ictreport.ixi.exchange.*;
 import com.ictreport.ixi.model.Neighbor;
-
+import com.ictreport.ixi.utils.Constants;
 import com.ictreport.ixi.utils.Cryptography;
 import org.iota.ict.ixi.IxiModule;
 import org.iota.ict.network.event.GossipFilter;
@@ -22,8 +22,6 @@ import java.util.List;
 import com.ictreport.ixi.utils.Properties;
 
 public class ReportIxi extends IxiModule {
-    public static final String VERSION = "0.1";
-
     public final static Logger LOGGER = LogManager.getLogger(ReportIxi.class);
 
     private Properties properties;
@@ -33,7 +31,7 @@ public class ReportIxi extends IxiModule {
 
     public static void main(String[] args) {
 
-        LOGGER.info(String.format("Report.ixi %s started.", ReportIxi.VERSION));
+        LOGGER.info(String.format("Report.ixi %s started.", Constants.VERSION));
 
         final String propertiesFilePath = (args.length == 0 ? "report.ixi.cfg" : args[0]);
         final Properties properties = new Properties(propertiesFilePath);
@@ -93,14 +91,15 @@ public class ReportIxi extends IxiModule {
         return keyPair;
     }
 
+    public Api getApi() {
+        return api;
+    }
+
     @Override
     public void onTransactionReceived(GossipReceiveEvent event) {
         if (api != null) {
-
             Payload payload = Payload.deserialize(event.getTransaction().decodedSignatureFragments);
             api.getReceiver().processPayload(null, payload);
-
-            api.getSender().reportTransactionReceived(event.getTransaction().decodedSignatureFragments);
         }
     }
 

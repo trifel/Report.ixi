@@ -2,13 +2,13 @@ package com.ictreport.ixi.exchange;
 
 public class PingPayload extends Payload {
 
-    private final String uuid;
+    private final String message;
 
-    public PingPayload(final String uuid) {
-        this.uuid = uuid;
+    public PingPayload(final String message) {
+        this.message = message;
     }
 
-    public String getUuid() {
-        return uuid;
+    public String getMessage() {
+        return message;
     }
 }

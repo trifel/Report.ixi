@@ -2,8 +2,6 @@ package com.ictreport.ixi.exchange;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.typeadapters.RuntimeTypeAdapterFactory;
 
 public class Payload {
@@ -14,7 +12,10 @@ public class Payload {
                 .of(Payload.class, "type")
                 .registerSubtype(MetadataPayload.class, "MetadataPayload")
                 .registerSubtype(PingPayload.class, "PingPayload")
-                .registerSubtype(SignedPayload.class, "SignedPayload");
+                .registerSubtype(SignedPayload.class, "SignedPayload")
+                .registerSubtype(StatusPayload.class, "StatusPayload")
+                .registerSubtype(ReceivedPingPayload.class, "ReceivedPingPayload")
+                .registerSubtype(SubmittedPingPayload.class, "SubmittedPingPayload");
 
         Gson gson = new GsonBuilder().registerTypeAdapterFactory(runtimeTypeAdapterFactory).create();
 
@@ -29,7 +30,10 @@ public class Payload {
                 .of(Payload.class, "type")
                 .registerSubtype(MetadataPayload.class, "MetadataPayload")
                 .registerSubtype(PingPayload.class, "PingPayload")
-                .registerSubtype(SignedPayload.class, "SignedPayload");
+                .registerSubtype(SignedPayload.class, "SignedPayload")
+                .registerSubtype(StatusPayload.class, "StatusPayload")
+                .registerSubtype(ReceivedPingPayload.class, "ReceivedPingPayload")
+                .registerSubtype(SubmittedPingPayload.class, "SubmittedPingPayload");
 
         Gson gson = new GsonBuilder().registerTypeAdapterFactory(runtimeTypeAdapterFactory).create();
 
