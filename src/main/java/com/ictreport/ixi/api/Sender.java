@@ -37,7 +37,6 @@ public class Sender {
 
     public void start() {
         uuidSenderTimer.schedule(new TimerTask() {
-
             @Override
             public void run() {
                 for (final Neighbor neighbor : reportIxi.getNeighbors()) {

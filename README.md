@@ -51,23 +51,9 @@ reportPort=1338
 // "ixuz (ict-0)" or "testIT (ict-0)".
 name=
 
-// Insert the IP or domain of your neighbor A.
-neighborAHost=
-// Insert the additional port of the Report.ixi application of your neighbor A (report port). 
-// If your neighbor didn't install Report.ixi, ignore this setting.
-neighborAPort=1338
-
-// Insert the IP or domain of your neighbor B.
-neighborBHost=
-// Insert the additional port of the Report.ixi application of your neighbor B (report port). 
-// If your neighbor didn't install Report.ixi, ignore this setting.
-neighborBPort=1338
-
-// Insert the IP or domain of your neighbor C.
-neighborCHost=
-// Insert the additional port of the Report.ixi application of your neighbor C (report port). 
-// If your neighbor didn't install Report.ixi, ignore this setting.
-neighborCPort=1338
+// Add host and port of your neighbors Report.ixi (comma separated, no whitespace).
+// Please note that the port numbers should refer to your neighbor's Report.ixi operational port.
+neighbors=10.10.10.10:1338,20.20.20.20:1338,public.address.to.neighbor:1338
 
 // A unique identifier that has been generated upon initial start of
 // the Report.ixi application. Don't change the uuid by yourself.
