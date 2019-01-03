@@ -21,7 +21,7 @@ import com.ictreport.ixi.utils.Constants;
 import com.ictreport.ixi.utils.RandomStringGenerator;
 
 public class Sender {
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger(Sender.class);
 
     private final ReportIxi reportIxi;
     private final DatagramSocket socket;
