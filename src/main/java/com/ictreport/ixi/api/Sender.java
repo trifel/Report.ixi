@@ -85,7 +85,7 @@ public class Sender {
                 SubmittedPingPayload submittedPingPayload = new SubmittedPingPayload(reportIxi.getProperties().getUuid(), pingPayload);
                 send(submittedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
             }
-        }, 0, 60000);
+        }, 0, 30000);
     }
 
     public void send(Payload payload, InetAddress address, int port) {
