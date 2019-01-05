@@ -3,6 +3,7 @@ package com.ictreport.ixi.api;
 import com.ictreport.ixi.exchange.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.iota.ict.ixi.Start;
 import org.iota.ict.model.TransactionBuilder;
 
 import java.io.IOException;
@@ -15,7 +16,6 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.ictreport.ixi.ReportIxi;
 import com.ictreport.ixi.model.Neighbor;
 import com.ictreport.ixi.utils.Constants;
 import com.ictreport.ixi.utils.RandomStringGenerator;
@@ -23,14 +23,14 @@ import com.ictreport.ixi.utils.RandomStringGenerator;
 public class Sender {
     private static final Logger LOGGER = LogManager.getLogger(Sender.class);
 
-    private final ReportIxi reportIxi;
+    private final Start reportIxi;
     private final DatagramSocket socket;
     private Timer uuidSenderTimer = new Timer();
     private Timer reportTimer = new Timer();
     private Timer submitRandomTransactionTimer = new Timer();
     private RandomStringGenerator randomStringGenerator = new RandomStringGenerator();
 
-    public Sender(final ReportIxi reportIxi, DatagramSocket socket) {
+    public Sender(final Start reportIxi, DatagramSocket socket) {
         this.reportIxi = reportIxi;
         this.socket = socket;
     }
@@ -79,7 +79,7 @@ public class Sender {
                 TransactionBuilder t = new TransactionBuilder();
                 t.tag = "REPORT9IXI99999999999999999";
                 t.asciiMessage(json);
-                reportIxi.submit(t.build());
+                reportIxi.getIct().submit(t.build());
 
                 // Send to RCS
                 SubmittedPingPayload submittedPingPayload = new SubmittedPingPayload(reportIxi.getProperties().getUuid(), pingPayload);

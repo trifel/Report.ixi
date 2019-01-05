@@ -19,9 +19,7 @@ public class Payload {
 
         Gson gson = new GsonBuilder().registerTypeAdapterFactory(runtimeTypeAdapterFactory).create();
 
-        final String json = gson.toJson(payload, Payload.class);
-
-        return json;
+        return gson.toJson(payload, Payload.class);
     }
 
     public static Payload deserialize(final String json) {
@@ -37,8 +35,6 @@ public class Payload {
 
         Gson gson = new GsonBuilder().registerTypeAdapterFactory(runtimeTypeAdapterFactory).create();
 
-        final Payload payload = gson.fromJson(json, Payload.class);
-
-        return payload;
+        return gson.fromJson(json, Payload.class);
     }
 }

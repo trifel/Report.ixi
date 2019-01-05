@@ -1,6 +1,5 @@
 package com.ictreport.ixi.exchange;
 
-import com.ictreport.ixi.ReportIxi;
 import com.ictreport.ixi.utils.Constants;
 import com.ictreport.ixi.utils.Cryptography;
 import org.junit.Assert;

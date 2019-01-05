@@ -13,17 +13,17 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
-import com.ictreport.ixi.ReportIxi;
 import com.ictreport.ixi.model.Neighbor;
+import org.iota.ict.ixi.Start;
 
 public class Receiver extends Thread {
     public final static Logger LOGGER = LogManager.getLogger(Receiver.class);
 
-    private final ReportIxi reportIxi;
+    private final Start reportIxi;
     private final DatagramSocket socket;
     private boolean isReceiving = false;
 
-    public Receiver(ReportIxi reportIxi, DatagramSocket socket) {
+    public Receiver(Start reportIxi, DatagramSocket socket) {
         super("Receiver");
         this.reportIxi = reportIxi;
         this.socket = socket;
@@ -71,10 +71,10 @@ public class Receiver extends Thread {
     }
 
     private Neighbor determineNeighborWhoSent(DatagramPacket packet) {
-        for (Neighbor nb : getReportIxi().getNeighbors())
+        for (Neighbor nb : reportIxi.getNeighbors())
             if (nb.sentPacket(packet))
                 return nb;
-        for (Neighbor nb : getReportIxi().getNeighbors())
+        for (Neighbor nb : reportIxi.getNeighbors())
             if (nb.sentPacketFromSameIP(packet))
                 return nb;
         LOGGER.warn("Received packet from unknown address: " + packet.getAddress());
@@ -143,12 +143,5 @@ public class Receiver extends Thread {
             }
             reportIxi.getApi().getSender().send(receivedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
         }
-    }
-
-    /**
-     * @return the reportIxi
-     */
-    public ReportIxi getReportIxi() {
-        return reportIxi;
     }
 }
