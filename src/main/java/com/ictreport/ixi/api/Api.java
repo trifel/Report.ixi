@@ -2,7 +2,7 @@ package com.ictreport.ixi.api;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.iota.ict.ixi.Start;
+import com.ictreport.ixi.ReportIxi;
 
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
@@ -11,13 +11,13 @@ import java.net.SocketException;
 public class Api {
     public final static Logger LOGGER = LogManager.getLogger(Api.class);
 
-    private final Start reportIxi;
+    private final ReportIxi reportIxi;
     private final InetSocketAddress address;
     private final DatagramSocket socket;
     private final Receiver receiver;
     private final Sender sender;
 
-    public Api(Start reportIxi) {
+    public Api(ReportIxi reportIxi) {
         this.reportIxi = reportIxi;
         this.address = new InetSocketAddress(reportIxi.getProperties().getHost(), reportIxi.getProperties().getReportPort());
 

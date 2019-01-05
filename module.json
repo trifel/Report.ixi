@@ -1,0 +1,7 @@
+{
+  "name": "Report.ixi",
+  "description": "This module allows you to ...",
+  "repository": "trifel/Report.ixi",
+  "web_gui": false,
+  "supported_versions": ["0.4-SNAPSHOT", "0.4"]
+}

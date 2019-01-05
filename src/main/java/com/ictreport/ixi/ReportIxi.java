@@ -1,14 +1,12 @@
-package org.iota.ict.ixi;
+package com.ictreport.ixi;
 
 import com.ictreport.ixi.api.Api;
-import com.ictreport.ixi.exchange.Payload;
 import com.ictreport.ixi.model.Neighbor;
 import com.ictreport.ixi.utils.Constants;
 import com.ictreport.ixi.utils.Cryptography;
 import com.ictreport.ixi.utils.Properties;
-import org.iota.ict.network.event.GossipFilter;
-import org.iota.ict.network.event.GossipReceiveEvent;
-import org.iota.ict.network.event.GossipSubmitEvent;
+import org.iota.ict.ixi.IctProxy;
+import org.iota.ict.ixi.IxiModule;
 
 import java.net.InetSocketAddress;
 import java.security.KeyPair;
@@ -19,42 +17,28 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class Start extends IxiModule {
+public class ReportIxi extends IxiModule {
 
-    public final static Logger LOGGER = LogManager.getLogger(Start.class);
+    public final static Logger LOGGER = LogManager.getLogger(ReportIxi.class);
 
-    static final String NAME = "Report.ixi";
     private Properties properties;
     private final List<Neighbor> neighbors = new LinkedList<>();
     private static Api api = null;
     private KeyPair keyPair = null;
 
-    public Start(IctProxy ict) {
-        super(ict);
+    public ReportIxi(IctProxy proxy) {
+        super(proxy);
     }
 
     @Override
-    public void onTransactionReceived(GossipReceiveEvent event) {
-        if (api != null) {
-            Payload payload = Payload.deserialize(event.getTransaction().decodedSignatureFragments);
-            api.getReceiver().processPayload(null, payload);
-        }
-    }
-
-    @Override
-    public void onTransactionSubmitted(GossipSubmitEvent event) {
-
-    }
-
-    @Override
-    public void onIctShutdown() {
+    public void terminate() {
         LOGGER.debug("Shutting down Report.ixi");
         if (api != null) api.shutDown();
+        super.terminate();
     }
 
     @Override
     public void run() {
-
         LOGGER.info(String.format("Report.ixi %s started.", Constants.VERSION));
 
         final String propertiesFilePath = "report.ixi.cfg";
@@ -71,12 +55,10 @@ public class Start extends IxiModule {
             neighbors.add(new Neighbor(neighborAddress));
         }
 
-        GossipFilter filter = new GossipFilter();
-        filter.watchTag("REPORT9IXI99999999999999999");
-        setGossipFilter(filter);
-
         api = new Api(this);
         api.init();
+
+        addGossipListener(new ReportIxiGossipListener(api));
     }
 
     public Properties getProperties() {

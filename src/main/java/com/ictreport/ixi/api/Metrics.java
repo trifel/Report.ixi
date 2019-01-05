@@ -3,14 +3,14 @@ package com.ictreport.ixi.api;
 import com.ictreport.ixi.model.Neighbor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.iota.ict.ixi.Start;
+import com.ictreport.ixi.ReportIxi;
 
 public class Metrics {
     public final static Logger LOGGER = LogManager.getLogger(Metrics.class);
     private static int nonNeighborPingCount = 0;
     private static int nonNeighborInvalidCount = 0;
 
-    public static void logMetrics(Start reportIxi) {
+    public static void logMetrics(ReportIxi reportIxi) {
 
         StringBuilder stringBuilder = new StringBuilder();
 

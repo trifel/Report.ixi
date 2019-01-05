@@ -14,16 +14,16 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
 import com.ictreport.ixi.model.Neighbor;
-import org.iota.ict.ixi.Start;
+import com.ictreport.ixi.ReportIxi;
 
 public class Receiver extends Thread {
     public final static Logger LOGGER = LogManager.getLogger(Receiver.class);
 
-    private final Start reportIxi;
+    private final ReportIxi reportIxi;
     private final DatagramSocket socket;
     private boolean isReceiving = false;
 
-    public Receiver(Start reportIxi, DatagramSocket socket) {
+    public Receiver(ReportIxi reportIxi, DatagramSocket socket) {
         super("Receiver");
         this.reportIxi = reportIxi;
         this.socket = socket;
