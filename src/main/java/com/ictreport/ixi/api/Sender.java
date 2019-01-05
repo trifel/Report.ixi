@@ -96,7 +96,7 @@ public class Sender {
         send(payload, new InetSocketAddress(host, port));
     }
 
-    public void send(Payload payload, InetSocketAddress address) {
+    public synchronized void send(Payload payload, InetSocketAddress address) {
         try {
             byte[] messageByteArray = Payload.serialize(payload).getBytes();
             socket.send(new DatagramPacket(messageByteArray, messageByteArray.length, address));
