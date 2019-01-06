@@ -6,6 +6,7 @@ import com.ictreport.ixi.exchange.PingPayload;
 import com.ictreport.ixi.exchange.ReceivedPingPayload;
 import com.ictreport.ixi.exchange.SignedPayload;
 import com.ictreport.ixi.exchange.SilentPingPayload;
+import com.ictreport.ixi.exchange.UuidPayload;
 import com.ictreport.ixi.utils.Constants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,6 +14,9 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 
 import com.ictreport.ixi.ReportIxi;
 import com.ictreport.ixi.model.Neighbor;
@@ -57,8 +61,11 @@ public class Receiver extends Thread {
     public void processPacket(final DatagramPacket packet) {
 
         Neighbor neighbor = determineNeighborWhoSent(packet);
-        if (neighbor == null)
+        if (neighbor == null && !isPacketSentFromRCS(packet)) {
+            LOGGER.warn("Received packet from unknown address: " + packet.getAddress());
+            Metrics.setNonNeighborInvalidCount(Metrics.getNonNeighborInvalidCount()+1);
             return;
+        }            
 
         String data = new String(packet.getData(), 0, packet.getLength());
 
@@ -66,9 +73,24 @@ public class Receiver extends Thread {
             final Payload payload = Payload.deserialize(data);
             processPayload(neighbor, payload);
         } catch (Exception e) {
-            LOGGER.info(String.format("Received invalid packet from Neighbor[%s]",
-            neighbor.getAddress()));
+            if (neighbor != null) {
+                LOGGER.info(String.format("Received invalid packet from Neighbor[%s]",
+                neighbor.getAddress()));
+            } else {
+                LOGGER.info(String.format("Received invalid packet from RCS"));
+            }
         }
+    }
+
+    private boolean isPacketSentFromRCS(DatagramPacket packet) {
+        try {
+            boolean sameIP = InetAddress.getByName(Constants.RCS_HOST).getHostAddress()
+                    .equals(packet.getAddress().getHostAddress());
+            boolean samePort = Constants.RCS_PORT == packet.getPort();
+            return sameIP && samePort;
+        } catch (UnknownHostException e) {}
+        
+        return false;
     }
 
     private Neighbor determineNeighborWhoSent(DatagramPacket packet) {
@@ -78,8 +100,6 @@ public class Receiver extends Thread {
         for (Neighbor nb : getReportIxi().getNeighbors())
             if (nb.sentPacketFromSameIP(packet))
                 return nb;
-        LOGGER.warn("Received packet from unknown address: " + packet.getAddress());
-        Metrics.setNonNeighborInvalidCount(Metrics.getNonNeighborInvalidCount()+1);
         return null;
     }
 
@@ -87,10 +107,16 @@ public class Receiver extends Thread {
 
         if (payload instanceof MetadataPayload) {
             processMetadataPacket(neighbor, (MetadataPayload) payload);
-        }
-        if (payload instanceof SignedPayload) {
+        } else if (payload instanceof SignedPayload) {
             processSignedPayload((SignedPayload) payload);
+        } else if (payload instanceof UuidPayload) {
+            processUuidPayload((UuidPayload) payload);
         }
+    }
+
+    private void processUuidPayload(UuidPayload uuidPayload) {
+        reportIxi.setUuid(uuidPayload.getUuid());
+        LOGGER.info(String.format("Received uuid from RCS"));
     }
 
     public void processMetadataPacket(final Neighbor neighbor, final MetadataPayload metadataPayload) {
@@ -136,13 +162,15 @@ public class Receiver extends Thread {
             PingPayload pingPayload = (PingPayload) signedPayload.getPayload();
             ReceivedPingPayload receivedPingPayload;
             if (signee != null) {
-                receivedPingPayload = new ReceivedPingPayload(reportIxi.getProperties().getUuid(), pingPayload, true);
+                receivedPingPayload = new ReceivedPingPayload(reportIxi.getUuid(), pingPayload, true);
                 signee.setPingCount(signee.getPingCount()+1);
             } else {
-                receivedPingPayload = new ReceivedPingPayload(reportIxi.getProperties().getUuid(), pingPayload, false);
+                receivedPingPayload = new ReceivedPingPayload(reportIxi.getUuid(), pingPayload, false);
                 Metrics.setNonNeighborPingCount(Metrics.getNonNeighborPingCount()+1);
             }
-            reportIxi.getApi().getSender().send(receivedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
+            if (reportIxi.getUuid() != null) {
+                reportIxi.getApi().getSender().send(receivedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
+            }
 
         } else if (signedPayload.getPayload() instanceof SilentPingPayload) {
             if (signee != null) {

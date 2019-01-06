@@ -25,8 +25,8 @@ public class Sender {
 
     private final ReportIxi reportIxi;
     private final DatagramSocket socket;
-    private Timer uuidSenderTimer = new Timer();
-    private Timer reportTimer = new Timer();
+    private Timer sendMetadataTimer = new Timer();
+    private Timer sendStatusTimer = new Timer();
     private Timer submitPingTimer = new Timer();
     private Timer submitSilentPingTimer = new Timer();
     private RandomStringGenerator randomStringGenerator = new RandomStringGenerator();
@@ -37,11 +37,13 @@ public class Sender {
     }
 
     public void start() {
-        uuidSenderTimer.schedule(new TimerTask() {
+        sendMetadataTimer.schedule(new TimerTask() {
             @Override
             public void run() {
+                if (reportIxi.getUuid() == null) return;
+
                 for (final Neighbor neighbor : reportIxi.getNeighbors()) {
-                    MetadataPayload metadataPayload = new MetadataPayload(reportIxi.getProperties().getUuid(),
+                    MetadataPayload metadataPayload = new MetadataPayload(reportIxi.getUuid(),
                             reportIxi.getKeyPair().getPublic(),
                             Constants.VERSION);
                     send (metadataPayload, neighbor.getAddress());
@@ -49,15 +51,17 @@ public class Sender {
             }
         }, 0, 60000);
 
-        reportTimer.schedule(new TimerTask() {
+        sendStatusTimer.schedule(new TimerTask() {
             @Override
             public void run() {
+                if (reportIxi.getUuid() == null) return;
+
                 List<String> neighborUuids = new LinkedList<>();
                 for (final Neighbor neighbor : reportIxi.getNeighbors()) {
                     neighborUuids.add(neighbor.getUuid() != null ? neighbor.getUuid() : "");
                 }
                 StatusPayload statusPayload = new StatusPayload(
-                    reportIxi.getProperties().getUuid(),
+                    reportIxi.getUuid(),
                     reportIxi.getProperties().getName(),
                     Constants.VERSION,
                     neighborUuids);
@@ -70,11 +74,13 @@ public class Sender {
         submitPingTimer.schedule(new TimerTask() {
             @Override
             public void run() {
+                if (reportIxi.getUuid() == null) return;
+
                 PingPayload pingPayload = new PingPayload(randomStringGenerator.nextString());
                 submitSignedPayload(pingPayload);
 
                 // Send to RCS
-                SubmittedPingPayload submittedPingPayload = new SubmittedPingPayload(reportIxi.getProperties().getUuid(), pingPayload);
+                SubmittedPingPayload submittedPingPayload = new SubmittedPingPayload(reportIxi.getUuid(), pingPayload);
                 send(submittedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
             }
         }, 0, 60000);
@@ -82,6 +88,8 @@ public class Sender {
         submitSilentPingTimer.schedule(new TimerTask() {
             @Override
             public void run() {
+                if (reportIxi.getUuid() == null) return;
+
                 SilentPingPayload silentPingPayload = new SilentPingPayload(randomStringGenerator.nextString());
                 submitSignedPayload(silentPingPayload);
             }
@@ -101,6 +109,12 @@ public class Sender {
         reportIxi.submit(t.build());
     }
 
+    public void requestUuid() {
+        RequestUuidPayload requestUuidPayload = new RequestUuidPayload(reportIxi.getProperties().getExternalReportPort());
+        send(requestUuidPayload, Constants.RCS_HOST, Constants.RCS_PORT);
+        LOGGER.info(String.format("Request uuid from RCS"));
+	}
+
     public void send(Payload payload, InetAddress address, int port) {
         send(payload, new InetSocketAddress(address, port));
     }
@@ -119,13 +133,13 @@ public class Sender {
     }
 
     public void shutDown() {
-        if (uuidSenderTimer != null) {
-            uuidSenderTimer.cancel();
-            uuidSenderTimer.purge();
+        if (sendMetadataTimer != null) {
+            sendMetadataTimer.cancel();
+            sendMetadataTimer.purge();
         }
-        if (reportTimer != null) {
-            reportTimer.cancel();
-            reportTimer.purge();
+        if (sendStatusTimer != null) {
+            sendStatusTimer.cancel();
+            sendStatusTimer.purge();
         }
         if (submitPingTimer != null) {
             submitPingTimer.cancel();

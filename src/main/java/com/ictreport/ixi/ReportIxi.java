@@ -28,6 +28,7 @@ public class ReportIxi extends IxiModule {
     private final List<Neighbor> neighbors = new LinkedList<>();
     private static Api api = null;
     private KeyPair keyPair = null;
+    private String uuid = null;
 
     public static void main(String[] args) {
 
@@ -69,6 +70,8 @@ public class ReportIxi extends IxiModule {
         api = new Api(this);
         api.init();
 
+        api.getSender().requestUuid();
+
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
               LOGGER.debug("Running Shutdown Hook");
@@ -89,6 +92,14 @@ public class ReportIxi extends IxiModule {
 
     public KeyPair getKeyPair() {
         return keyPair;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
     public Api getApi() {
