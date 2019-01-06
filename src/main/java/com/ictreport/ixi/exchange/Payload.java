@@ -15,7 +15,9 @@ public class Payload {
                 .registerSubtype(SignedPayload.class, "SignedPayload")
                 .registerSubtype(StatusPayload.class, "StatusPayload")
                 .registerSubtype(ReceivedPingPayload.class, "ReceivedPingPayload")
-                .registerSubtype(SubmittedPingPayload.class, "SubmittedPingPayload");
+                .registerSubtype(SubmittedPingPayload.class, "SubmittedPingPayload")
+                .registerSubtype(RequestUuidPayload.class, "RequestUuidPayload")
+                .registerSubtype(UuidPayload.class, "UuidPayload");
 
         final Gson gson = new GsonBuilder().registerTypeAdapterFactory(runtimeTypeAdapterFactory).create();
 
@@ -31,7 +33,9 @@ public class Payload {
                 .registerSubtype(SignedPayload.class, "SignedPayload")
                 .registerSubtype(StatusPayload.class, "StatusPayload")
                 .registerSubtype(ReceivedPingPayload.class, "ReceivedPingPayload")
-                .registerSubtype(SubmittedPingPayload.class, "SubmittedPingPayload");
+                .registerSubtype(SubmittedPingPayload.class, "SubmittedPingPayload")
+                .registerSubtype(RequestUuidPayload.class, "RequestUuidPayload")
+                .registerSubtype(UuidPayload.class, "UuidPayload");
 
         final Gson gson = new GsonBuilder().registerTypeAdapterFactory(runtimeTypeAdapterFactory).create();
 

@@ -45,6 +45,10 @@ ictName=ict
 // This additional port is not the Ict port.
 reportPort=1338
 
+// optional: 
+// Must be defined if the external report port is different from the internal.
+externalReportPort=1338
+
 // A simple name chosen by the Ict operator for this Ict node.
 // There is no guarantee that this name is unique, multiple Ict nodes may
 // use the same name. Follow the naming convention: "<name> (ict-<number>)", e.g. 
@@ -54,10 +58,6 @@ name=
 // Add host and port of your neighbors Report.ixi (comma separated, no whitespace).
 // Please note that the port numbers should refer to your neighbor's Report.ixi operational port.
 neighbors=10.10.10.10:1338,20.20.20.20:1338,public.address.to.neighbor:1338
-
-// A unique identifier that has been generated upon initial start of
-// the Report.ixi application. Don't change the uuid by yourself.
-uuid=61c134d5-915e-457b-999e-e91fd2aa8fe3
 ```
 
 ### Port forwarding, firewall settings

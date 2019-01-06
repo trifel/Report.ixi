@@ -21,6 +21,7 @@ public class ReportIxi extends IxiModule {
     private final List<Neighbor> neighbors = new LinkedList<>();
     private final Api api;
     private final KeyPair keyPair;
+    private String uuid = null;
 
     public ReportIxi(final Ixi ixi) {
         super(ixi);
@@ -53,6 +54,8 @@ public class ReportIxi extends IxiModule {
         LOGGER.info(String.format("Report.ixi %s: Initiating API...", Constants.VERSION));
         api.init();
 
+        api.getSender().requestUuid();
+
         ixi.addGossipListener(new ReportIxiGossipListener(api));
         LOGGER.info(String.format("Report.ixi %s started!", Constants.VERSION));
     }
@@ -67,6 +70,14 @@ public class ReportIxi extends IxiModule {
 
     public KeyPair getKeyPair() {
         return keyPair;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(final String uuid) {
+        this.uuid = uuid;
     }
 
     public Api getApi() {

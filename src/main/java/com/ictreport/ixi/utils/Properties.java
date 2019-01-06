@@ -21,6 +21,7 @@ public class Properties extends java.util.Properties {
     private final static String UUID = "uuid";
     private final static String HOST = "host";
     private final static String REPORT_PORT = "reportPort";
+    private final static String EXTERNAL_REPORT_PORT = "externalReportPort";
     private final static String NEIGHBORS = "neighbors";
 
     // Property defaults
@@ -30,6 +31,7 @@ public class Properties extends java.util.Properties {
     private final static String DEFAULT_UUID = java.util.UUID.randomUUID().toString();
     private final static String DEFAULT_HOST = "0.0.0.0";
     private final static int    DEFAULT_REPORT_PORT = 1338;
+    private final static int    DEFAULT_EXTERNAL_REPORT_PORT = -1;
     private final static String DEFAULT_NEIGHBORS = "";
 
     public Properties() {
@@ -83,6 +85,20 @@ public class Properties extends java.util.Properties {
      */
     public void setReportPort(final int reportPort) {
         put(REPORT_PORT, Integer.toString(reportPort));
+    }
+
+    /**
+     * @param externalReportPort the externalReportPort to set
+     */
+    public void setExternalReportPort(final int externalReportPort) {
+        put(EXTERNAL_REPORT_PORT, Integer.toString(externalReportPort));
+    }
+
+    /**
+     * * @return the externalReportPort
+     */
+    public int getExternalReportPort() {
+        return Integer.parseInt(getProperty(EXTERNAL_REPORT_PORT, Integer.toString(DEFAULT_EXTERNAL_REPORT_PORT)).trim());
     }
 
     /**
