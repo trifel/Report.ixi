@@ -5,6 +5,7 @@ import com.ictreport.ixi.exchange.Payload;
 import com.ictreport.ixi.exchange.PingPayload;
 import com.ictreport.ixi.exchange.ReceivedPingPayload;
 import com.ictreport.ixi.exchange.SignedPayload;
+import com.ictreport.ixi.exchange.SilentPingPayload;
 import com.ictreport.ixi.utils.Constants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -142,6 +143,13 @@ public class Receiver extends Thread {
                 Metrics.setNonNeighborPingCount(Metrics.getNonNeighborPingCount()+1);
             }
             reportIxi.getApi().getSender().send(receivedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
+
+        } else if (signedPayload.getPayload() instanceof SilentPingPayload) {
+            if (signee != null) {
+                signee.setPingCount(signee.getPingCount()+1);
+            } else {
+                Metrics.setNonNeighborPingCount(Metrics.getNonNeighborPingCount()+1);
+            }
         }
     }
 

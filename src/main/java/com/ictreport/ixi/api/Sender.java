@@ -27,7 +27,8 @@ public class Sender {
     private final DatagramSocket socket;
     private Timer uuidSenderTimer = new Timer();
     private Timer reportTimer = new Timer();
-    private Timer submitRandomTransactionTimer = new Timer();
+    private Timer submitPingTimer = new Timer();
+    private Timer submitSilentPingTimer = new Timer();
     private RandomStringGenerator randomStringGenerator = new RandomStringGenerator();
 
     public Sender(final ReportIxi reportIxi, DatagramSocket socket) {
@@ -66,26 +67,38 @@ public class Sender {
             }
         }, 0, 60000);
 
-        submitRandomTransactionTimer.schedule(new TimerTask() {
+        submitPingTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                // Prepare a signed ping payload
                 PingPayload pingPayload = new PingPayload(randomStringGenerator.nextString());
-                SignedPayload signedPayload = new SignedPayload(pingPayload, reportIxi.getKeyPair().getPrivate());
-
-                String json = Payload.serialize(signedPayload);
-
-                // Broadcast to neighbors
-                TransactionBuilder t = new TransactionBuilder();
-                t.tag = "REPORT9IXI99999999999999999";
-                t.asciiMessage(json);
-                reportIxi.submit(t.build());
+                submitSignedPayload(pingPayload);
 
                 // Send to RCS
                 SubmittedPingPayload submittedPingPayload = new SubmittedPingPayload(reportIxi.getProperties().getUuid(), pingPayload);
                 send(submittedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
             }
-        }, 0, 30000);
+        }, 0, 60000);
+
+        submitSilentPingTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                SilentPingPayload silentPingPayload = new SilentPingPayload(randomStringGenerator.nextString());
+                submitSignedPayload(silentPingPayload);
+            }
+        }, 30000, 60000);
+    }
+
+    private void submitSignedPayload(Payload payload) {
+        // Prepare a signed payload
+        SignedPayload signedPayload = new SignedPayload(payload, reportIxi.getKeyPair().getPrivate());
+
+        String json = Payload.serialize(signedPayload);
+
+        // Broadcast to neighbors
+        TransactionBuilder t = new TransactionBuilder();
+        t.tag = "REPORT9IXI99999999999999999";
+        t.asciiMessage(json);
+        reportIxi.submit(t.build());
     }
 
     public void send(Payload payload, InetAddress address, int port) {
@@ -114,9 +127,13 @@ public class Sender {
             reportTimer.cancel();
             reportTimer.purge();
         }
-        if (submitRandomTransactionTimer != null) {
-            submitRandomTransactionTimer.cancel();
-            submitRandomTransactionTimer.purge();
+        if (submitPingTimer != null) {
+            submitPingTimer.cancel();
+            submitPingTimer.purge();
+        }
+        if (submitSilentPingTimer != null) {
+            submitSilentPingTimer.cancel();
+            submitSilentPingTimer.purge();
         }
     }
 
