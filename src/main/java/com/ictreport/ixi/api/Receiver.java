@@ -23,8 +23,6 @@ public class Receiver extends Thread {
     public Receiver(final ReportIxi reportIxi, final DatagramSocket socket) {
         super("Receiver");
 
-        LOGGER.info(String.format("Report.ixi %s: Receiver thread starting...", Constants.VERSION));
-
         this.reportIxi = reportIxi;
         this.socket = socket;
     }
@@ -32,8 +30,6 @@ public class Receiver extends Thread {
     @Override
     public void run() {
         isReceiving = true;
-
-        LOGGER.info(String.format("Report.ixi %s: Receiver thread started...", Constants.VERSION));
 
         while (isReceiving) {
             final byte[] buf = new byte[1024];
@@ -83,12 +79,16 @@ public class Receiver extends Thread {
             } else {
                 LOGGER.info(String.format("Received invalid packet from RCS"));
             }
+            e.printStackTrace();
         }
     }
 
     private void processUuidPayload(final UuidPayload uuidPayload) {
         reportIxi.setUuid(uuidPayload.getUuid());
         LOGGER.info(String.format("Received uuid from RCS"));
+        synchronized (reportIxi.waitingForUuid) {
+            reportIxi.waitingForUuid.notify();
+        }
     }
 
     private void processMetadataPacket(final Neighbor neighbor, final MetadataPayload metadataPayload) {
@@ -117,15 +117,15 @@ public class Receiver extends Thread {
         neighbor.incrementMetadataCount();
     }
 
-    private boolean isPacketSentFromRCS(DatagramPacket packet) {
+    private boolean isPacketSentFromRCS(final DatagramPacket packet) {
         try {
-            boolean sameIP = InetAddress.getByName(Constants.RCS_HOST).getHostAddress()
+            final boolean sameIP = InetAddress.getByName(Constants.RCS_HOST).getHostAddress()
                     .equals(packet.getAddress().getHostAddress());
-            boolean samePort = Constants.RCS_PORT == packet.getPort();
+            final boolean samePort = Constants.RCS_PORT == packet.getPort();
             return sameIP && samePort;
-        } catch (UnknownHostException e) {}
-
-        return false;
+        } catch (final UnknownHostException e) {
+            return false;
+        }
     }
 
     private void processSignedPayload(final SignedPayload signedPayload) {

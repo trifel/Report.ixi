@@ -21,7 +21,8 @@ public class ReportIxi extends IxiModule {
     private final List<Neighbor> neighbors = new LinkedList<>();
     private final Api api;
     private final KeyPair keyPair;
-    private String uuid = null;
+    public final Object waitingForUuid = new Object();
+    private String uuid = "";
 
     public ReportIxi(final Ixi ixi) {
         super(ixi);
@@ -35,15 +36,15 @@ public class ReportIxi extends IxiModule {
 
     @Override
     public void terminate() {
-        LOGGER.info(String.format("Report.ixi %s: Terminating...", Constants.VERSION));
+        LOGGER.info("Terminating Report.ixi...");
         if (api != null) api.shutDown();
         super.terminate();
-        LOGGER.info(String.format("Report.ixi %s: Terminated...", Constants.VERSION));
+        LOGGER.info("Report.ixi terminated.");
     }
 
     @Override
     public void run() {
-        LOGGER.info(String.format("Report.ixi %s: Assigning neighbor addresses...", Constants.VERSION));
+        LOGGER.info("Assigning neighbor addresses...");
         for (final InetSocketAddress neighborAddress : properties.getNeighborAddresses()) {
             neighbors.add(new Neighbor(neighborAddress));
             if (neighbors.size() > 3) {
@@ -51,13 +52,22 @@ public class ReportIxi extends IxiModule {
             }
         }
 
-        LOGGER.info(String.format("Report.ixi %s: Initiating API...", Constants.VERSION));
+        LOGGER.info("Initiating API...");
         api.init();
 
-        api.getSender().requestUuid();
+        LOGGER.info("Request uuid from RCS...");
+
+        synchronized (waitingForUuid) {
+            try {
+                api.getSender().requestUuid();
+                waitingForUuid.wait();
+            } catch (InterruptedException e) {
+                LOGGER.error("Failed to receive uuid from RCS.");
+            }
+        }
 
         ixi.addGossipListener(new ReportIxiGossipListener(api));
-        LOGGER.info(String.format("Report.ixi %s started!", Constants.VERSION));
+        LOGGER.info(String.format("Report.ixi %s: Started.", Constants.VERSION));
     }
 
     public Properties getProperties() {
@@ -72,7 +82,7 @@ public class ReportIxi extends IxiModule {
         return keyPair;
     }
 
-    public String getUuid() {
+    public final String getUuid() {
         return uuid;
     }
 

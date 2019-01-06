@@ -5,7 +5,6 @@ import com.ictreport.ixi.utils.Cryptography;
 import org.junit.Assert;
 import org.junit.Test;
 import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
 
 public class MetadataPayloadTest {
 

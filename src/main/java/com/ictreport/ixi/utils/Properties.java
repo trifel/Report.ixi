@@ -18,7 +18,6 @@ public class Properties extends java.util.Properties {
     private final static String MODULE_NAME = "moduleName";
     private final static String ICT_NAME = "ictName";
     private final static String NAME = "name";
-    private final static String UUID = "uuid";
     private final static String HOST = "host";
     private final static String REPORT_PORT = "reportPort";
     private final static String EXTERNAL_REPORT_PORT = "externalReportPort";
@@ -28,7 +27,6 @@ public class Properties extends java.util.Properties {
     private final static String DEFAULT_MODULE_NAME = "Report.ixi";
     private final static String DEFAULT_ICT_NAME = "ict";
     private final static String DEFAULT_NAME = "";
-    private final static String DEFAULT_UUID = java.util.UUID.randomUUID().toString();
     private final static String DEFAULT_HOST = "0.0.0.0";
     private final static int    DEFAULT_REPORT_PORT = 1338;
     private final static int    DEFAULT_EXTERNAL_REPORT_PORT = -1;
@@ -116,20 +114,6 @@ public class Properties extends java.util.Properties {
     }
 
     /**
-     * @return the uuid
-     */
-    public String getUuid() {
-        return getProperty(UUID, DEFAULT_UUID).trim();
-    }
-
-    /**
-     * @param uuid the uuid to set
-     */
-    public void setUuid(final String uuid) {
-        put(UUID, uuid);
-    }
-
-    /**
      * @return the name
      */
     public String getName() {
@@ -201,9 +185,6 @@ public class Properties extends java.util.Properties {
     private void setRequiredProps() {
         if (get(ICT_NAME) == null) {
             put(ICT_NAME, DEFAULT_ICT_NAME);
-        }
-        if (get(UUID) == null) {
-            put(UUID, DEFAULT_UUID);
         }
         if (get(NAME) == null) {
             put(NAME, DEFAULT_NAME);

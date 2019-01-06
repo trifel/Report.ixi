@@ -35,6 +35,8 @@ public class Sender {
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
+                if (reportIxi.getUuid() == null || reportIxi.getUuid().isEmpty()) return;
+
                 for (final Neighbor neighbor : reportIxi.getNeighbors()) {
                     final MetadataPayload metadataPayload = new MetadataPayload(reportIxi.getUuid(),
                             reportIxi.getKeyPair().getPublic(),
@@ -47,7 +49,7 @@ public class Sender {
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
-                if (reportIxi.getUuid() == null) return;
+                if (reportIxi.getUuid() == null || reportIxi.getUuid().isEmpty()) return;
 
                 final List<String> neighborUuids = new LinkedList<>();
                 for (final Neighbor neighbor : reportIxi.getNeighbors()) {
@@ -67,7 +69,7 @@ public class Sender {
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
-                if (reportIxi.getUuid() == null) return;
+                if (reportIxi.getUuid() == null || reportIxi.getUuid().isEmpty()) return;
 
                 final PingPayload pingPayload = new PingPayload(randomStringGenerator.nextString());
                 submitSignedPayload(pingPayload);
@@ -82,20 +84,18 @@ public class Sender {
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
-                if (reportIxi.getUuid() == null) return;
+                if (reportIxi.getUuid() == null || reportIxi.getUuid().isEmpty()) return;
 
                 final SilentPingPayload silentPingPayload = new SilentPingPayload(randomStringGenerator.nextString());
                 submitSignedPayload(silentPingPayload);
             }
         }, 30000, 60000);
-
-        LOGGER.info(String.format("Report.ixi %s: Sender thread started...", Constants.VERSION));
     }
 
     public void requestUuid() {
-        RequestUuidPayload requestUuidPayload = new RequestUuidPayload(reportIxi.getProperties().getExternalReportPort());
+        final RequestUuidPayload requestUuidPayload =
+                new RequestUuidPayload(reportIxi.getProperties().getExternalReportPort());
         send(requestUuidPayload, Constants.RCS_HOST, Constants.RCS_PORT);
-        LOGGER.info(String.format("Request uuid from RCS"));
     }
 
     public void send(final Payload payload, final InetAddress address, final int port) {

@@ -6,7 +6,7 @@ import org.junit.Test;
 public class ReceivedPingPayloadTest {
 
     @Test
-    public void testPingPayload() {
+    public void testReceivedPingPayload() {
         final PingPayload pingPayload = new PingPayload("abc");
         final ReceivedPingPayload receivedPingPayload = new ReceivedPingPayload("abc",
                 pingPayload, true);
