@@ -2,7 +2,7 @@ package com.ictreport.ixi.api;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.ictreport.ixi.ReportIxi;
+import org.iota.ict.ixi.ReportIxi;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;

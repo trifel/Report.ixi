@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import com.ictreport.ixi.model.Neighbor;
-import com.ictreport.ixi.ReportIxi;
+import org.iota.ict.ixi.ReportIxi;
 
 public class Receiver extends Thread {
 

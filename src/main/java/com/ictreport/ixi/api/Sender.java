@@ -3,7 +3,7 @@ package com.ictreport.ixi.api;
 import com.ictreport.ixi.exchange.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.ictreport.ixi.ReportIxi;
+import org.iota.ict.ixi.ReportIxi;
 import org.iota.ict.model.TransactionBuilder;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -128,6 +128,6 @@ public class Sender {
         final TransactionBuilder t = new TransactionBuilder();
         t.tag = Constants.TAG;
         t.asciiMessage(json);
-        reportIxi.submit(t.build());
+        reportIxi.getIxi().submit(t.build());
     }
 }

@@ -1,12 +1,12 @@
-package com.ictreport.ixi;
+package org.iota.ict.ixi;
 
+import com.ictreport.ixi.ReportIxiGossipListener;
 import com.ictreport.ixi.api.Api;
 import com.ictreport.ixi.model.Neighbor;
 import com.ictreport.ixi.utils.Constants;
 import com.ictreport.ixi.utils.Cryptography;
 import com.ictreport.ixi.utils.Properties;
-import org.iota.ict.ixi.IctProxy;
-import org.iota.ict.ixi.IxiModule;
+
 import java.net.InetSocketAddress;
 import java.security.KeyPair;
 import java.util.LinkedList;
@@ -22,8 +22,8 @@ public class ReportIxi extends IxiModule {
     private final Api api;
     private final KeyPair keyPair;
 
-    public ReportIxi(final IctProxy proxy) {
-        super(proxy);
+    public ReportIxi(final Ixi ixi) {
+        super(ixi);
 
         LOGGER.info(String.format("Report.ixi %s: Starting...", Constants.VERSION));
         properties = new Properties(Constants.PROPERTIES_FILE);
@@ -53,7 +53,7 @@ public class ReportIxi extends IxiModule {
         LOGGER.info(String.format("Report.ixi %s: Initiating API...", Constants.VERSION));
         api.init();
 
-        addGossipListener(new ReportIxiGossipListener(api));
+        ixi.addGossipListener(new ReportIxiGossipListener(api));
         LOGGER.info(String.format("Report.ixi %s started!", Constants.VERSION));
     }
 
@@ -71,5 +71,9 @@ public class ReportIxi extends IxiModule {
 
     public Api getApi() {
         return api;
+    }
+
+    public Ixi getIxi() {
+        return ixi;
     }
 }
