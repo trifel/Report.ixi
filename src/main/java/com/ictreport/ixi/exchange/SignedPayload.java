@@ -2,7 +2,6 @@ package com.ictreport.ixi.exchange;
 
 import com.ictreport.ixi.utils.Cryptography;
 import org.apache.commons.codec.binary.Base64;
-
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
@@ -19,7 +18,6 @@ public class SignedPayload extends Payload {
     }
 
     public boolean verify(final PublicKey publicKey) {
-
         final String serializedPayload = Payload.serialize(payload);
         return Cryptography.verify(serializedPayload.getBytes(), Base64.decodeBase64(signature), publicKey);
     }

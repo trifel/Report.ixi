@@ -7,6 +7,14 @@ import java.util.Random;
 
 public class RandomStringGenerator {
 
+    private static final String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static final String lower = upper.toLowerCase(Locale.ROOT);
+    private static final String digits = "0123456789";
+    private static final String alphanum = upper + lower + digits;
+    private final Random random;
+    private final char[] symbols;
+    private final char[] buf;
+
     /**
      * Generate a random string.
      */
@@ -16,21 +24,7 @@ public class RandomStringGenerator {
         return new String(buf);
     }
 
-    public static final String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    public static final String lower = upper.toLowerCase(Locale.ROOT);
-
-    public static final String digits = "0123456789";
-
-    public static final String alphanum = upper + lower + digits;
-
-    private final Random random;
-
-    private final char[] symbols;
-
-    private final char[] buf;
-
-    public RandomStringGenerator(int length, Random random, String symbols) {
+    public RandomStringGenerator(final int length, final Random random, final String symbols) {
         if (length < 1) throw new IllegalArgumentException();
         if (symbols.length() < 2) throw new IllegalArgumentException();
         this.random = Objects.requireNonNull(random);
@@ -41,14 +35,14 @@ public class RandomStringGenerator {
     /**
      * Create an alphanumeric string generator.
      */
-    public RandomStringGenerator(int length, Random random) {
+    public RandomStringGenerator(final int length, final Random random) {
         this(length, random, alphanum);
     }
 
     /**
      * Create an alphanumeric strings from a secure generator.
      */
-    public RandomStringGenerator(int length) {
+    public RandomStringGenerator(final int length) {
         this(length, new SecureRandom());
     }
 

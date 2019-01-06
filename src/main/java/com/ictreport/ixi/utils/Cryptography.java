@@ -3,7 +3,6 @@ package com.ictreport.ixi.utils;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -23,27 +22,34 @@ public class Cryptography {
      * @param length
      * @return a keypair
      */
-    public static KeyPair generateKeyPair(int length)
-            throws NoSuchAlgorithmException {
-
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(length);
-        return keyGen.generateKeyPair();
+    public static KeyPair generateKeyPair(final int length) {
+        final KeyPairGenerator keyGen;
+        try {
+            keyGen = KeyPairGenerator.getInstance("RSA");
+            keyGen.initialize(length);
+            return keyGen.generateKeyPair();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to generate key pair!", e);
+        }
     }
 
     /**
      * Encrypts a text
-     * @param text
+     * @param data
      * @param key
      * @return an encrypted text
      */
-    public static String encryptText(String text, Key key)
-            throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException,
-            BadPaddingException, IllegalBlockSizeException {
-
-        Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.ENCRYPT_MODE, key);
-        return Base64.encodeBase64String(cipher.doFinal(text.getBytes(StandardCharsets.UTF_8)));
+    public static String encryptText(final String data, final Key key) {
+        try {
+            final Cipher cipher = Cipher.getInstance("RSA");
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+            return Base64.encodeBase64String(cipher.doFinal(data.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException | InvalidKeyException | IllegalBlockSizeException |
+                BadPaddingException | NoSuchPaddingException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to encrypt data", e);
+        }
     }
 
     /**
@@ -52,66 +58,61 @@ public class Cryptography {
      * @param key
      * @return a decrypted text
      */
-    public static String decryptText(String text, Key key)
-            throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException,
-            NoSuchPaddingException, NoSuchAlgorithmException {
-
-        Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.DECRYPT_MODE, key);
-        return new String(cipher.doFinal(Base64.decodeBase64(text)), StandardCharsets.UTF_8);
+    public static String decryptText(final String text, final Key key) {
+        try {
+            final Cipher cipher = Cipher.getInstance("RSA");
+            cipher.init(Cipher.DECRYPT_MODE, key);
+            return new String(cipher.doFinal(Base64.decodeBase64(text)), StandardCharsets.UTF_8);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException |
+                BadPaddingException | InvalidKeyException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to decrypt data", e);
+        }
     }
 
-    public static PrivateKey getPrivateKeyFromBytes(final byte[] bytes) throws InvalidKeySpecException {
-
+    public static PrivateKey getPrivateKeyFromBytes(final byte[] bytes) {
         try {
-            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(bytes);
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            final PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(bytes);
+            final KeyFactory keyFactory = KeyFactory.getInstance("RSA");
             return keyFactory.generatePrivate(keySpec);
-        } catch (NoSuchAlgorithmException e) {
+        } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
             e.printStackTrace();
+            throw new RuntimeException("Failed to get private key from bytes", e);
         }
-
-        return null;
     }
 
-    public static PublicKey getPublicKeyFromBytes(final byte[] bytes) throws InvalidKeySpecException {
-
+    public static PublicKey getPublicKeyFromBytes(final byte[] bytes) {
         try {
-            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(bytes);
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            final X509EncodedKeySpec keySpec = new X509EncodedKeySpec(bytes);
+            final KeyFactory keyFactory = KeyFactory.getInstance("RSA");
             return keyFactory.generatePublic(keySpec);
-        } catch (NoSuchAlgorithmException e) {
+        } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
             e.printStackTrace();
+            throw new RuntimeException("Failed to get public key from bytes", e);
         }
-
-        return null;
     }
 
-    public static byte[] sign(byte[] bytes, PrivateKey key) {
-
+    public static byte[] sign(final byte[] bytes, final PrivateKey key) {
         try {
-            Signature sig = Signature.getInstance("SHA1WithRSA");
+            final Signature sig = Signature.getInstance("SHA1WithRSA");
             sig.initSign(key);
             sig.update(bytes);
             return sig.sign();
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+        } catch (final NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();
+            throw new RuntimeException("Failed to sign bytes", e);
         }
-
-        return null;
     }
 
-    public static boolean verify(byte[] bytes, byte[] signature, PublicKey key) {
-
+    public static boolean verify(final byte[] bytes, final byte[] signature, final PublicKey key) {
         try {
-            Signature sig = Signature.getInstance("SHA1WithRSA");
+            final Signature sig = Signature.getInstance("SHA1WithRSA");
             sig.initVerify(key);
             sig.update(bytes);
             return sig.verify(signature);
-        } catch (InvalidKeyException | NoSuchAlgorithmException | SignatureException e) {
+        } catch (final InvalidKeyException | NoSuchAlgorithmException | SignatureException e) {
             e.printStackTrace();
+            return false;
         }
-
-        return false;
     }
 }

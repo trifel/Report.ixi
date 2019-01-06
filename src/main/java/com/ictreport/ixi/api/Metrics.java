@@ -6,65 +6,63 @@ import org.apache.logging.log4j.Logger;
 import com.ictreport.ixi.ReportIxi;
 
 public class Metrics {
-    public final static Logger LOGGER = LogManager.getLogger(Metrics.class);
+
+    private final static Logger LOGGER = LogManager.getLogger(Metrics.class);
     private static int nonNeighborPingCount = 0;
     private static int nonNeighborInvalidCount = 0;
 
-    public static void logMetrics(ReportIxi reportIxi) {
+    public static void finishAndLog(final ReportIxi reportIxi) {
+        final StringBuilder stringBuilder = new StringBuilder();
 
-        StringBuilder stringBuilder = new StringBuilder();
-
-        stringBuilder.append("Report.ixi metrics:\n");
-        stringBuilder.append(String.format("| %1$-8s | %2$-5s | %3$-8s | %4$-10s\n",
-                "METADATA",
-                "PINGS",
-                "INVALID",
-                "NEIGHBOR"));
-
-        stringBuilder.append(String.format("| %1$-8s | %2$-5s | %3$-8s | %4$-10s\n",
-                "COUNT",
-                "COUNT",
-                "COUNT",
-                "ADDRESS"));
+        stringBuilder.append("Report.ixi metrics:\n")
+                .append(String.format("| %1$-8s | %2$-5s | %3$-8s | %4$-10s\n",
+                        "METADATA",
+                        "PINGS",
+                        "INVALID",
+                        "NEIGHBOR"))
+                .append(String.format("| %1$-8s | %2$-5s | %3$-8s | %4$-10s\n",
+                        "COUNT",
+                        "COUNT",
+                        "COUNT",
+                        "ADDRESS"));
 
         for (Neighbor neighbor : reportIxi.getNeighbors()) {
             stringBuilder.append(String.format("| %1$-8d | %2$-5d | %3$-8d | %4$-10s\n",
                     neighbor.getMetadataCount(),
                     neighbor.getPingCount(),
                     neighbor.getInvalidCount(),
-                    neighbor.getAddress()));
+                    neighbor.getSocketAddress()));
         }
 
         stringBuilder.append(String.format("| %1$-8d | %2$-5d | %3$-8d | %4$-10s\n",
                 0,
-                getNonNeighborPingCount(),
-                getNonNeighborInvalidCount(),
+                nonNeighborPingCount,
+                nonNeighborInvalidCount,
                 "Other/Non-neighbor..."));
 
-        LOGGER.info(stringBuilder.toString());
+        resetNonNeighborPingCount();
+        resetNonNeighborInvalidCount();
 
-        for (Neighbor neighbor : reportIxi.getNeighbors()) {
-            neighbor.setMetadataCount(0);
-            neighbor.setPingCount(0);
-            neighbor.setInvalidCount(0);
-            setNonNeighborPingCount(0);
+        for (final Neighbor neighbor : reportIxi.getNeighbors()) {
+            neighbor.resetMetrics();
         }
 
+        LOGGER.info(stringBuilder.toString());
     }
 
-    public static int getNonNeighborPingCount() {
-        return nonNeighborPingCount;
+    public static void incrementNonNeighborPingCount() {
+        Metrics.nonNeighborPingCount++;
     }
 
-    public static void setNonNeighborPingCount(int nonNeighborPingCount) {
-        Metrics.nonNeighborPingCount = nonNeighborPingCount;
+    public static void resetNonNeighborPingCount() {
+        Metrics.nonNeighborPingCount = 0;
     }
 
-    public static int getNonNeighborInvalidCount() {
-        return nonNeighborInvalidCount;
+    public static void incrementNonNeighborInvalidCount() {
+        Metrics.nonNeighborInvalidCount++;
     }
 
-    public static void setNonNeighborInvalidCount(int nonNeighborInvalidCount) {
-        Metrics.nonNeighborInvalidCount = nonNeighborInvalidCount;
+    public static void resetNonNeighborInvalidCount() {
+        Metrics.nonNeighborInvalidCount = 0;
     }
 }

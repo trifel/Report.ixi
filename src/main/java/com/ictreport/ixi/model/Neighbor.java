@@ -1,13 +1,12 @@
 package com.ictreport.ixi.model;
 
 import java.net.DatagramPacket;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.security.PublicKey;
 
 public class Neighbor {
 
-    private InetSocketAddress address;
+    private InetSocketAddress socketAddress;
     private String uuid = null;
     private PublicKey publicKey = null;
     private String reportIxiVersion = null;
@@ -15,19 +14,18 @@ public class Neighbor {
     private int metadataCount = 0;
     private int invalidCount = 0;
 
-    public Neighbor(InetSocketAddress address) {
-        this.address = address;
+    public Neighbor(final InetSocketAddress socketAddress) {
+        this.socketAddress = socketAddress;
     }
 
-
-    public boolean sentPacket(DatagramPacket packet) {
+    public boolean sentPacket(final DatagramPacket packet) {
         boolean sameIP = sentPacketFromSameIP(packet);
-        boolean samePort = address.getPort() == packet.getPort();
+        boolean samePort = socketAddress.getPort() == packet.getPort();
         return sameIP && samePort;
     }
 
-    public boolean sentPacketFromSameIP(DatagramPacket packet) {
-        return address.getAddress().getHostAddress().equals(packet.getAddress().getHostAddress());
+    public boolean sentPacketFromSameIP(final DatagramPacket packet) {
+        return socketAddress.getAddress().getHostAddress().equals(packet.getAddress().getHostAddress());
     }
 
     /**
@@ -40,7 +38,7 @@ public class Neighbor {
     /**
      * @param publicKey the publicKey to set
      */
-    public void setPublicKey(PublicKey publicKey) {
+    public void setPublicKey(final PublicKey publicKey) {
         this.publicKey = publicKey;
     }
 
@@ -54,53 +52,59 @@ public class Neighbor {
     /**
      * @param uuid the uuid to set
      */
-    public void setUuid(String uuid) {
+    public void setUuid(final String uuid) {
         this.uuid = uuid;
     }
 
     /**
-     * @return the address
+     * @return the socketAddress
      */
-    public InetSocketAddress getAddress() {
-        return address;
+    public InetSocketAddress getSocketAddress() {
+        return socketAddress;
     }
 
     /**
-     * @param address the address to set
+     * @param socketAddress the socketAddress to set
      */
-    public void setAddress(InetSocketAddress address) {
-        this.address = address;
+    public void setSocketAddress(final InetSocketAddress socketAddress) {
+        this.socketAddress = socketAddress;
     }
 
     public String getReportIxiVersion() {
         return reportIxiVersion;
     }
 
-    public void setReportIxiVersion(String reportIxiVersion) {
+    public void setReportIxiVersion(final String reportIxiVersion) {
         this.reportIxiVersion = reportIxiVersion;
+    }
+
+    public void incrementPingCount() {
+        pingCount++;
     }
 
     public int getPingCount() {
         return pingCount;
     }
 
-    public void setPingCount(int pingCount) {
-        this.pingCount = pingCount;
+    public void incrementMetadataCount() {
+        metadataCount++;
     }
 
     public int getMetadataCount() {
         return metadataCount;
     }
 
-    public void setMetadataCount(int metadataCount) {
-        this.metadataCount = metadataCount;
+    public void incrementInvalidCount() {
+        invalidCount++;
     }
 
     public int getInvalidCount() {
         return invalidCount;
     }
 
-    public void setInvalidCount(int invalidCount) {
-        this.invalidCount = invalidCount;
+    public void resetMetrics() {
+        metadataCount = 0;
+        pingCount = 0;
+        invalidCount = 0;
     }
 }

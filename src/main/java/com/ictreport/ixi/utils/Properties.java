@@ -2,7 +2,6 @@ package com.ictreport.ixi.utils;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -11,8 +10,8 @@ import java.net.InetSocketAddress;
 import java.util.*;
 
 public class Properties extends java.util.Properties {
-    private final static Logger LOGGER = LogManager.getLogger(Properties.class);
 
+    private final static Logger LOGGER = LogManager.getLogger(Properties.class);
     private static final String LIST_DELIMITER = ",";
 
     // Property names
@@ -34,22 +33,13 @@ public class Properties extends java.util.Properties {
     private final static String DEFAULT_NEIGHBORS = "";
 
     public Properties() {
-
-        // Add required properties
         setRequiredProps();
     }
 
     public Properties(final String propertiesFilePath) {
-
-        // Load properties from filesystem
         load(propertiesFilePath);
-
-        // Add required properties
         setRequiredProps();
-
-        // Validate the properties
         validateProps();
-
         LOGGER.info("Neighbors: " + getNeighborAddresses());
     }
 
@@ -57,7 +47,6 @@ public class Properties extends java.util.Properties {
      * @return the ixi module name
      */
     public String getModuleName() {
-
         return getProperty(MODULE_NAME, DEFAULT_MODULE_NAME).trim();
     }
 
@@ -65,7 +54,6 @@ public class Properties extends java.util.Properties {
      * @param moduleName the ixi module name to set
      */
     public void setModuleName(final String moduleName) {
-
         put(MODULE_NAME, moduleName);
     }
 
@@ -73,7 +61,6 @@ public class Properties extends java.util.Properties {
      * @return the ict name
      */
     public String getIctName() {
-
         return getProperty(ICT_NAME, DEFAULT_ICT_NAME).trim();
     }
 
@@ -81,7 +68,6 @@ public class Properties extends java.util.Properties {
      * @param ictName the ict name to set
      */
     public void setIctName(final String ictName) {
-
         put(ICT_NAME, ictName);
     }
 
@@ -89,7 +75,6 @@ public class Properties extends java.util.Properties {
      * @return the reportPort
      */
     public int getReportPort() {
-
         return Integer.parseInt(getProperty(REPORT_PORT, Integer.toString(DEFAULT_REPORT_PORT)).trim());
     }
 
@@ -97,7 +82,6 @@ public class Properties extends java.util.Properties {
      * @param reportPort the reportPort to set
      */
     public void setReportPort(final int reportPort) {
-
         put(REPORT_PORT, Integer.toString(reportPort));
     }
 
@@ -105,7 +89,6 @@ public class Properties extends java.util.Properties {
      * @return the host
      */
     public String getHost() {
-
         return getProperty(HOST, DEFAULT_HOST).trim();
     }
 
@@ -113,7 +96,6 @@ public class Properties extends java.util.Properties {
      * @param host the host to set
      */
     public void setHost(final String host) {
-
         put(HOST, host);
     }
 
@@ -121,7 +103,6 @@ public class Properties extends java.util.Properties {
      * @return the uuid
      */
     public String getUuid() {
-
         return getProperty(UUID, DEFAULT_UUID).trim();
     }
 
@@ -129,7 +110,6 @@ public class Properties extends java.util.Properties {
      * @param uuid the uuid to set
      */
     public void setUuid(final String uuid) {
-
         put(UUID, uuid);
     }
 
@@ -137,7 +117,6 @@ public class Properties extends java.util.Properties {
      * @return the name
      */
     public String getName() {
-
         return getProperty(NAME, DEFAULT_NAME).trim();
     }
 
@@ -145,25 +124,22 @@ public class Properties extends java.util.Properties {
      * @param name the name to set
      */
     public void setName(final String name) {
-
         put(NAME, name);
     }
 
     public List<InetSocketAddress> getNeighborAddresses() {
-
         return neighborsFromString(getProperty(NEIGHBORS));
     }
 
-    public void load(String propertiesFilePath) {
-
+    public void load(final String propertiesFilePath) {
         FileInputStream inputStream = null;
         try {
             inputStream = new FileInputStream(propertiesFilePath);
             load(inputStream);
-        } catch (FileNotFoundException e) {
+        } catch (final FileNotFoundException e) {
             LOGGER.info(String.format("Could not read properties file '%s', therefore a new one will be created.",
                     propertiesFilePath));
-        } catch (IOException e) {
+        } catch (final IOException e) {
             LOGGER.error(String.format("Failed to open input stream of file: '%s'",
                     propertiesFilePath));
             e.printStackTrace();
@@ -180,17 +156,16 @@ public class Properties extends java.util.Properties {
         }
     }
 
-    public void store(String propertiesFilePath) {
-
+    public void store(final String propertiesFilePath) {
         FileOutputStream outputStream = null;
         try {
             outputStream = new FileOutputStream(propertiesFilePath);
             store(outputStream, null);
-        } catch (FileNotFoundException e) {
+        } catch (final FileNotFoundException e) {
             LOGGER.error(String.format("Failed to open output stream of file: '%s'",
                     propertiesFilePath));
             e.printStackTrace();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             LOGGER.error(String.format("Failed to save properties to file: '%s'",
                     propertiesFilePath));
             e.printStackTrace();
@@ -242,8 +217,8 @@ public class Properties extends java.util.Properties {
 
     @SuppressWarnings("unchecked")
     public Enumeration keys() {
-        Enumeration keysEnum = super.keys();
-        Vector<String> keyList = new Vector<>();
+        final Enumeration keysEnum = super.keys();
+        final Vector<String> keyList = new Vector<>();
         while(keysEnum.hasMoreElements()){
             keyList.add((String)keysEnum.nextElement());
         }
@@ -251,23 +226,23 @@ public class Properties extends java.util.Properties {
         return keyList.elements();
     }
 
-    private static List<InetSocketAddress> neighborsFromString(String string) {
-        List<String> addresses = stringListFromString(string);
+    private static List<InetSocketAddress> neighborsFromString(final String string) {
+        final List<String> addresses = stringListFromString(string);
 
-        List<InetSocketAddress> neighbors = new LinkedList<>();
-        for (String address : addresses) {
+        final List<InetSocketAddress> neighbors = new LinkedList<>();
+        for (final String address : addresses) {
             try {
                 neighbors.add(inetSocketAddressFromString(address));
-            } catch (Throwable t) {
+            } catch (final Throwable t) {
                 LOGGER.error(String.format("Invalid neighbor address: '%s'", address));
             }
         }
         return neighbors;
     }
 
-    private static List<String> stringListFromString(String string) {
-        List<String> stringList = new LinkedList<>();
-        for (String element : string.split(LIST_DELIMITER)) {
+    private static List<String> stringListFromString(final String string) {
+        final List<String> stringList = new LinkedList<>();
+        for (final String element : string.split(LIST_DELIMITER)) {
             if (element.length() == 0)
                 continue;
             stringList.add(element);
@@ -275,11 +250,11 @@ public class Properties extends java.util.Properties {
         return stringList;
     }
 
-    private static InetSocketAddress inetSocketAddressFromString(String address) {
+    private static InetSocketAddress inetSocketAddressFromString(final String address) {
         int portColonIndex;
-        for (portColonIndex = address.length() - 1; address.charAt(portColonIndex) != ':'; portColonIndex--) ;
-        String hostString = address.substring(0, portColonIndex);
-        int port = Integer.parseInt(address.substring(portColonIndex + 1, address.length()));
+        for (portColonIndex = address.length() - 1; address.charAt(portColonIndex) != ':'; portColonIndex--);
+        final String hostString = address.substring(0, portColonIndex);
+        final int port = Integer.parseInt(address.substring(portColonIndex + 1, address.length()));
         return new InetSocketAddress(hostString, port);
     }
 }

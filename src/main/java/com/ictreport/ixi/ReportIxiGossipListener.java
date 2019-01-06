@@ -12,14 +12,13 @@ public class ReportIxiGossipListener extends GossipListener {
     private final GossipFilter filter = new GossipFilter();
     private final Api api;
 
-    public ReportIxiGossipListener(Api api) {
+    public ReportIxiGossipListener(final Api api) {
         this.api = api;
-
         filter.watchTag("REPORT9IXI99999999999999999");
     }
 
     @Override
-    public void onGossipEvent(GossipEvent event) {
+    public void onGossipEvent(final GossipEvent event) {
         if (!filter.passes(event.getTransaction())) return;
 
         if (event.isOwnTransaction()) {
@@ -31,7 +30,7 @@ public class ReportIxiGossipListener extends GossipListener {
 
     private void handleInbound(final Transaction transaction) {
         if (api != null) {
-            Payload payload = Payload.deserialize(transaction.decodedSignatureFragments);
+            final Payload payload = Payload.deserialize(transaction.decodedSignatureFragments);
             api.getReceiver().processPayload(null, payload);
         }
     }
