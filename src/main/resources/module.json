@@ -1,8 +1,9 @@
 {
   "name": "Report.ixi",
+  "version": "0.4",
   "main_class": "org.iota.ict.ixi.ReportIxi",
   "description": "This module allows you to ...",
   "repository": "trifel/Report.ixi",
-  "web_gui": false,
+  "gui_port": -1,
   "supported_versions": ["0.4-SNAPSHOT", "0.4"]
 }
