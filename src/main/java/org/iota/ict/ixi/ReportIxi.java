@@ -5,6 +5,7 @@ import com.ictreport.ixi.api.Api;
 import com.ictreport.ixi.model.Neighbor;
 import com.ictreport.ixi.utils.Constants;
 import com.ictreport.ixi.utils.Cryptography;
+import com.ictreport.ixi.utils.Metadata;
 import com.ictreport.ixi.utils.Properties;
 
 import java.net.InetSocketAddress;
@@ -18,11 +19,11 @@ public class ReportIxi extends IxiModule {
 
     private final static Logger LOGGER = LogManager.getLogger(ReportIxi.class);
     private final Properties properties;
+    private final Metadata metadata;
     private final List<Neighbor> neighbors = new LinkedList<>();
     private final Api api;
     private final KeyPair keyPair;
     public final Object waitingForUuid = new Object();
-    private String uuid = "";
 
     public ReportIxi(final Ixi ixi) {
         super(ixi);
@@ -30,6 +31,7 @@ public class ReportIxi extends IxiModule {
         LOGGER.info(String.format("Report.ixi %s: Starting...", Constants.VERSION));
         properties = new Properties(Constants.PROPERTIES_FILE);
         properties.store(Constants.PROPERTIES_FILE);
+        metadata = new Metadata(Constants.METADATA_FILE);
         api = new Api(this);
         keyPair = Cryptography.generateKeyPair(Constants.KEY_LENGTH);
     }
@@ -74,20 +76,16 @@ public class ReportIxi extends IxiModule {
         return this.properties;
     }
 
+    public Metadata getMetadata() {
+        return this.metadata;
+    }
+
     public List<Neighbor> getNeighbors() {
         return this.neighbors;
     }
 
     public KeyPair getKeyPair() {
         return keyPair;
-    }
-
-    public final String getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(final String uuid) {
-        this.uuid = uuid;
     }
 
     public Api getApi() {

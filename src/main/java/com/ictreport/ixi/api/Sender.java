@@ -35,10 +35,10 @@ public class Sender {
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
-                if (reportIxi.getUuid() == null || reportIxi.getUuid().isEmpty()) return;
+                if (reportIxi.getMetadata().getUuid().isEmpty()) return;
 
                 for (final Neighbor neighbor : reportIxi.getNeighbors()) {
-                    final MetadataPayload metadataPayload = new MetadataPayload(reportIxi.getUuid(),
+                    final MetadataPayload metadataPayload = new MetadataPayload(reportIxi.getMetadata().getUuid(),
                             reportIxi.getKeyPair().getPublic(),
                             Constants.VERSION);
                     send (metadataPayload, neighbor.getSocketAddress());
@@ -49,14 +49,14 @@ public class Sender {
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
-                if (reportIxi.getUuid() == null || reportIxi.getUuid().isEmpty()) return;
+                if (reportIxi.getMetadata().getUuid().isEmpty()) return;
 
                 final List<String> neighborUuids = new LinkedList<>();
                 for (final Neighbor neighbor : reportIxi.getNeighbors()) {
                     neighborUuids.add(neighbor.getUuid() != null ? neighbor.getUuid() : "");
                 }
                 final StatusPayload statusPayload = new StatusPayload(
-                    reportIxi.getUuid(),
+                    reportIxi.getMetadata().getUuid(),
                     reportIxi.getProperties().getName(),
                     Constants.VERSION,
                     neighborUuids);
@@ -69,14 +69,14 @@ public class Sender {
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
-                if (reportIxi.getUuid() == null || reportIxi.getUuid().isEmpty()) return;
+                if (reportIxi.getMetadata().getUuid().isEmpty()) return;
 
                 final PingPayload pingPayload = new PingPayload(randomStringGenerator.nextString());
                 submitSignedPayload(pingPayload);
 
                 // Send to RCS
                 final SubmittedPingPayload submittedPingPayload =
-                        new SubmittedPingPayload(reportIxi.getUuid(), pingPayload);
+                        new SubmittedPingPayload(reportIxi.getMetadata().getUuid(), pingPayload);
                 send(submittedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
             }
         }, 0, 60000);
@@ -84,7 +84,7 @@ public class Sender {
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
-                if (reportIxi.getUuid() == null || reportIxi.getUuid().isEmpty()) return;
+                if (reportIxi.getMetadata().getUuid().isEmpty()) return;
 
                 final SilentPingPayload silentPingPayload = new SilentPingPayload(randomStringGenerator.nextString());
                 submitSignedPayload(silentPingPayload);
@@ -94,7 +94,7 @@ public class Sender {
 
     public void requestUuid() {
         final RequestUuidPayload requestUuidPayload =
-                new RequestUuidPayload(reportIxi.getProperties().getExternalReportPort());
+                new RequestUuidPayload(reportIxi.getMetadata().getUuid(), reportIxi.getProperties().getExternalReportPort());
         send(requestUuidPayload, Constants.RCS_HOST, Constants.RCS_PORT);
     }
 

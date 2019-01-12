@@ -8,4 +8,5 @@ public class Constants {
     public static final String TAG = "REPORT9IXI99999999999999999";
     public static final int KEY_LENGTH = 1024;
     public static final String PROPERTIES_FILE = "report.ixi.cfg";
+    public static final String METADATA_FILE = "report.ixi.metadata";
 }

@@ -84,8 +84,13 @@ public class Receiver extends Thread {
     }
 
     private void processUuidPayload(final UuidPayload uuidPayload) {
-        reportIxi.setUuid(uuidPayload.getUuid());
-        LOGGER.info(String.format("Received uuid from RCS"));
+        if (!uuidPayload.getUuid().equals(reportIxi.getMetadata().getUuid())) {
+            reportIxi.getMetadata().setUuid(uuidPayload.getUuid());
+            reportIxi.getMetadata().store(Constants.METADATA_FILE);
+            LOGGER.info(String.format("Received new uuid from RCS"));
+        } else {
+            LOGGER.info(String.format("Current uuid was successfully validated by RCS"));
+        }
         synchronized (reportIxi.waitingForUuid) {
             reportIxi.waitingForUuid.notify();
         }
@@ -141,15 +146,15 @@ public class Receiver extends Thread {
             final PingPayload pingPayload = (PingPayload) signedPayload.getPayload();
             final ReceivedPingPayload receivedPingPayload;
             if (signee != null) {
-                receivedPingPayload = new ReceivedPingPayload(reportIxi.getUuid(),
+                receivedPingPayload = new ReceivedPingPayload(reportIxi.getMetadata().getUuid(),
                         pingPayload, true);
                 signee.incrementPingCount();
             } else {
-                receivedPingPayload = new ReceivedPingPayload(reportIxi.getUuid(),
+                receivedPingPayload = new ReceivedPingPayload(reportIxi.getMetadata().getUuid(),
                         pingPayload, false);
                 Metrics.incrementNonNeighborPingCount();
             }
-            if (reportIxi.getUuid() != null) {
+            if (reportIxi.getMetadata().getUuid() != null) {
                 reportIxi.getApi().getSender().send(receivedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
             }
         } else if (signedPayload.getPayload() instanceof SilentPingPayload) {
