@@ -1,11 +1,17 @@
 package com.ictreport.ixi.model;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.net.DatagramPacket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.security.PublicKey;
 
 public class Neighbor {
 
+    private static final Logger LOGGER = LogManager.getLogger(Neighbor.class);
     private InetSocketAddress socketAddress;
     private String uuid = null;
     private PublicKey publicKey = null;
@@ -106,5 +112,15 @@ public class Neighbor {
         metadataCount = 0;
         pingCount = 0;
         invalidCount = 0;
+    }
+
+    public void resolveHost() {
+        try {
+            if (!socketAddress.getAddress().equals(InetAddress.getByName(socketAddress.getHostName()))) {
+                socketAddress = new InetSocketAddress(socketAddress.getHostName(), socketAddress.getPort());
+            }
+        } catch (UnknownHostException e) {
+            LOGGER.warn("Failed to resolve host for: " + socketAddress.getHostString());
+        }
     }
 }

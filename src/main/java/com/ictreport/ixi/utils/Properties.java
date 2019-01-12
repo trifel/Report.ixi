@@ -15,8 +15,6 @@ public class Properties extends java.util.Properties {
     private static final String LIST_DELIMITER = ",";
 
     // Property names
-    private final static String MODULE_NAME = "moduleName";
-    private final static String ICT_NAME = "ictName";
     private final static String NAME = "name";
     private final static String HOST = "host";
     private final static String REPORT_PORT = "reportPort";
@@ -24,8 +22,6 @@ public class Properties extends java.util.Properties {
     private final static String NEIGHBORS = "neighbors";
 
     // Property defaults
-    private final static String DEFAULT_MODULE_NAME = "Report.ixi";
-    private final static String DEFAULT_ICT_NAME = "ict";
     private final static String DEFAULT_NAME = "";
     private final static String DEFAULT_HOST = "0.0.0.0";
     private final static int    DEFAULT_REPORT_PORT = 1338;
@@ -41,34 +37,6 @@ public class Properties extends java.util.Properties {
         setRequiredProps();
         validateProps();
         LOGGER.info("Neighbors: " + getNeighborAddresses());
-    }
-
-    /**
-     * @return the ixi module name
-     */
-    public String getModuleName() {
-        return getProperty(MODULE_NAME, DEFAULT_MODULE_NAME).trim();
-    }
-
-    /**
-     * @param moduleName the ixi module name to set
-     */
-    public void setModuleName(final String moduleName) {
-        put(MODULE_NAME, moduleName);
-    }
-
-    /**
-     * @return the ict name
-     */
-    public String getIctName() {
-        return getProperty(ICT_NAME, DEFAULT_ICT_NAME).trim();
-    }
-
-    /**
-     * @param ictName the ict name to set
-     */
-    public void setIctName(final String ictName) {
-        put(ICT_NAME, ictName);
     }
 
     /**
@@ -183,14 +151,8 @@ public class Properties extends java.util.Properties {
     }
 
     private void setRequiredProps() {
-        if (get(ICT_NAME) == null) {
-            put(ICT_NAME, DEFAULT_ICT_NAME);
-        }
         if (get(NAME) == null) {
             put(NAME, DEFAULT_NAME);
-        }
-        if (get(HOST) == null) {
-            put(HOST, DEFAULT_HOST);
         }
         if (get(REPORT_PORT) == null) {
             put(REPORT_PORT, Integer.toString(DEFAULT_REPORT_PORT));

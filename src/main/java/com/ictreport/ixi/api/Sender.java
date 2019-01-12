@@ -41,6 +41,8 @@ public class Sender {
                     final MetadataPayload metadataPayload = new MetadataPayload(reportIxi.getMetadata().getUuid(),
                             reportIxi.getKeyPair().getPublic(),
                             Constants.VERSION);
+
+                    neighbor.resolveHost();
                     send (metadataPayload, neighbor.getSocketAddress());
                 }
             }
