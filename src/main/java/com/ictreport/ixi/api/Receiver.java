@@ -173,8 +173,6 @@ public class Receiver extends Thread {
         for (final Neighbor neighbor : reportIxi.getNeighbors())
             if (neighbor.sentPacketFromSameIP(packet))
                 return neighbor;
-        LOGGER.warn("Received packet from unknown address: " + packet.getAddress());
-        Metrics.incrementNonNeighborInvalidCount();
         return null;
     }
 }

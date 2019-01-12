@@ -24,6 +24,11 @@ public class ReportIxi extends IxiModule {
     private final Api api;
     private final KeyPair keyPair;
     public final Object waitingForUuid = new Object();
+    public byte state = STATE_TERMINATED;
+    public final static byte STATE_TERMINATED = 0;
+    public final static byte STATE_INITIALIZING = 1;
+    public final static byte STATE_RUNNING = 2;
+    public final static byte STATE_TERMINATING = 3;
 
     public ReportIxi(final Ixi ixi) {
         super(ixi);
@@ -38,14 +43,17 @@ public class ReportIxi extends IxiModule {
 
     @Override
     public void terminate() {
+        state = STATE_TERMINATING;
         LOGGER.info("Terminating Report.ixi...");
         if (api != null) api.shutDown();
         super.terminate();
+        state = STATE_TERMINATED;
         LOGGER.info("Report.ixi terminated.");
     }
 
     @Override
     public void run() {
+        state = STATE_INITIALIZING;
         LOGGER.info("Assigning neighbor addresses...");
         for (final InetSocketAddress neighborAddress : properties.getNeighborAddresses()) {
             neighbors.add(new Neighbor(neighborAddress));
@@ -68,6 +76,7 @@ public class ReportIxi extends IxiModule {
             }
         }
 
+        state = STATE_RUNNING;
         ixi.addGossipListener(new ReportIxiGossipListener(api));
         LOGGER.info(String.format("Report.ixi %s: Started.", Constants.VERSION));
     }
@@ -94,5 +103,9 @@ public class ReportIxi extends IxiModule {
 
     public Ixi getIxi() {
         return ixi;
+    }
+
+    public boolean isRunning() {
+        return state == STATE_RUNNING;
     }
 }

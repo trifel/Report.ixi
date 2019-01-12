@@ -35,7 +35,7 @@ public class Sender {
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
-                if (reportIxi.getMetadata().getUuid().isEmpty()) return;
+                if (!reportIxi.isRunning()) return;
 
                 for (final Neighbor neighbor : reportIxi.getNeighbors()) {
                     final MetadataPayload metadataPayload = new MetadataPayload(reportIxi.getMetadata().getUuid(),
@@ -49,7 +49,7 @@ public class Sender {
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
-                if (reportIxi.getMetadata().getUuid().isEmpty()) return;
+                if (!reportIxi.isRunning()) return;
 
                 final List<String> neighborUuids = new LinkedList<>();
                 for (final Neighbor neighbor : reportIxi.getNeighbors()) {
@@ -69,7 +69,7 @@ public class Sender {
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
-                if (reportIxi.getMetadata().getUuid().isEmpty()) return;
+                if (!reportIxi.isRunning()) return;
 
                 final PingPayload pingPayload = new PingPayload(randomStringGenerator.nextString());
                 submitSignedPayload(pingPayload);
@@ -84,7 +84,7 @@ public class Sender {
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
-                if (reportIxi.getMetadata().getUuid().isEmpty()) return;
+                if (!reportIxi.isRunning()) return;
 
                 final SilentPingPayload silentPingPayload = new SilentPingPayload(randomStringGenerator.nextString());
                 submitSignedPayload(silentPingPayload);
