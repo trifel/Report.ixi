@@ -7,6 +7,7 @@ public class Constants {
     public static final int RCS_PORT = 14265;
     public static final String TAG = "REPORT9IXI99999999999999999";
     public static final int KEY_LENGTH = 1024;
-    public static final String PROPERTIES_FILE = "report.ixi.cfg";
-    public static final String METADATA_FILE = "report.ixi.metadata";
+    public static final String PROPERTIES_LOCATION = "modules/report.ixi";
+    public static final String PROPERTIES_FILE = PROPERTIES_LOCATION+"/report.ixi.cfg";
+    public static final String METADATA_FILE = PROPERTIES_LOCATION+"/report.ixi.metadata";
 }

@@ -2,10 +2,8 @@ package com.ictreport.ixi.utils;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.util.*;
 
@@ -33,10 +31,15 @@ public class Properties extends java.util.Properties {
     }
 
     public Properties(final String propertiesFilePath) {
+
+        File propertiesLocation = new File(Constants.PROPERTIES_LOCATION);
+        if (propertiesLocation.mkdirs()) {
+            LOGGER.info(String.format("Created properties folder at: %s\n", propertiesLocation.getAbsolutePath()));
+        }
+
         load(propertiesFilePath);
         setRequiredProps();
         validateProps();
-        LOGGER.info("Neighbors: " + getNeighborAddresses());
     }
 
     /**

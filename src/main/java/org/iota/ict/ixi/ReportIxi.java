@@ -8,6 +8,7 @@ import com.ictreport.ixi.utils.Cryptography;
 import com.ictreport.ixi.utils.Metadata;
 import com.ictreport.ixi.utils.Properties;
 
+import java.io.File;
 import java.net.InetSocketAddress;
 import java.security.KeyPair;
 import java.util.LinkedList;
@@ -78,7 +79,7 @@ public class ReportIxi extends IxiModule {
 
         state = STATE_RUNNING;
         ixi.addGossipListener(new ReportIxiGossipListener(api));
-        LOGGER.info(String.format("Report.ixi %s: Started.", Constants.VERSION));
+        LOGGER.info(String.format("Report.ixi %s: Started on port: %d", Constants.VERSION, getProperties().getReportPort()));
     }
 
     public Properties getProperties() {
