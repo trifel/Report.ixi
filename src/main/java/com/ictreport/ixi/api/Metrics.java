@@ -40,14 +40,14 @@ public class Metrics {
                 nonNeighborInvalidCount,
                 "Other/Non-neighbor..."));
 
+        LOGGER.info(stringBuilder.toString());
+
         resetNonNeighborPingCount();
         resetNonNeighborInvalidCount();
 
         for (final Neighbor neighbor : reportIxi.getNeighbors()) {
             neighbor.resetMetrics();
         }
-
-        LOGGER.info(stringBuilder.toString());
     }
 
     public static void incrementNonNeighborPingCount() {
