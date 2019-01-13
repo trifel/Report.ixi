@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'com.ictreport'
-version '0.4-SNAPSHOT'
+version '0.4'
 
 sourceCompatibility = 1.7
 repositories {
