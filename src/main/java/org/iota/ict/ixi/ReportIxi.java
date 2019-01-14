@@ -19,11 +19,11 @@ import org.apache.logging.log4j.Logger;
 public class ReportIxi extends IxiModule {
 
     private final static Logger LOGGER = LogManager.getLogger(ReportIxi.class);
-    private final Properties properties;
-    private final Metadata metadata;
+    private Properties properties;
+    private Metadata metadata;
     private final List<Neighbor> neighbors = new LinkedList<>();
-    private final Api api;
-    private final KeyPair keyPair;
+    private Api api;
+    private KeyPair keyPair;
     public final Object waitingForUuid = new Object();
     public byte state = STATE_TERMINATED;
     public final static byte STATE_TERMINATED = 0;
@@ -33,13 +33,6 @@ public class ReportIxi extends IxiModule {
 
     public ReportIxi(final Ixi ixi) {
         super(ixi);
-
-        LOGGER.info(String.format("Report.ixi %s: Starting...", Constants.VERSION));
-        properties = new Properties(Constants.PROPERTIES_FILE);
-        properties.store(Constants.PROPERTIES_FILE);
-        metadata = new Metadata(Constants.METADATA_FILE);
-        api = new Api(this);
-        keyPair = Cryptography.generateKeyPair(Constants.KEY_LENGTH);
     }
 
     @Override
@@ -55,6 +48,13 @@ public class ReportIxi extends IxiModule {
     @Override
     public void run() {
         state = STATE_INITIALIZING;
+
+        LOGGER.info(String.format("Report.ixi %s: Starting...", Constants.VERSION));
+        properties = new Properties(Constants.PROPERTIES_FILE);
+        properties.store(Constants.PROPERTIES_FILE);
+        metadata = new Metadata(Constants.METADATA_FILE);
+        keyPair = Cryptography.generateKeyPair(Constants.KEY_LENGTH);
+
         LOGGER.info("Assigning neighbor addresses...");
         for (final InetSocketAddress neighborAddress : properties.getNeighborAddresses()) {
             neighbors.add(new Neighbor(neighborAddress));
@@ -64,6 +64,7 @@ public class ReportIxi extends IxiModule {
         }
 
         LOGGER.info("Initiating API...");
+        api = new Api(this);
         api.init();
 
         LOGGER.info("Request uuid from RCS...");

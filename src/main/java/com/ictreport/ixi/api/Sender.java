@@ -24,8 +24,6 @@ public class Sender {
     private final List<Timer> timers = new ArrayList<>();
 
     public Sender(final ReportIxi reportIxi, final DatagramSocket socket) {
-        LOGGER.info(String.format("Report.ixi %s: Sender thread starting...", Constants.VERSION));
-
         this.reportIxi = reportIxi;
         this.socket = socket;
     }

@@ -31,6 +31,9 @@ public class Neighbor {
     }
 
     public boolean sentPacketFromSameIP(final DatagramPacket packet) {
+        if (socketAddress == null) {
+            return false;
+        }
         return socketAddress.getAddress().getHostAddress().equals(packet.getAddress().getHostAddress());
     }
 
