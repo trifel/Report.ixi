@@ -79,7 +79,6 @@ public class Receiver extends Thread {
             } else {
                 LOGGER.info(String.format("Received invalid packet from RCS"));
             }
-            e.printStackTrace();
         }
     }
 

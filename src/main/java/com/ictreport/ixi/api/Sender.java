@@ -140,6 +140,6 @@ public class Sender {
         final TransactionBuilder t = new TransactionBuilder();
         t.tag = Constants.TAG;
         t.asciiMessage(json);
-        reportIxi.getIxi().submit(t.build());
+        reportIxi.getIxi().submit(t.buildWhileUpdatingTimestamp());
     }
 }
