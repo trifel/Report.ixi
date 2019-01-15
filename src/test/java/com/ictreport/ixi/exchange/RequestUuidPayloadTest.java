@@ -7,7 +7,7 @@ public class RequestUuidPayloadTest {
 
     @Test
     public void testRequestUuidPayload() {
-        final RequestUuidPayload requestUuidPayload = new RequestUuidPayload(1234);
+        final RequestUuidPayload requestUuidPayload = new RequestUuidPayload("", -1);
         final String json = Payload.serialize(requestUuidPayload);
         final Payload deserializedPayload = Payload.deserialize(json);
 
