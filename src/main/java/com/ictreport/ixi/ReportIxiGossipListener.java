@@ -7,7 +7,7 @@ import org.iota.ict.network.event.GossipEvent;
 import org.iota.ict.network.event.GossipFilter;
 import org.iota.ict.network.event.GossipListener;
 
-public class ReportIxiGossipListener extends GossipListener {
+public class ReportIxiGossipListener implements GossipListener {
 
     private final GossipFilter filter = new GossipFilter();
     private final Api api;
@@ -17,7 +17,6 @@ public class ReportIxiGossipListener extends GossipListener {
         filter.watchTag("REPORT9IXI99999999999999999");
     }
 
-    @Override
     public void onGossipEvent(final GossipEvent event) {
         if (!filter.passes(event.getTransaction())) return;
 
@@ -30,7 +29,7 @@ public class ReportIxiGossipListener extends GossipListener {
 
     private void handleInbound(final Transaction transaction) {
         if (api != null) {
-            final Payload payload = Payload.deserialize(transaction.decodedSignatureFragments);
+            final Payload payload = Payload.deserialize(transaction.decodedSignatureFragments());
             api.getReceiver().processPayload(null, payload);
         }
     }
