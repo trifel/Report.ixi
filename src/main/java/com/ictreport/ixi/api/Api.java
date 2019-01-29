@@ -16,7 +16,7 @@ public class Api {
     private final Sender sender;
 
     public Api(final ReportIxi reportIxi) {
-        this.address = new InetSocketAddress(reportIxi.getProperties().getHost(), reportIxi.getProperties().getReportPort());
+        this.address = new InetSocketAddress(reportIxi.getReportIxiContext().getHost(), reportIxi.getReportIxiContext().getReportPort());
 
         try {
             this.socket = new DatagramSocket(this.address.getPort());

@@ -57,7 +57,7 @@ public class Sender {
                 }
                 final StatusPayload statusPayload = new StatusPayload(
                     reportIxi.getMetadata().getUuid(),
-                    reportIxi.getProperties().getName(),
+                    reportIxi.getReportIxiContext().getName(),
                     Constants.VERSION,
                     neighborUuids);
                 send(statusPayload, Constants.RCS_HOST, Constants.RCS_PORT);
@@ -94,7 +94,7 @@ public class Sender {
 
     public void requestUuid() {
         final RequestUuidPayload requestUuidPayload =
-                new RequestUuidPayload(reportIxi.getMetadata().getUuid(), reportIxi.getProperties().getExternalReportPort());
+                new RequestUuidPayload(reportIxi.getMetadata().getUuid(), reportIxi.getReportIxiContext().getExternalReportPort());
         send(requestUuidPayload, Constants.RCS_HOST, Constants.RCS_PORT);
     }
 
