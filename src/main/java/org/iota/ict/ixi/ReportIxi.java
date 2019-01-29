@@ -19,6 +19,7 @@ import org.iota.ict.ixi.context.ConfigurableIxiContext;
 import org.iota.ict.ixi.context.IxiContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import spark.Service;
 
 public class ReportIxi extends IxiModule {
 
@@ -121,8 +122,16 @@ public class ReportIxi extends IxiModule {
         protected ReportIxiContext() {
             super(new JSONObject()
                     .put(FIELD_NAME, "name (ict-1)")
-                    .put(FIELD_REPORT_PORT, "1338")
+                    .put(FIELD_REPORT_PORT, 1338)
                     .put(FIELD_NEIGHBORS, new JSONArray(neighbors)));
+        }
+
+        @Override
+        public JSONObject getConfiguration() {
+            return new JSONObject()
+                    .put(FIELD_NAME, properties.getName())
+                    .put(FIELD_REPORT_PORT, properties.getReportPort())
+                    .put(FIELD_NEIGHBORS, new JSONArray(neighbors));
         }
 
         @Override
