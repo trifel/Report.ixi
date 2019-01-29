@@ -36,6 +36,7 @@ public class ReportIxi extends IxiModule {
     public ReportIxi(final Ixi ixi) {
         super(ixi);
         context.applyConfiguration();
+        createDirectoryIfNotExists();
     }
 
     @Override
@@ -43,18 +44,20 @@ public class ReportIxi extends IxiModule {
         state = STATE_TERMINATING;
         LOGGER.info("Terminating Report.ixi...");
         if (api != null) api.shutDown();
-        super.terminate();
+        try {
+            super.terminate();
+        } catch (IllegalStateException e) {
+            // TODO: handle exception.
+            // After uninstalling Report.ixi module via Ict web GUI and then
+            // terminating the Ict process causes this exception to throw.
+        }
         state = STATE_TERMINATED;
         LOGGER.info("Report.ixi terminated.");
     }
 
     @Override
     public void install() {
-        if(!METADATA_DIRECTORY.exists()) {
-            if (!METADATA_DIRECTORY.mkdirs()) {
-                throw new RuntimeException("Failed to create metadata folder");
-            }
-        }
+        createDirectoryIfNotExists();
     }
 
     @Override
@@ -123,5 +126,13 @@ public class ReportIxi extends IxiModule {
 
     public boolean isRunning() {
         return state == STATE_RUNNING;
+    }
+
+    private void createDirectoryIfNotExists() {
+        if(!METADATA_DIRECTORY.exists()) {
+            if (!METADATA_DIRECTORY.mkdirs()) {
+                throw new RuntimeException("Failed to create metadata folder");
+            }
+        }
     }
 }
