@@ -7,7 +7,6 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.security.PublicKey;
 
 public class Neighbor {
 
@@ -15,9 +14,6 @@ public class Neighbor {
     private InetSocketAddress socketAddress;
     private String uuid = null;
     private String reportIxiVersion = null;
-    private int pingCount = 0;
-    private int metadataCount = 0;
-    private int invalidCount = 0;
 
     public Neighbor(final InetSocketAddress socketAddress) {
         this.socketAddress = socketAddress;
@@ -70,36 +66,6 @@ public class Neighbor {
 
     public void setReportIxiVersion(final String reportIxiVersion) {
         this.reportIxiVersion = reportIxiVersion;
-    }
-
-    public void incrementPingCount() {
-        pingCount++;
-    }
-
-    public int getPingCount() {
-        return pingCount;
-    }
-
-    public void incrementMetadataCount() {
-        metadataCount++;
-    }
-
-    public int getMetadataCount() {
-        return metadataCount;
-    }
-
-    public void incrementInvalidCount() {
-        invalidCount++;
-    }
-
-    public int getInvalidCount() {
-        return invalidCount;
-    }
-
-    public void resetMetrics() {
-        metadataCount = 0;
-        pingCount = 0;
-        invalidCount = 0;
     }
 
     public void resolveHost() {

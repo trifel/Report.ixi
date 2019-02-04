@@ -63,7 +63,7 @@ public class Sender {
 
                     // Ignore neighbors that not yet have been assigned a uuid
                     if (neighbor.getUuid() == null) {
-                        LOGGER.warn(String.format("Neighbor (%s) has not been assigned a uuid." +
+                        LOGGER.warn(String.format("Neighbor (%s) has not been assigned a uuid. " +
                                 "Therefore is excluded from the status payload",
                                 neighbor.getSocketAddress().toString()));
                         continue;
@@ -101,8 +101,6 @@ public class Sender {
                     neighbors);
 
                 send(statusPayload, Constants.RCS_HOST, Constants.RCS_PORT);
-
-                Metrics.finishAndLog(reportIxi);
             }
         }, 0, 60000);
 

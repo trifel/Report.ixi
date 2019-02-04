@@ -46,10 +46,10 @@ public class Receiver extends Thread {
     }
 
     public void processPayload(final Neighbor neighbor, final Payload payload) {
-        if (payload instanceof MetadataPayload) {
-            processMetadataPacket(neighbor, (MetadataPayload) payload);
-        } else if (payload instanceof PingPayload) {
+        if (payload instanceof PingPayload) {
             processPingPayload((PingPayload) payload);
+        } else if (payload instanceof MetadataPayload) {
+            processMetadataPacket(neighbor, (MetadataPayload) payload);
         } else if (payload instanceof UuidPayload) {
             processUuidPayload((UuidPayload) payload);
         }
@@ -63,7 +63,6 @@ public class Receiver extends Thread {
         Neighbor neighbor = determineNeighborWhoSent(packet);
         if (neighbor == null && !isPacketSentFromRCS(packet)) {
             LOGGER.warn("Received packet from unknown address: " + packet.getAddress());
-            Metrics.incrementNonNeighborInvalidCount();
             return;
         }
 
@@ -110,8 +109,6 @@ public class Receiver extends Thread {
             LOGGER.info(String.format("Received new uuid from neighbor[%s]",
                     neighbor.getSocketAddress()));
         }
-
-        neighbor.incrementMetadataCount();
     }
 
     private boolean isPacketSentFromRCS(final DatagramPacket packet) {
@@ -129,8 +126,6 @@ public class Receiver extends Thread {
 
         final ReceivedPingPayload receivedPingPayload =
                 new ReceivedPingPayload(reportIxi.getMetadata().getUuid(), pingPayload);
-
-        Metrics.incrementNonNeighborPingCount();
 
         if (reportIxi.getMetadata().getUuid() != null) {
             reportIxi.getApi().getSender().send(receivedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
