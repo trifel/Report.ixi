@@ -26,7 +26,6 @@ public class Metrics {
                         "COUNT",
                         "ADDRESS"));
 
-        LOGGER.info("Neighbor count: " + reportIxi.getNeighbors().size());
         for (Neighbor neighbor : reportIxi.getNeighbors()) {
             stringBuilder.append(String.format("| %1$-8d | %2$-5d | %3$-8d | %4$-10s\n",
                     neighbor.getMetadataCount(),

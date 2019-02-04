@@ -1,6 +1,7 @@
 package com.ictreport.ixi;
 
 import com.ictreport.ixi.model.Neighbor;
+import com.ictreport.ixi.utils.IctRestCaller;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
@@ -283,48 +284,16 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         }
     }
 
-    private static JSONArray getNeighborsFromIctRest() {
-        final String password = "change_me_now";
-
-        try {
-            final CloseableHttpClient httpclient = HttpClients.createDefault();
-            HttpPost httppost = new HttpPost("http://localhost:2187/getConfig");
-
-            // Request parameters and other properties.
-            List<NameValuePair> params = new ArrayList<>();
-            params.add(new BasicNameValuePair("password", password));
-            httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
-
-            //Execute and get the response.
-            final CloseableHttpResponse response = httpclient.execute(httppost);
-            HttpEntity entity = response.getEntity();
-
-            if (entity != null) {
-                try (InputStream instream = entity.getContent()) {
-
-                    StringWriter writer = new StringWriter();
-                    IOUtils.copy(instream, writer, "UTF-8");
-                    final String json = writer.toString();
-
-                    JSONObject ictConfig = new JSONObject(json);
-                    JSONArray ictNeighbors = ictConfig.getJSONArray("neighbors");
-
-                    return ictNeighbors;
-                }
-            }
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } catch (ClientProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
     private JSONArray getMatchedNeighborsWithIct() {
         List<JSONObject> newNeighbors = new LinkedList<>();
-        JSONArray ictNeighbors = getNeighborsFromIctRest();
+        JSONObject ictConfig = IctRestCaller.getConfig(getIctRestPassword());
+
+        if (ictConfig == null) {
+            // TODO: Return something else than null?
+            return null;
+        }
+
+        JSONArray ictNeighbors = ictConfig.getJSONArray("neighbors");
 
         // Keep only report.ixi neighbors that also present in the ict config
         for (int i=0; i<getNeighbors().length(); i++) {

@@ -1,6 +1,7 @@
 package com.ictreport.ixi.api;
 
 import com.ictreport.ixi.exchange.*;
+import com.ictreport.ixi.utils.IctRestCaller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.iota.ict.ixi.ReportIxi;
@@ -14,6 +15,8 @@ import java.util.*;
 import com.ictreport.ixi.model.Neighbor;
 import com.ictreport.ixi.utils.Constants;
 import com.ictreport.ixi.utils.RandomStringGenerator;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class Sender {
 
@@ -53,9 +56,42 @@ public class Sender {
             public void run() {
                 if (!reportIxi.isRunning()) return;
 
+                final JSONArray ictNeighbors = IctRestCaller.getNeighbors(reportIxi.getReportIxiContext().getIctRestPassword());
+
                 final List<NeighborPayload> neighbors = new LinkedList<>();
                 for (final Neighbor neighbor : reportIxi.getNeighbors()) {
-                    neighbors.add(new NeighborPayload(neighbor.getUuid(), 1, 2, 3, 4, 5));
+
+                    // Ignore neighbors that not yet have been assigned a uuid
+                    if (neighbor.getUuid() == null) {
+                        LOGGER.warn(String.format("Neighbor (%s) has not been assigned a uuid." +
+                                "Therefore is excluded from the status payload",
+                                neighbor.getSocketAddress().toString()));
+                        continue;
+                    }
+
+                    // Ensure that the neighbor's host is resolved
+                    neighbor.resolveHost();
+
+                    // Find the neighbor in the json array from ict-rest
+                    boolean foundNeighbor = false;
+                    for (int i=0; i<ictNeighbors.length(); i++) {
+                        JSONObject ictNeighbor = (JSONObject)ictNeighbors.get(i);
+
+                        if (ictNeighbor.getString("address").equals(neighbor.getSocketAddress().toString())) {
+                            neighbors.add(new NeighborPayload(neighbor.getUuid(),
+                                    ictNeighbor.getInt("all"),
+                                    ictNeighbor.getInt("new"),
+                                    ictNeighbor.getInt("ignored"),
+                                    ictNeighbor.getInt("invalid"),
+                                    ictNeighbor.getInt("requested")));
+                            foundNeighbor = true;
+                        }
+                    }
+
+                    if (!foundNeighbor) {
+                        LOGGER.warn(String.format("Failed to match neighbor (%s) with (getNeighbors)-array from ict-rest.",
+                                neighbor.getSocketAddress().toString()));
+                    }
                 }
 
                 final StatusPayload statusPayload = new StatusPayload(
