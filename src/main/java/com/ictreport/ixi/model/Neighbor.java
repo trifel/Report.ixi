@@ -14,7 +14,6 @@ public class Neighbor {
     private static final Logger LOGGER = LogManager.getLogger(Neighbor.class);
     private InetSocketAddress socketAddress;
     private String uuid = null;
-    private PublicKey publicKey = null;
     private String reportIxiVersion = null;
     private int pingCount = 0;
     private int metadataCount = 0;
@@ -35,20 +34,6 @@ public class Neighbor {
             return false;
         }
         return socketAddress.getAddress().getHostAddress().equals(packet.getAddress().getHostAddress());
-    }
-
-    /**
-     * @return the publicKey
-     */
-    public PublicKey getPublicKey() {
-        return publicKey;
-    }
-
-    /**
-     * @param publicKey the publicKey to set
-     */
-    public void setPublicKey(final PublicKey publicKey) {
-        this.publicKey = publicKey;
     }
 
     /**

@@ -11,18 +11,25 @@ public class StatusPayloadTest {
 
     @Test
     public void testPingPayload() {
-        final List<String> neighborUuids = new ArrayList<>(Arrays.asList("def", "ghi", "jkl"));
-        final StatusPayload statusPayload = new StatusPayload("abc", "ict (ict-1)",
-                Constants.VERSION, neighborUuids);
+        final List<NeighborPayload> neighbors = new ArrayList<>();
+        neighbors.add(new NeighborPayload("abc", 10, 20, 30, 40, 50));
+        neighbors.add(new NeighborPayload("def", 11, 21, 31, 41, 51));
+        neighbors.add(new NeighborPayload("ghi", 12, 22, 32, 42, 52));
+
+        final StatusPayload statusPayload = new StatusPayload("xyz", "ict (ict-1)",
+                Constants.VERSION, neighbors);
+
         final String json = Payload.serialize(statusPayload);
+
+        System.out.println(json);
+
         final Payload deserializedPayload = Payload.deserialize(json);
 
         if (deserializedPayload instanceof StatusPayload) {
             final StatusPayload deserializedStatusPayload = (StatusPayload) deserializedPayload;
-            Assert.assertEquals(deserializedStatusPayload.getUuid(), statusPayload.getUuid());
-            Assert.assertEquals(deserializedStatusPayload.getName(), statusPayload.getName());
-            Assert.assertEquals(deserializedStatusPayload.getReportIxiVersion(), statusPayload.getReportIxiVersion());
-            Assert.assertEquals(deserializedStatusPayload.getNeighborUuids(), statusPayload.getNeighborUuids());
+            Assert.assertEquals("xyz", deserializedStatusPayload.getUuid());
+            Assert.assertEquals("ict (ict-1)", deserializedStatusPayload.getName());
+            Assert.assertEquals(Constants.VERSION, deserializedStatusPayload.getReportIxiVersion());
         } else {
             Assert.fail("Deserialization of polymorphism object failed.");
         }

@@ -11,13 +11,12 @@ public class Payload {
                 .of(Payload.class, "type")
                 .registerSubtype(MetadataPayload.class, "MetadataPayload")
                 .registerSubtype(PingPayload.class, "PingPayload")
-                .registerSubtype(SilentPingPayload.class, "SilentPingPayload")
-                .registerSubtype(SignedPayload.class, "SignedPayload")
                 .registerSubtype(StatusPayload.class, "StatusPayload")
                 .registerSubtype(ReceivedPingPayload.class, "ReceivedPingPayload")
                 .registerSubtype(SubmittedPingPayload.class, "SubmittedPingPayload")
                 .registerSubtype(RequestUuidPayload.class, "RequestUuidPayload")
-                .registerSubtype(UuidPayload.class, "UuidPayload");
+                .registerSubtype(UuidPayload.class, "UuidPayload")
+                .registerSubtype(NeighborPayload.class, "NeighborPayload");
 
         final Gson gson = new GsonBuilder().registerTypeAdapterFactory(runtimeTypeAdapterFactory).create();
 
@@ -29,13 +28,12 @@ public class Payload {
                 .of(Payload.class, "type")
                 .registerSubtype(MetadataPayload.class, "MetadataPayload")
                 .registerSubtype(PingPayload.class, "PingPayload")
-                .registerSubtype(SilentPingPayload.class, "SilentPingPayload")
-                .registerSubtype(SignedPayload.class, "SignedPayload")
                 .registerSubtype(StatusPayload.class, "StatusPayload")
                 .registerSubtype(ReceivedPingPayload.class, "ReceivedPingPayload")
                 .registerSubtype(SubmittedPingPayload.class, "SubmittedPingPayload")
                 .registerSubtype(RequestUuidPayload.class, "RequestUuidPayload")
-                .registerSubtype(UuidPayload.class, "UuidPayload");
+                .registerSubtype(UuidPayload.class, "UuidPayload")
+                .registerSubtype(NeighborPayload.class, "NeighborPayload");
 
         final Gson gson = new GsonBuilder().registerTypeAdapterFactory(runtimeTypeAdapterFactory).create();
 

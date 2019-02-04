@@ -7,14 +7,14 @@ public class StatusPayload extends Payload {
     private final String uuid;
     private final String name;
     private final String reportIxiVersion;
-    private final List<String> neighborUuids;
+    private final List<NeighborPayload> neighbors;
 
     public StatusPayload(final String uuid, final String name,
-                         final String reportIxiVersion, final List<String> neighborUuids) {
+                         final String reportIxiVersion, final List<NeighborPayload> neighbors) {
         this.uuid = uuid;
         this.name = name;
         this.reportIxiVersion = reportIxiVersion;
-        this.neighborUuids = neighborUuids;
+        this.neighbors = neighbors;
     }
 
     public String getUuid() {
@@ -29,7 +29,7 @@ public class StatusPayload extends Payload {
         return reportIxiVersion;
     }
 
-    public List<String> getNeighborUuids() {
-        return neighborUuids;
+    public List<NeighborPayload> getNeighbors() {
+        return neighbors;
     }
 }

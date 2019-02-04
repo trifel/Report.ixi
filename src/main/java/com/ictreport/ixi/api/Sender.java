@@ -30,15 +30,16 @@ public class Sender {
 
     public void start() {
         timers.add(new Timer());
+
+        // Metadata sender
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
                 if (!reportIxi.isRunning()) return;
 
                 for (final Neighbor neighbor : reportIxi.getNeighbors()) {
-                    final MetadataPayload metadataPayload = new MetadataPayload(reportIxi.getMetadata().getUuid(),
-                            reportIxi.getKeyPair().getPublic(),
-                            Constants.VERSION);
+                    final MetadataPayload metadataPayload =
+                            new MetadataPayload(reportIxi.getMetadata().getUuid(), Constants.VERSION);
 
                     neighbor.resolveHost();
                     send (metadataPayload, neighbor.getSocketAddress());
@@ -46,33 +47,43 @@ public class Sender {
             }
         }, 0, 60000);
 
+        // Status sender
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
                 if (!reportIxi.isRunning()) return;
 
-                final List<String> neighborUuids = new LinkedList<>();
+                final List<NeighborPayload> neighbors = new LinkedList<>();
                 for (final Neighbor neighbor : reportIxi.getNeighbors()) {
-                    neighborUuids.add(neighbor.getUuid() != null ? neighbor.getUuid() : "");
+                    neighbors.add(new NeighborPayload(neighbor.getUuid(), 1, 2, 3, 4, 5));
                 }
+
                 final StatusPayload statusPayload = new StatusPayload(
                     reportIxi.getMetadata().getUuid(),
                     reportIxi.getReportIxiContext().getName(),
                     Constants.VERSION,
-                    neighborUuids);
+                    neighbors);
+
                 send(statusPayload, Constants.RCS_HOST, Constants.RCS_PORT);
 
                 Metrics.finishAndLog(reportIxi);
             }
         }, 0, 60000);
 
+        // Ping sender
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
                 if (!reportIxi.isRunning()) return;
 
                 final PingPayload pingPayload = new PingPayload(randomStringGenerator.nextString());
-                submitSignedPayload(pingPayload);
+                final String json = Payload.serialize(pingPayload);
+
+                // Broadcast to neighbors
+                final TransactionBuilder t = new TransactionBuilder();
+                t.tag = Constants.TAG;
+                t.asciiMessage(json);
+                reportIxi.getIxi().submit(t.buildWhileUpdatingTimestamp());
 
                 // Send to RCS
                 final SubmittedPingPayload submittedPingPayload =
@@ -80,16 +91,6 @@ public class Sender {
                 send(submittedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
             }
         }, 0, 60000);
-
-        addTimerTask(new TimerTask() {
-            @Override
-            public void run() {
-                if (!reportIxi.isRunning()) return;
-
-                final SilentPingPayload silentPingPayload = new SilentPingPayload(randomStringGenerator.nextString());
-                submitSignedPayload(silentPingPayload);
-            }
-        }, 30000, 60000);
     }
 
     public void requestUuid() {
@@ -129,17 +130,5 @@ public class Sender {
         final Timer timer = new Timer();
         timer.schedule(timerTask, delay, period);
         timers.add(timer);
-    }
-
-    private void submitSignedPayload(final Payload payload) {
-        // Prepare a signed payload
-        final SignedPayload signedPayload = new SignedPayload(payload, reportIxi.getKeyPair().getPrivate());
-        final String json = Payload.serialize(signedPayload);
-
-        // Broadcast to neighbors
-        final TransactionBuilder t = new TransactionBuilder();
-        t.tag = Constants.TAG;
-        t.asciiMessage(json);
-        reportIxi.getIxi().submit(t.buildWhileUpdatingTimestamp());
     }
 }

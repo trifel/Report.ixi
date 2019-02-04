@@ -48,8 +48,8 @@ public class Receiver extends Thread {
     public void processPayload(final Neighbor neighbor, final Payload payload) {
         if (payload instanceof MetadataPayload) {
             processMetadataPacket(neighbor, (MetadataPayload) payload);
-        } else if (payload instanceof SignedPayload) {
-            processSignedPayload((SignedPayload) payload);
+        } else if (payload instanceof PingPayload) {
+            processPingPayload((PingPayload) payload);
         } else if (payload instanceof UuidPayload) {
             processUuidPayload((UuidPayload) payload);
         }
@@ -111,13 +111,6 @@ public class Receiver extends Thread {
                     neighbor.getSocketAddress()));
         }
 
-        if (neighbor.getPublicKey() == null ||
-                !neighbor.getPublicKey().equals(metadataPayload.getPublicKey())) {
-            neighbor.setPublicKey(metadataPayload.getPublicKey());
-            LOGGER.info(String.format("Received new publicKey from neighbor[%s]",
-                    neighbor.getSocketAddress()));
-        }
-
         neighbor.incrementMetadataCount();
     }
 
@@ -132,36 +125,15 @@ public class Receiver extends Thread {
         }
     }
 
-    private void processSignedPayload(final SignedPayload signedPayload) {
-        Neighbor signee = null;
-        for (Neighbor neighbor : reportIxi.getNeighbors()) {
-            if (neighbor.getPublicKey() != null && signedPayload.verify(neighbor.getPublicKey())) {
-                signee = neighbor;
-                break;
-            }
-        }
+    private void processPingPayload(final PingPayload pingPayload) {
 
-        if (signedPayload.getPayload() instanceof PingPayload) {
-            final PingPayload pingPayload = (PingPayload) signedPayload.getPayload();
-            final ReceivedPingPayload receivedPingPayload;
-            if (signee != null) {
-                receivedPingPayload = new ReceivedPingPayload(reportIxi.getMetadata().getUuid(),
-                        pingPayload, true);
-                signee.incrementPingCount();
-            } else {
-                receivedPingPayload = new ReceivedPingPayload(reportIxi.getMetadata().getUuid(),
-                        pingPayload, false);
-                Metrics.incrementNonNeighborPingCount();
-            }
-            if (reportIxi.getMetadata().getUuid() != null) {
-                reportIxi.getApi().getSender().send(receivedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
-            }
-        } else if (signedPayload.getPayload() instanceof SilentPingPayload) {
-            if (signee != null) {
-                signee.incrementPingCount();
-            } else {
-                Metrics.incrementNonNeighborPingCount();
-            }
+        final ReceivedPingPayload receivedPingPayload =
+                new ReceivedPingPayload(reportIxi.getMetadata().getUuid(), pingPayload);
+
+        Metrics.incrementNonNeighborPingCount();
+
+        if (reportIxi.getMetadata().getUuid() != null) {
+            reportIxi.getApi().getSender().send(receivedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
         }
     }
 

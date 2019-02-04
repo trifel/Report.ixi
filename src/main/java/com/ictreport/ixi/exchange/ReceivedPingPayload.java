@@ -4,12 +4,10 @@ public class ReceivedPingPayload extends Payload {
 
     private final String uuid;
     private final PingPayload pingPayload;
-    private final boolean isSenderDirectNeighbor;
 
-    public ReceivedPingPayload(final String uuid, final PingPayload pingPayload, final boolean isSenderDirectNeighbor) {
+    public ReceivedPingPayload(final String uuid, final PingPayload pingPayload) {
         this.uuid = uuid;
         this.pingPayload = pingPayload;
-        this.isSenderDirectNeighbor = isSenderDirectNeighbor;
     }
 
     public String getUuid() {
@@ -18,9 +16,5 @@ public class ReceivedPingPayload extends Payload {
 
     public PingPayload getPingPayload() {
         return pingPayload;
-    }
-
-    public boolean isSenderDirectNeighbor() {
-        return isSenderDirectNeighbor;
     }
 }

@@ -2,6 +2,7 @@ package com.ictreport.ixi;
 
 import com.ictreport.ixi.api.Api;
 import com.ictreport.ixi.exchange.Payload;
+import com.ictreport.ixi.utils.Constants;
 import org.iota.ict.model.Transaction;
 import org.iota.ict.network.event.GossipEvent;
 import org.iota.ict.network.event.GossipFilter;
@@ -14,7 +15,7 @@ public class ReportIxiGossipListener implements GossipListener {
 
     public ReportIxiGossipListener(final Api api) {
         this.api = api;
-        filter.watchTag("REPORT9IXI99999999999999999");
+        filter.watchTag(Constants.TAG);
     }
 
     public void onGossipEvent(final GossipEvent event) {

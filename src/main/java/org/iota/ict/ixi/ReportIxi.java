@@ -5,10 +5,8 @@ import com.ictreport.ixi.ReportIxiGossipListener;
 import com.ictreport.ixi.api.Api;
 import com.ictreport.ixi.model.Neighbor;
 import com.ictreport.ixi.utils.Constants;
-import com.ictreport.ixi.utils.Cryptography;
 import com.ictreport.ixi.utils.Metadata;
 
-import java.security.KeyPair;
 import java.util.*;
 
 import org.apache.logging.log4j.LogManager;
@@ -21,11 +19,10 @@ public class ReportIxi extends IxiModule {
     public static final java.io.File METADATA_DIRECTORY = new java.io.File("modules/report.ixi/");
 
     private final static Logger LOGGER = LogManager.getLogger(ReportIxi.class);
-    private final ReportIxiContext context = new ReportIxiContext();
+    private final ReportIxiContext context;
     private Metadata metadata;
-    private List<Neighbor> neighbors = new LinkedList<>();
+    private final List<Neighbor> neighbors = new LinkedList<>();
     private Api api;
-    private KeyPair keyPair;
     public final Object waitingForUuid = new Object();
     private byte state = STATE_TERMINATED;
     private final static byte STATE_TERMINATED = 0;
@@ -35,7 +32,7 @@ public class ReportIxi extends IxiModule {
 
     public ReportIxi(final Ixi ixi) {
         super(ixi);
-        context.applyConfiguration();
+        this.context = new ReportIxiContext(this);
         createDirectoryIfNotExists();
     }
 
@@ -71,7 +68,6 @@ public class ReportIxi extends IxiModule {
 
         LOGGER.info(String.format("Report.ixi %s: Starting...", Constants.VERSION));
         metadata = new Metadata(Constants.METADATA_FILE);
-        keyPair = Cryptography.generateKeyPair(Constants.KEY_LENGTH);
 
         LOGGER.info("Initiating API...");
         api = new Api(this);
@@ -110,10 +106,6 @@ public class ReportIxi extends IxiModule {
 
     public List<Neighbor> getNeighbors() {
         return this.neighbors;
-    }
-
-    public KeyPair getKeyPair() {
-        return keyPair;
     }
 
     public Api getApi() {
