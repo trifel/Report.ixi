@@ -10,6 +10,8 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -21,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class IctRestCaller {
+
+    private final static Logger LOGGER = LogManager.getLogger(IctRestCaller.class);
 
     public static JSONObject getConfig(final String ictRestPassword) {
 
@@ -52,6 +56,13 @@ public class IctRestCaller {
 
             //Execute and get the response.
             final CloseableHttpResponse response = httpclient.execute(httppost);
+
+            if (response.getStatusLine().getStatusCode() != 200) {
+                LOGGER.error(String.format("Failed to call ict-rest api, status code: %d.",
+                        response.getStatusLine().getStatusCode()));
+                return null;
+            }
+
             HttpEntity entity = response.getEntity();
 
             if (entity != null) {

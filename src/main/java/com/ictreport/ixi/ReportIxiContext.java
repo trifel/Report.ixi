@@ -78,7 +78,6 @@ public class ReportIxiContext extends ConfigurableIxiContext {
 
         applyConfiguration();
         matchNeighborsWithIct();
-        LOGGER.info("Neighbors set to: " + getNeighbors().toString());
     }
 
     @Override
@@ -337,6 +336,9 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     }
 
     public void matchNeighborsWithIct() {
-        setNeighbors(getMatchedNeighborsWithIct());
+        final JSONArray neighbors = getMatchedNeighborsWithIct();
+        if (neighbors != null) {
+            setNeighbors(neighbors);
+        }
     }
 }
