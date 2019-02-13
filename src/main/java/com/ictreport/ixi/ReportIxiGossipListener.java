@@ -2,6 +2,8 @@ package com.ictreport.ixi;
 
 import com.ictreport.ixi.api.Api;
 import com.ictreport.ixi.exchange.Payload;
+import com.ictreport.ixi.exchange.SignedPayload;
+
 import org.iota.ict.model.Transaction;
 import org.iota.ict.network.event.GossipEvent;
 import org.iota.ict.network.event.GossipFilter;
@@ -30,8 +32,14 @@ public class ReportIxiGossipListener extends GossipListener {
 
     private void handleInbound(final Transaction transaction) {
         if (api != null) {
-            final Payload payload = Payload.deserialize(transaction.decodedSignatureFragments);
-            api.getReceiver().processPayload(null, payload);
+            try {
+                final Payload payload = Payload.deserialize(transaction.decodedSignatureFragments);
+                if (payload instanceof SignedPayload) {
+                    api.getReceiver().processSignedPayload((SignedPayload)payload);
+                }                
+            } catch (final Exception e) {
+                
+            }
         }
     }
 

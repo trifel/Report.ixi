@@ -48,8 +48,6 @@ public class Receiver extends Thread {
     public void processPayload(final Neighbor neighbor, final Payload payload) {
         if (payload instanceof MetadataPayload) {
             processMetadataPacket(neighbor, (MetadataPayload) payload);
-        } else if (payload instanceof SignedPayload) {
-            processSignedPayload((SignedPayload) payload);
         } else if (payload instanceof UuidPayload) {
             processUuidPayload((UuidPayload) payload);
         }
@@ -132,7 +130,7 @@ public class Receiver extends Thread {
         }
     }
 
-    private void processSignedPayload(final SignedPayload signedPayload) {
+    public void processSignedPayload(final SignedPayload signedPayload) {
         Neighbor signee = null;
         for (Neighbor neighbor : reportIxi.getNeighbors()) {
             if (neighbor.getPublicKey() != null && signedPayload.verify(neighbor.getPublicKey())) {
