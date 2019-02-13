@@ -109,7 +109,7 @@ public class Sender {
     public synchronized void send(final Payload payload, final InetSocketAddress address) {
         try {
             final byte[] messageByteArray = Payload.serialize(payload).getBytes();
-            socket.send(new DatagramPacket(messageByteArray, messageByteArray.length, address));
+            if (socket != null && !socket.isClosed()) socket.send(new DatagramPacket(messageByteArray, messageByteArray.length, address));
         } catch (final IOException | RuntimeException e) {
             e.printStackTrace();
         }

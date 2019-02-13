@@ -36,6 +36,10 @@ public class Api {
 	public void shutDown() {
         receiver.shutDown();
         sender.shutDown();
+        try {
+            this.socket.close();
+        } catch (Exception e) {
+        }        
 	}
 
     public Receiver getReceiver() {
