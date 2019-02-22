@@ -13,7 +13,7 @@ public class NeighborPayload extends Payload {
     private final int requested;
 
     public NeighborPayload(String uuid, int all, int newTx, int ignored, int invalid, int requested) {
-        this.uuid = uuid;
+        this.uuid = (uuid != null ? uuid : "");
         this.all = all;
         this.newTx = newTx;
         this.ignored = ignored;
