@@ -68,15 +68,14 @@ public class Sender {
                     for (int i=0; i<ictNeighbors.length(); i++) {
                         JSONObject ictNeighbor = (JSONObject)ictNeighbors.get(i);
 
-                        LOGGER.info(ictNeighbor.toString());
-
                         if (ictNeighbor.getString("address").equals(neighbor.getIctSocketAddress().toString())) {
+                            JSONObject stats = (JSONObject)ictNeighbor.getJSONArray("stats").get(ictNeighbor.getJSONArray("stats").length()-1);
                             neighbors.add(new NeighborPayload(neighbor.getUuid(),
-                                    ictNeighbor.getInt("all"),
-                                    ictNeighbor.getInt("new"),
-                                    ictNeighbor.getInt("ignored"),
-                                    ictNeighbor.getInt("invalid"),
-                                    ictNeighbor.getInt("requested")));
+                                stats.getInt("all"),
+                                stats.getInt("new"),
+                                stats.getInt("ignored"),
+                                stats.getInt("invalid"),
+                                stats.getInt("requested")));
                             foundNeighbor = true;
                         }
                     }
