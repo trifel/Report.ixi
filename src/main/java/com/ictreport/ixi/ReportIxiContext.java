@@ -204,6 +204,14 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         return address.substring(0, portColonIndex);
     }
 
+    private InetSocketAddress inetSocketAddressFromString(final String address) {
+        int portColonIndex;
+        for (portColonIndex = address.length() - 1; address.charAt(portColonIndex) != ':'; portColonIndex--);
+        final String hostString = address.substring(0, portColonIndex);
+        final int port = Integer.parseInt(address.substring(portColonIndex + 1, address.length()));
+        return new InetSocketAddress(hostString, port);
+    }
+
     public String getIctRestPassword() {
         return ictRestPassword;
     }
@@ -254,7 +262,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
             String neighborAddress = neighbor.getString(NEIGHBOR_ADDRESS);
             int neighborReportPort = neighbor.getInt(NEIGHBOR_REPORT_PORT);
             if (!neighborAddress.isEmpty()) {
-                reportIxi.getNeighbors().add(new Neighbor(new InetSocketAddress(getHostFromAddressString(neighborAddress), neighborReportPort)));
+                reportIxi.getNeighbors().add(new Neighbor(new InetSocketAddress(getHostFromAddressString(neighborAddress), neighborReportPort), inetSocketAddressFromString(neighborAddress)));
             }
         }
     }

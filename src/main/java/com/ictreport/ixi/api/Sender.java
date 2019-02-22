@@ -45,7 +45,7 @@ public class Sender {
                             new MetadataPayload(reportIxi.getMetadata().getUuid(), Constants.VERSION);
 
                     neighbor.resolveHost();
-                    send (metadataPayload, neighbor.getSocketAddress());
+                    send (metadataPayload, neighbor.getReportSocketAddress());
                 }
             }
         }, 0, 60000);
@@ -68,7 +68,9 @@ public class Sender {
                     for (int i=0; i<ictNeighbors.length(); i++) {
                         JSONObject ictNeighbor = (JSONObject)ictNeighbors.get(i);
 
-                        if (ictNeighbor.getString("address").equals(neighbor.getSocketAddress().toString())) {
+                        LOGGER.info(ictNeighbor.toString());
+
+                        if (ictNeighbor.getString("address").equals(neighbor.getIctSocketAddress().toString())) {
                             neighbors.add(new NeighborPayload(neighbor.getUuid(),
                                     ictNeighbor.getInt("all"),
                                     ictNeighbor.getInt("new"),
@@ -81,7 +83,7 @@ public class Sender {
 
                     if (!foundNeighbor) {
                         LOGGER.warn(String.format("Failed to match neighbor (%s) with (getNeighbors)-array from ict-rest.",
-                                neighbor.getSocketAddress().toString()));
+                                neighbor.getIctSocketAddress().toString()));
                     }
                 }
 

@@ -11,25 +11,27 @@ import java.net.UnknownHostException;
 public class Neighbor {
 
     private static final Logger LOGGER = LogManager.getLogger(Neighbor.class);
-    private InetSocketAddress socketAddress;
+    private InetSocketAddress reportSocketAddress;
+    private InetSocketAddress ictSocketAddress;
     private String uuid = null;
     private String reportIxiVersion = null;
 
-    public Neighbor(final InetSocketAddress socketAddress) {
-        this.socketAddress = socketAddress;
+    public Neighbor(final InetSocketAddress socketAddress, final InetSocketAddress ictSocketAddress) {
+        this.reportSocketAddress = socketAddress;
+        this.ictSocketAddress = ictSocketAddress;
     }
 
     public boolean sentPacket(final DatagramPacket packet) {
         boolean sameIP = sentPacketFromSameIP(packet);
-        boolean samePort = socketAddress.getPort() == packet.getPort();
+        boolean samePort = reportSocketAddress.getPort() == packet.getPort();
         return sameIP && samePort;
     }
 
     public boolean sentPacketFromSameIP(final DatagramPacket packet) {
-        if (socketAddress == null) {
+        if (reportSocketAddress == null) {
             return false;
         }
-        return socketAddress.getAddress().getHostAddress().equals(packet.getAddress().getHostAddress());
+        return reportSocketAddress.getAddress().getHostAddress().equals(packet.getAddress().getHostAddress());
     }
 
     /**
@@ -47,17 +49,31 @@ public class Neighbor {
     }
 
     /**
-     * @return the socketAddress
+     * @return the reportSocketAddress
      */
-    public InetSocketAddress getSocketAddress() {
-        return socketAddress;
+    public InetSocketAddress getReportSocketAddress() {
+        return reportSocketAddress;
     }
 
     /**
-     * @param socketAddress the socketAddress to set
+     * @param socketAddress the reportSocketAddress to set
      */
-    public void setSocketAddress(final InetSocketAddress socketAddress) {
-        this.socketAddress = socketAddress;
+    public void setReportSocketAddress(final InetSocketAddress reportSocketAddress) {
+        this.reportSocketAddress = reportSocketAddress;
+    }
+
+    /**
+     * @return the ictSocketAddress
+     */
+    public InetSocketAddress getIctSocketAddress() {
+        return ictSocketAddress;
+    }
+
+    /**
+     * @param ictSocketAddress the ictSocketAddress to set
+     */
+    public void setIctSocketAddress(final InetSocketAddress ictSocketAddress) {
+        this.ictSocketAddress = ictSocketAddress;
     }
 
     public String getReportIxiVersion() {
@@ -70,11 +86,17 @@ public class Neighbor {
 
     public void resolveHost() {
         try {
-            if (!socketAddress.getAddress().equals(InetAddress.getByName(socketAddress.getHostName()))) {
-                socketAddress = new InetSocketAddress(socketAddress.getHostName(), socketAddress.getPort());
+            if (!reportSocketAddress.getAddress().equals(InetAddress.getByName(reportSocketAddress.getHostName()))) {
+                reportSocketAddress = new InetSocketAddress(reportSocketAddress.getHostName(), reportSocketAddress.getPort());
             }
         } catch (UnknownHostException e) {
-            LOGGER.warn("Failed to resolve host for: " + socketAddress.getHostString());
+            LOGGER.warn("Failed to resolve host for: " + reportSocketAddress.getHostString());
+        }
+        try {
+            if (!ictSocketAddress.getAddress().equals(InetAddress.getByName(ictSocketAddress.getHostName()))) {
+                ictSocketAddress = new InetSocketAddress(ictSocketAddress.getHostName(), ictSocketAddress.getPort());
+            }
+        } catch (UnknownHostException e) {
         }
     }
 }
