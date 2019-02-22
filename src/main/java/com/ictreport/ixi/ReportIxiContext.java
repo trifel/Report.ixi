@@ -48,6 +48,9 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     private String                        name                         = DEFAULT_NAME;
     private JSONArray                     neighbors                    = DEFAULT_NEIGHBORS;
 
+    // Other
+    private String                        ictVersion                   = "";
+
     static {
         DEFAULT_CONFIGURATION.put(ICT_REST_PASSWORD, DEFAULT_ICT_REST_PASSWORD);
         DEFAULT_CONFIGURATION.put(HOST, DEFAULT_HOST);
@@ -62,6 +65,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         this.reportIxi = reportIxi;
 
         applyConfiguration();
+        loadIctInfo();
         matchNeighborsWithIct();
     }
 
@@ -262,6 +266,10 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         this.externalReportPort = externalReportPort;
     }
 
+    public String getIctVersion() {
+        return ictVersion;
+    }
+
     private class IllegalPropertyException extends IllegalArgumentException {
         private IllegalPropertyException(String field, String cause) {
             super("Invalid property '"+field+"': " + cause + ".");
@@ -324,6 +332,14 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         final JSONArray neighbors = getMatchedNeighborsWithIct();
         if (neighbors != null) {
             setNeighbors(neighbors);
+        }
+    }
+
+    public void loadIctInfo() {
+        final JSONObject ictInfo = IctRestCaller.getInfo(getIctRestPassword());
+        if (ictInfo != null) {
+            String version = ictInfo.getString("version");
+            this.ictVersion = version;
         }
     }
 }

@@ -17,7 +17,7 @@ public class StatusPayloadTest {
         neighbors.add(new NeighborPayload("ghi", 12, 22, 32, 42, 52));
 
         final StatusPayload statusPayload = new StatusPayload("xyz", "ict (ict-1)",
-                Constants.VERSION, neighbors);
+                "0.5", Constants.VERSION, neighbors);
 
         final String json = Payload.serialize(statusPayload);
 

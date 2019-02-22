@@ -1,5 +1,6 @@
 package com.ictreport.ixi.utils;
 
+import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
@@ -24,6 +25,14 @@ public class IctRestCaller {
 
     private final static Logger LOGGER = LogManager.getLogger(IctRestCaller.class);
 
+    public static JSONObject getInfo(final String ictRestPassword) {
+        String json = call("getInfo", ictRestPassword);
+        if (json != null) {
+            return new JSONObject(json);
+        }
+        return null;
+    }
+
     public static JSONObject getConfig(final String ictRestPassword) {
 
         String json = call("getConfig", ictRestPassword);
@@ -37,7 +46,8 @@ public class IctRestCaller {
 
         String json = call("getNeighbors", ictRestPassword);
         if (json != null) {
-            return new JSONArray(json);
+            JSONObject rootObject =  new JSONObject(json);
+            return rootObject.getJSONArray("neighbors");
         }
         return null;
     }

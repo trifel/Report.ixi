@@ -97,6 +97,7 @@ public class Sender {
                 final StatusPayload statusPayload = new StatusPayload(
                     reportIxi.getMetadata().getUuid(),
                     reportIxi.getReportIxiContext().getName(),
+                    reportIxi.getReportIxiContext().getIctVersion(),
                     Constants.VERSION,
                     neighbors);
 

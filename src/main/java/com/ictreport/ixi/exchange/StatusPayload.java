@@ -6,13 +6,15 @@ public class StatusPayload extends Payload {
 
     private final String uuid;
     private final String name;
+    private final String ictVersion;
     private final String reportIxiVersion;
     private final List<NeighborPayload> neighbors;
 
-    public StatusPayload(final String uuid, final String name,
+    public StatusPayload(final String uuid, final String name, final String ictVersion,
                          final String reportIxiVersion, final List<NeighborPayload> neighbors) {
         this.uuid = uuid;
         this.name = name;
+        this.ictVersion = ictVersion;
         this.reportIxiVersion = reportIxiVersion;
         this.neighbors = neighbors;
     }
@@ -23,6 +25,10 @@ public class StatusPayload extends Payload {
 
     public String getName() {
         return name;
+    }
+
+    public String getIctVersion() {
+        return ictVersion;
     }
 
     public String getReportIxiVersion() {
