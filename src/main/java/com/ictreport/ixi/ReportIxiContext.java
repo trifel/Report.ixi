@@ -77,7 +77,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
                 .put(ICT_REST_PASSWORD, getIctRestPassword())
                 .put(REPORT_PORT, getReportPort())
                 .put(NAME, getName())
-                .put(NEIGHBORS, getNeighbors());
+                .put(NEIGHBORS, getNeighbors().toString());
 
         // Optional configuration properties
         if (!getHost().equals("0.0.0.0")) {
@@ -103,8 +103,15 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         setIctRestPassword(configuration.getString(ICT_REST_PASSWORD));
         setName(configuration.getString(NAME));
         setReportPort(configuration.getInt(REPORT_PORT));
-        setNeighbors(configuration.getJSONArray(NEIGHBORS));
 
+        if (configuration.get(NEIGHBORS) instanceof String) {
+            setNeighbors(new JSONArray(configuration.getString(NEIGHBORS)));
+        } else if (configuration.get(NEIGHBORS) instanceof JSONArray) {
+            setNeighbors(configuration.getJSONArray(NEIGHBORS));
+        } else {
+            setNeighbors(new JSONArray());
+        }
+        
         // Optional configuration properties
         if (configuration.has(HOST)) {
             setHost(configuration.getString(HOST));
@@ -138,9 +145,9 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         if (!newConfiguration.has(REPORT_PORT)) {
             throw new IllegalPropertyException(REPORT_PORT, "not defined");
         }
-        if (!(newConfiguration.get(REPORT_PORT) instanceof Integer)) {
+        /*if (!(newConfiguration.get(REPORT_PORT) instanceof Integer)) {
             throw new IllegalPropertyException(REPORT_PORT, "not an integer");
-        }
+        }*/
         if (newConfiguration.getInt(REPORT_PORT) < 0 || newConfiguration.getInt(REPORT_PORT) > 65535) {
             throw new IllegalPropertyException(REPORT_PORT, "port must be within range 0-65535");
         }
@@ -150,9 +157,9 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         if (!newConfiguration.has(EXTERNAL_REPORT_PORT)) {
             throw new IllegalPropertyException(EXTERNAL_REPORT_PORT, "not defined");
         }
-        if (!(newConfiguration.get(EXTERNAL_REPORT_PORT) instanceof Integer)) {
+        /*if (!(newConfiguration.get(EXTERNAL_REPORT_PORT) instanceof Integer)) {
             throw new IllegalPropertyException(EXTERNAL_REPORT_PORT, "not an integer");
-        }
+        }*/
         if (newConfiguration.getInt(EXTERNAL_REPORT_PORT) < 0 || newConfiguration.getInt(EXTERNAL_REPORT_PORT) > 65535) {
             throw new IllegalPropertyException(EXTERNAL_REPORT_PORT, "port must be within range 0-65535");
         }
@@ -174,11 +181,11 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         if (!newConfiguration.has(NEIGHBORS)) {
             throw new IllegalPropertyException(NEIGHBORS, "not defined");
         }
-        if(!(newConfiguration.get(NEIGHBORS) instanceof JSONArray)) {
+        /*if(!(newConfiguration.get(NEIGHBORS) instanceof JSONArray)) {
             throw new IllegalPropertyException(NEIGHBORS, "not an array");
-        }
+        }*/
 
-        JSONArray array = newConfiguration.getJSONArray(NEIGHBORS);
+        JSONArray array = new JSONArray(newConfiguration.getString(NEIGHBORS));
 
         if (array.length() > 3) {
             throw new IllegalPropertyException(NEIGHBORS, "maximum 3 neighbors allowed");
