@@ -204,7 +204,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         return address.substring(0, portColonIndex);
     }
 
-    private InetSocketAddress inetSocketAddressFromString(final String address) {
+    public static InetSocketAddress inetSocketAddressFromString(final String address) {
         int portColonIndex;
         for (portColonIndex = address.length() - 1; address.charAt(portColonIndex) != ':'; portColonIndex--);
         final String hostString = address.substring(0, portColonIndex);
@@ -305,7 +305,18 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         for (int i=0; i<getNeighbors().length(); i++) {
             JSONObject currentNeighbor = getNeighbors().getJSONObject(i);
             String currentNeighborAddress = currentNeighbor.getString(NEIGHBOR_ADDRESS);
-            if (ictNeighbors.toList().contains(currentNeighborAddress)) {
+
+            boolean found = false;
+            for (int j=0; j<ictNeighbors.length(); j++) {
+                String ictNeighborAddress = ictNeighbors.getString(j);
+
+                if (compareInetSocketAddresses(inetSocketAddressFromString(ictNeighborAddress), inetSocketAddressFromString(currentNeighborAddress)) == 0) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (found) {
                 newNeighbors.add(currentNeighbor);
             } else {
                 LOGGER.info(String.format("%s doesn't exists in Ict config." +
@@ -323,7 +334,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
                 JSONObject currentNeighbor = newNeighbors.get(j);
                 String currentNeighborAddress = currentNeighbor.getString(NEIGHBOR_ADDRESS);
 
-                if (ictNeighborAddress.equals(currentNeighborAddress)) {
+                if (compareInetSocketAddresses(inetSocketAddressFromString(ictNeighborAddress), inetSocketAddressFromString(currentNeighborAddress)) == 0) {
                     found = true;
                     break;
                 }
@@ -354,6 +365,26 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         if (ictInfo != null) {
             String version = ictInfo.getString("version");
             this.ictVersion = version;
+        }
+    }
+
+    private static Integer getIp(InetSocketAddress addr) {
+        byte[] a = addr.getAddress().getAddress();
+        return ((a[0] & 0xff) << 24) | ((a[1] & 0xff) << 16) | ((a[2] & 0xff) << 8) | (a[3] & 0xff);
+    }
+    
+    public static int compareInetSocketAddresses(InetSocketAddress o1, InetSocketAddress o2) {
+        //TODO deal with nulls
+        if (o1 == o2) {
+            return 0;
+        } else if(o1.isUnresolved() || o2.isUnresolved()){
+            return o1.toString().compareTo(o2.toString());
+        } else {
+            int compare = getIp(o1).compareTo(getIp(o2));
+            if (compare == 0) {
+                compare = Integer.valueOf(o1.getPort()).compareTo(o2.getPort());
+            }
+            return compare;
         }
     }
 }

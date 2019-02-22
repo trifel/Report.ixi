@@ -1,5 +1,6 @@
 package com.ictreport.ixi.api;
 
+import com.ictreport.ixi.ReportIxiContext;
 import com.ictreport.ixi.exchange.*;
 import com.ictreport.ixi.utils.IctRestCaller;
 import org.apache.logging.log4j.LogManager;
@@ -68,7 +69,7 @@ public class Sender {
                     for (int i=0; i<ictNeighbors.length(); i++) {
                         JSONObject ictNeighbor = (JSONObject)ictNeighbors.get(i);
 
-                        if (ictNeighbor.getString("address").equals(neighbor.getIctSocketAddress().toString())) {
+                        if (ReportIxiContext.compareInetSocketAddresses(ReportIxiContext.inetSocketAddressFromString(ictNeighbor.getString("address")), neighbor.getIctSocketAddress()) == 0) {
                             JSONObject stats = (JSONObject)ictNeighbor.getJSONArray("stats").get(ictNeighbor.getJSONArray("stats").length()-1);
                             neighbors.add(new NeighborPayload(neighbor.getUuid(),
                                 stats.getInt("all"),
