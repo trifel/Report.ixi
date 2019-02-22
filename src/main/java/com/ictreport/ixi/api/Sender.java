@@ -60,15 +60,6 @@ public class Sender {
 
                 final List<NeighborPayload> neighbors = new LinkedList<>();
                 for (final Neighbor neighbor : reportIxi.getNeighbors()) {
-
-                    // Ignore neighbors that not yet have been assigned a uuid
-                    if (neighbor.getUuid() == null) {
-                        LOGGER.warn(String.format("Neighbor (%s) has not been assigned a uuid. " +
-                                "Therefore is excluded from the status payload",
-                                neighbor.getSocketAddress().toString()));
-                        continue;
-                    }
-
                     // Ensure that the neighbor's host is resolved
                     neighbor.resolveHost();
 
