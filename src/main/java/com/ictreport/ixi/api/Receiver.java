@@ -123,7 +123,6 @@ public class Receiver extends Thread {
     }
 
     private void processPingPayload(final PingPayload pingPayload) {
-
         final ReceivedPingPayload receivedPingPayload =
                 new ReceivedPingPayload(reportIxi.getMetadata().getUuid(), pingPayload);
 

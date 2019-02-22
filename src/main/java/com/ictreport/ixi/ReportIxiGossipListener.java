@@ -3,6 +3,8 @@ package com.ictreport.ixi;
 import com.ictreport.ixi.api.Api;
 import com.ictreport.ixi.exchange.Payload;
 import com.ictreport.ixi.utils.Constants;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.iota.ict.model.Transaction;
 import org.iota.ict.network.event.GossipEvent;
 import org.iota.ict.network.event.GossipFilter;
@@ -10,6 +12,7 @@ import org.iota.ict.network.event.GossipListener;
 
 public class ReportIxiGossipListener implements GossipListener {
 
+    private final static Logger LOGGER = LogManager.getLogger(ReportIxiGossipListener.class);
     private final GossipFilter filter = new GossipFilter();
     private final Api api;
 
@@ -30,8 +33,12 @@ public class ReportIxiGossipListener implements GossipListener {
 
     private void handleInbound(final Transaction transaction) {
         if (api != null) {
-            final Payload payload = Payload.deserialize(transaction.decodedSignatureFragments());
-            api.getReceiver().processPayload(null, payload);
+            try {
+                final Payload payload = Payload.deserialize(transaction.decodedSignatureFragments());
+                api.getReceiver().processPayload(null, payload);
+            } catch (final Exception e) {
+                // Invalid payload received, ignore it...
+            }
         }
     }
 
