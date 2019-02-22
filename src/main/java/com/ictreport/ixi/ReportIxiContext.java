@@ -57,7 +57,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         DEFAULT_CONFIGURATION.put(REPORT_PORT, DEFAULT_REPORT_PORT);
         DEFAULT_CONFIGURATION.put(EXTERNAL_REPORT_PORT, DEFAULT_EXTERNAL_REPORT_PORT);
         DEFAULT_CONFIGURATION.put(NAME, DEFAULT_NAME);
-        DEFAULT_CONFIGURATION.put(NEIGHBORS, DEFAULT_NEIGHBORS);
+        DEFAULT_CONFIGURATION.put(NEIGHBORS, DEFAULT_NEIGHBORS.toString());
     }
 
     public ReportIxiContext(final ReportIxi reportIxi) {
@@ -198,12 +198,10 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         }
     }
 
-    private InetSocketAddress inetSocketAddressFromString(final String address) {
+    private String getHostFromAddressString(final String address) {
         int portColonIndex;
         for (portColonIndex = address.length() - 1; address.charAt(portColonIndex) != ':'; portColonIndex--);
-        final String hostString = address.substring(0, portColonIndex);
-        final int port = Integer.parseInt(address.substring(portColonIndex + 1, address.length()));
-        return new InetSocketAddress(hostString, port);
+        return address.substring(0, portColonIndex);
     }
 
     public String getIctRestPassword() {
@@ -254,8 +252,9 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         for (int i=0; i<neighbors.length(); i++) {
             JSONObject neighbor = neighbors.getJSONObject(i);
             String neighborAddress = neighbor.getString(NEIGHBOR_ADDRESS);
+            int neighborReportPort = neighbor.getInt(NEIGHBOR_REPORT_PORT);
             if (!neighborAddress.isEmpty()) {
-                reportIxi.getNeighbors().add(new Neighbor(inetSocketAddressFromString(neighborAddress)));
+                reportIxi.getNeighbors().add(new Neighbor(new InetSocketAddress(getHostFromAddressString(neighborAddress), neighborReportPort)));
             }
         }
     }
