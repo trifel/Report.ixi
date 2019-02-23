@@ -135,8 +135,9 @@ public class ReportIxi extends IxiModule {
 
     public void syncNeighborsFromIctRest() {
         final List<AddressAndStats> addressesAndStatsToSync = new LinkedList<>();
+        final int ictRestPort = getReportIxiContext().getIctRestPort();
         final String ictRestPassword = getReportIxiContext().getIctRestPassword();
-        final JSONArray ictNeighbors = IctRestCaller.getNeighbors(ictRestPassword);
+        final JSONArray ictNeighbors = IctRestCaller.getNeighbors(ictRestPort, ictRestPassword);
 
         for (int i=0; ictNeighbors != null && i<ictNeighbors.length(); i++) {
             final JSONObject ictNeighbor = (JSONObject)ictNeighbors.get(i);

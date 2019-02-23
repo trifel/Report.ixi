@@ -25,26 +25,26 @@ public class IctRestCaller {
 
     private final static Logger LOGGER = LogManager.getLogger(IctRestCaller.class);
 
-    public static JSONObject getInfo(final String ictRestPassword) {
-        String json = call("getInfo", ictRestPassword);
+    public static JSONObject getInfo(final int ictRestPort, final String ictRestPassword) {
+        String json = call("getInfo", ictRestPort, ictRestPassword);
         if (json != null) {
             return new JSONObject(json);
         }
         return null;
     }
 
-    public static JSONObject getConfig(final String ictRestPassword) {
+    public static JSONObject getConfig(final int ictRestPort, final String ictRestPassword) {
 
-        String json = call("getConfig", ictRestPassword);
+        String json = call("getConfig", ictRestPort, ictRestPassword);
         if (json != null) {
             return new JSONObject(json);
         }
         return null;
     }
 
-    public static JSONArray getNeighbors(final String ictRestPassword) {
+    public static JSONArray getNeighbors(final int ictRestPort, final String ictRestPassword) {
 
-        String json = call("getNeighbors", ictRestPassword);
+        String json = call("getNeighbors", ictRestPort, ictRestPassword);
         if (json != null) {
             JSONObject rootObject =  new JSONObject(json);
             return rootObject.getJSONArray("neighbors");
@@ -52,10 +52,10 @@ public class IctRestCaller {
         return null;
     }
 
-    private static String call(final String route, final String ictRestPassword) {
+    private static String call(final String route, final int ictRestPort, final String ictRestPassword) {
         try {
             final CloseableHttpClient httpclient = HttpClients.createDefault();
-            HttpPost httppost = new HttpPost("http://localhost:2187/" + route);
+            HttpPost httppost = new HttpPost("http://localhost:" + ictRestPort + "/" + route);
 
             // Request parameters and other properties.
             List<NameValuePair> params = new ArrayList<>();
@@ -83,7 +83,7 @@ public class IctRestCaller {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.warn("Failed to call Ict REST API. Check Report.ixi configuration, especially 'Ict REST API port' and 'Ict REST API password'.");
         }
         return null;
     }

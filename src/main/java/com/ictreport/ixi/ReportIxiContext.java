@@ -23,16 +23,18 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     private final        ReportIxi        reportIxi;
 
     // Property names
-    private static final String           ICT_REST_PASSWORD            = "ictRestPassword";
-    private static final String           HOST                         = "host";
-    private static final String           REPORT_PORT                  = "reportPort";
-    private static final String           EXTERNAL_REPORT_PORT         = "externalReportPort";
-    private static final String           NAME                         = "name";
-    private static final String           NEIGHBORS                    = "neighbors";
+    private static final String           ICT_REST_PORT                = "Ict REST API Port";
+    private static final String           ICT_REST_PASSWORD            = "Ict REST API Password";
+    private static final String           HOST                         = "Ict Host";
+    private static final String           REPORT_PORT                  = "Report.ixi Port";
+    private static final String           EXTERNAL_REPORT_PORT         = "External Report.ixi Port";
+    private static final String           NAME                         = "Name";
+    private static final String           NEIGHBORS                    = "Neighbors";
     private static final String           NEIGHBOR_ADDRESS             = "_address";
     private static final String           NEIGHBOR_REPORT_PORT         = "reportPort";
 
     // Property defaults
+    private static final int              DEFAULT_ICT_REST_PORT        = 2187;
     private static final String           DEFAULT_ICT_REST_PASSWORD    = "change_me_now";
     private static final JSONObject       DEFAULT_CONFIGURATION        = new JSONObject();
     private static final String           DEFAULT_HOST                 = null;
@@ -42,6 +44,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     private static final JSONArray        DEFAULT_NEIGHBORS            = new JSONArray();
 
     // Context properties
+    private int                           ictRestPort                  = DEFAULT_ICT_REST_PORT;
     private String                        ictRestPassword              = DEFAULT_ICT_REST_PASSWORD;
     private String                        host                         = DEFAULT_HOST;
     private int                           reportPort                   = DEFAULT_REPORT_PORT;
@@ -52,6 +55,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     private String                        ictVersion                   = "";
 
     static {
+        DEFAULT_CONFIGURATION.put(ICT_REST_PORT, DEFAULT_ICT_REST_PORT);
         DEFAULT_CONFIGURATION.put(ICT_REST_PASSWORD, DEFAULT_ICT_REST_PASSWORD);
         DEFAULT_CONFIGURATION.put(HOST, DEFAULT_HOST);
         DEFAULT_CONFIGURATION.put(REPORT_PORT, DEFAULT_REPORT_PORT);
@@ -83,6 +87,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         final JSONArray jsonNeighbors = new JSONArray(jsonNeighbor);
 
         JSONObject configuration = new JSONObject()
+                .put(ICT_REST_PORT, getIctRestPort())
                 .put(ICT_REST_PASSWORD, getIctRestPassword())
                 .put(REPORT_PORT, getReportPort())
                 .put(NAME, getName())
@@ -109,6 +114,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
 
     @Override
     public void applyConfiguration() {
+        setIctRestPort(configuration.getInt(ICT_REST_PORT));
         setIctRestPassword(configuration.getString(ICT_REST_PASSWORD));
         setName(configuration.getString(NAME));
         setReportPort(configuration.getInt(REPORT_PORT));
@@ -207,6 +213,14 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         }
     }
 
+    public int getIctRestPort() {
+        return ictRestPort;
+    }
+
+    public void setIctRestPort(int ictRestPort) {
+        this.ictRestPort = ictRestPort;
+    }
+
     public String getIctRestPassword() {
         return ictRestPassword;
     }
@@ -285,7 +299,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     }
 
     public void loadIctInfo() {
-        final JSONObject ictInfo = IctRestCaller.getInfo(getIctRestPassword());
+        final JSONObject ictInfo = IctRestCaller.getInfo(getIctRestPort(), getIctRestPassword());
         if (ictInfo != null) {
             String version = ictInfo.getString("version");
             this.ictVersion = version;
