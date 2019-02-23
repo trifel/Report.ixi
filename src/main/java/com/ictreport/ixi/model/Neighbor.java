@@ -1,5 +1,6 @@
 package com.ictreport.ixi.model;
 
+import com.ictreport.ixi.utils.SyncedNeighbors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -11,10 +12,16 @@ import java.net.UnknownHostException;
 public class Neighbor {
 
     private static final Logger LOGGER = LogManager.getLogger(Neighbor.class);
+    private SyncedNeighbors.Address address;
     private InetSocketAddress reportSocketAddress;
     private InetSocketAddress ictSocketAddress;
     private String uuid = null;
     private String reportIxiVersion = null;
+
+    public Neighbor(final SyncedNeighbors.Address address) {
+        this.reportSocketAddress = address.asReportInetSocketAddress();
+        this.ictSocketAddress = address.asInetSocketAddress();
+    }
 
     public Neighbor(final InetSocketAddress socketAddress, final InetSocketAddress ictSocketAddress) {
         this.reportSocketAddress = socketAddress;
@@ -98,5 +105,16 @@ public class Neighbor {
             }
         } catch (UnknownHostException e) {
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Neighbor{" +
+                "address=" + address +
+                ", reportSocketAddress=" + reportSocketAddress +
+                ", ictSocketAddress=" + ictSocketAddress +
+                ", uuid='" + uuid + '\'' +
+                ", reportIxiVersion='" + reportIxiVersion + '\'' +
+                '}';
     }
 }

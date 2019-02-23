@@ -2,12 +2,14 @@ package com.ictreport.ixi;
 
 import com.ictreport.ixi.model.Neighbor;
 import com.ictreport.ixi.utils.IctRestCaller;
+import com.ictreport.ixi.utils.SyncedNeighbors;
 import org.iota.ict.ixi.ReportIxi;
 import org.iota.ict.ixi.context.ConfigurableIxiContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -50,6 +52,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
 
     // Other
     private String                        ictVersion                   = "";
+    private final SyncedNeighbors         syncedNeighbors              = new SyncedNeighbors();
 
     static {
         DEFAULT_CONFIGURATION.put(ICT_REST_PASSWORD, DEFAULT_ICT_REST_PASSWORD);
@@ -66,18 +69,25 @@ public class ReportIxiContext extends ConfigurableIxiContext {
 
         applyConfiguration();
         loadIctInfo();
-        matchNeighborsWithIct();
     }
 
     @Override
     public JSONObject getConfiguration() {
 
-        matchNeighborsWithIct();
+        syncedNeighbors.syncFromIctRest(getIctRestPassword());
+        final List<JSONObject> jsonNeighbor = new LinkedList<>();
+        for (SyncedNeighbors.Address address : syncedNeighbors.getNeighbors()) {
+            jsonNeighbor.add(new JSONObject()
+                    .put(NEIGHBOR_ADDRESS, address.asInetSocketAddress().toString())
+                    .put(NEIGHBOR_REPORT_PORT, address.getReportPort()));
+        }
+        final JSONArray jsonNeighbors = new JSONArray(jsonNeighbor);
+
         JSONObject configuration = new JSONObject()
                 .put(ICT_REST_PASSWORD, getIctRestPassword())
                 .put(REPORT_PORT, getReportPort())
                 .put(NAME, getName())
-                .put(NEIGHBORS, getNeighbors().toString());
+                .put(NEIGHBORS, jsonNeighbors.toString());
 
         // Optional configuration properties
         if (!getHost().equals("0.0.0.0")) {
@@ -118,6 +128,11 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         }
         if (configuration.has(EXTERNAL_REPORT_PORT)) {
             setExternalReportPort(configuration.getInt(EXTERNAL_REPORT_PORT));
+        }
+
+        LOGGER.info("Applied configuration...");
+        for (Neighbor neighbor : reportIxi.getNeighbors()) {
+            LOGGER.info(" - Neighbor: " + neighbor.toString());
         }
     }
 
@@ -254,16 +269,27 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     }
 
     public void setNeighbors(JSONArray neighbors) {
+        LOGGER.info("Setting neighbors: " + neighbors.toString());
         this.neighbors = neighbors;
 
-        reportIxi.getNeighbors().clear();
+        List<SyncedNeighbors.Address> addressesToSync = new ArrayList<>();
+
         for (int i=0; i<neighbors.length(); i++) {
             JSONObject neighbor = neighbors.getJSONObject(i);
             String neighborAddress = neighbor.getString(NEIGHBOR_ADDRESS);
             int neighborReportPort = neighbor.getInt(NEIGHBOR_REPORT_PORT);
-            if (!neighborAddress.isEmpty()) {
-                reportIxi.getNeighbors().add(new Neighbor(new InetSocketAddress(getHostFromAddressString(neighborAddress), neighborReportPort), inetSocketAddressFromString(neighborAddress)));
-            }
+
+            final SyncedNeighbors.Address address = syncedNeighbors.parseAddress(neighborAddress);
+            address.setReportPort(neighborReportPort);
+            addressesToSync.add(address);
+        }
+
+        syncedNeighbors.syncAddresses(addressesToSync, true);
+
+        reportIxi.getNeighbors().clear();
+
+        for (SyncedNeighbors.Address address : syncedNeighbors.getNeighbors()) {
+            reportIxi.getNeighbors().add(new Neighbor(address));
         }
     }
 
@@ -287,76 +313,6 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     private class IllegalPropertyException extends IllegalArgumentException {
         private IllegalPropertyException(String field, String cause) {
             super("Invalid property '"+field+"': " + cause + ".");
-        }
-    }
-
-    private JSONArray getMatchedNeighborsWithIct() {
-        List<JSONObject> newNeighbors = new LinkedList<>();
-        JSONObject ictConfig = IctRestCaller.getConfig(getIctRestPassword());
-
-        if (ictConfig == null) {
-            // TODO: Return something else than null?
-            return null;
-        }
-
-        JSONArray ictNeighbors = ictConfig.getJSONArray("neighbors");
-
-        // Keep only report.ixi neighbors that also present in the ict config
-        for (int i=0; i<getNeighbors().length(); i++) {
-            JSONObject currentNeighbor = getNeighbors().getJSONObject(i);
-            String currentNeighborAddress = currentNeighbor.getString(NEIGHBOR_ADDRESS);
-
-            boolean found = false;
-            for (int j=0; j<ictNeighbors.length(); j++) {
-                String ictNeighborAddress = ictNeighbors.getString(j);
-
-                if (compareInetSocketAddresses(inetSocketAddressFromString(ictNeighborAddress), inetSocketAddressFromString(currentNeighborAddress)) == 0) {
-                    found = true;
-                    break;
-                }
-            }
-
-            if (found) {
-                newNeighbors.add(currentNeighbor);
-            } else {
-                LOGGER.info(String.format("%s doesn't exists in Ict config." +
-                                "Therefore, it is removed from report.ixi configuration.",
-                        currentNeighborAddress));
-            }
-        }
-
-        // Add neighbors that are not yet present in report.ixi configuration
-        for (int i=0; i<ictNeighbors.length(); i++) {
-            String ictNeighborAddress = ictNeighbors.getString(i);
-
-            boolean found = false;
-            for (int j=0; j<newNeighbors.size(); j++) {
-                JSONObject currentNeighbor = newNeighbors.get(j);
-                String currentNeighborAddress = currentNeighbor.getString(NEIGHBOR_ADDRESS);
-
-                if (compareInetSocketAddresses(inetSocketAddressFromString(ictNeighborAddress), inetSocketAddressFromString(currentNeighborAddress)) == 0) {
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found) {
-                LOGGER.info(String.format("%s exists in Ict config, but not present in report.ixi configuration." +
-                                "Therefore, it is added to report.ixi configuration.",
-                        ictNeighborAddress));
-                newNeighbors.add(new JSONObject()
-                        .put(NEIGHBOR_ADDRESS, ictNeighborAddress)
-                        .put(NEIGHBOR_REPORT_PORT, DEFAULT_NEIGHBOR_REPORT_PORT));
-            }
-        }
-
-        return new JSONArray(newNeighbors);
-    }
-
-    public void matchNeighborsWithIct() {
-        final JSONArray neighbors = getMatchedNeighborsWithIct();
-        if (neighbors != null) {
-            setNeighbors(neighbors);
         }
     }
 
