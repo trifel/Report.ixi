@@ -1,9 +1,9 @@
 {
   "name": "Report.ixi",
-  "version": "0.5-SNAPSHOT",
+  "version": "0.5",
   "main_class": "org.iota.ict.ixi.ReportIxi",
   "description": "This IXI module collects transaction metrics in order to provide extra services such as visualizers and monitoring tools.",
   "repository": "trifel/Report.ixi",
   "gui_port": -1,
-  "supported_versions": ["0.5-SNAPSHOT", "0.5"]
+  "supported_versions": ["0.5", "0.5"]
 }
