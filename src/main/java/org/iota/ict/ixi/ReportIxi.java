@@ -3,8 +3,11 @@ package org.iota.ict.ixi;
 import com.ictreport.ixi.ReportIxiContext;
 import com.ictreport.ixi.ReportIxiGossipListener;
 import com.ictreport.ixi.api.Api;
+import com.ictreport.ixi.model.Address;
+import com.ictreport.ixi.model.AddressAndStats;
 import com.ictreport.ixi.model.Neighbor;
 import com.ictreport.ixi.utils.Constants;
+import com.ictreport.ixi.utils.IctRestCaller;
 import com.ictreport.ixi.utils.Metadata;
 
 import java.util.*;
@@ -13,6 +16,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.iota.ict.ixi.context.IxiContext;
 import org.iota.ict.utils.IOHelper;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class ReportIxi extends IxiModule {
 
@@ -126,5 +131,70 @@ public class ReportIxi extends IxiModule {
                 throw new RuntimeException("Failed to create metadata folder");
             }
         }
+    }
+
+    public void syncNeighborsFromIctRest() {
+        final List<AddressAndStats> addressesAndStatsToSync = new LinkedList<>();
+        final String ictRestPassword = getReportIxiContext().getIctRestPassword();
+        final JSONArray ictNeighbors = IctRestCaller.getNeighbors(ictRestPassword);
+
+        for (int i=0; ictNeighbors != null && i<ictNeighbors.length(); i++) {
+            final JSONObject ictNeighbor = (JSONObject)ictNeighbors.get(i);
+            final String ictNeighborAddress = ictNeighbor.getString("address");
+
+            try {
+                final Address address = Address.parse(ictNeighborAddress);
+
+                final JSONArray statsArray = ictNeighbor.getJSONArray("stats");
+
+                if (statsArray.length() > 0) {
+                    final JSONObject stats = statsArray.getJSONObject(statsArray.length() - 1);
+                    addressesAndStatsToSync.add(new AddressAndStats(
+                            address,
+                            stats.getInt("all"),
+                            stats.getInt("new"),
+                            stats.getInt("ignored"),
+                            stats.getInt("invalid"),
+                            stats.getInt("requested")
+                    ));
+                } else {
+                    addressesAndStatsToSync.add(new AddressAndStats(address));
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                LOGGER.warn(String.format(
+                        "Failed to parse InetSocketAddress from [%s] received from Ict REST API.",
+                        ictNeighborAddress
+                ));
+            }
+        }
+
+        syncNeighbors(addressesAndStatsToSync, false);
+    }
+
+    public void syncNeighbors(List<AddressAndStats> addressesAndStats, boolean applyReportPort) {
+
+        final List<Neighbor> keepNeighbors = new LinkedList<>();
+
+        for (AddressAndStats addressAndStats : addressesAndStats) {
+            Neighbor syncedNeighbor = null;
+            for (Neighbor neighbor : getNeighbors()) {
+                if (neighbor.isSyncableAddress(addressAndStats.getAddress())) {
+                    neighbor.syncAddressAndStats(addressAndStats, applyReportPort);
+                    syncedNeighbor = neighbor;
+                    break;
+                }
+            }
+
+            if (syncedNeighbor != null) {
+                keepNeighbors.add(syncedNeighbor);
+            } else {
+                keepNeighbors.add(new Neighbor(addressAndStats.getAddress()));
+            }
+        }
+
+        getNeighbors().clear();
+        getNeighbors().addAll(keepNeighbors);
     }
 }

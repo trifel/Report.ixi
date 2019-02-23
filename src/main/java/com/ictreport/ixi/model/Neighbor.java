@@ -1,44 +1,31 @@
 package com.ictreport.ixi.model;
 
-import com.ictreport.ixi.utils.SyncedNeighbors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 
-public class Neighbor {
+public class Neighbor extends AddressAndStats {
 
     private static final Logger LOGGER = LogManager.getLogger(Neighbor.class);
-    private SyncedNeighbors.Address address;
-    private InetSocketAddress reportSocketAddress;
-    private InetSocketAddress ictSocketAddress;
     private String uuid = null;
     private String reportIxiVersion = null;
 
-    public Neighbor(final SyncedNeighbors.Address address) {
-        this.reportSocketAddress = address.asReportInetSocketAddress();
-        this.ictSocketAddress = address.asInetSocketAddress();
-    }
-
-    public Neighbor(final InetSocketAddress socketAddress, final InetSocketAddress ictSocketAddress) {
-        this.reportSocketAddress = socketAddress;
-        this.ictSocketAddress = ictSocketAddress;
+    public Neighbor(final Address address) {
+        super(address, 0, 0, 0, 0, 0);
     }
 
     public boolean sentPacket(final DatagramPacket packet) {
         boolean sameIP = sentPacketFromSameIP(packet);
-        boolean samePort = reportSocketAddress.getPort() == packet.getPort();
+        boolean samePort = getAddress().getReportSocketAddress().getPort() == packet.getPort();
         return sameIP && samePort;
     }
 
     public boolean sentPacketFromSameIP(final DatagramPacket packet) {
-        if (reportSocketAddress == null) {
+        if (getAddress().getReportSocketAddress() == null) {
             return false;
         }
-        return reportSocketAddress.getAddress().getHostAddress().equals(packet.getAddress().getHostAddress());
+        return getAddress().getReportSocketAddress().getAddress().getHostAddress().equals(packet.getAddress().getHostAddress());
     }
 
     /**
@@ -55,34 +42,6 @@ public class Neighbor {
         this.uuid = uuid;
     }
 
-    /**
-     * @return the reportSocketAddress
-     */
-    public InetSocketAddress getReportSocketAddress() {
-        return reportSocketAddress;
-    }
-
-    /**
-     * @param socketAddress the reportSocketAddress to set
-     */
-    public void setReportSocketAddress(final InetSocketAddress reportSocketAddress) {
-        this.reportSocketAddress = reportSocketAddress;
-    }
-
-    /**
-     * @return the ictSocketAddress
-     */
-    public InetSocketAddress getIctSocketAddress() {
-        return ictSocketAddress;
-    }
-
-    /**
-     * @param ictSocketAddress the ictSocketAddress to set
-     */
-    public void setIctSocketAddress(final InetSocketAddress ictSocketAddress) {
-        this.ictSocketAddress = ictSocketAddress;
-    }
-
     public String getReportIxiVersion() {
         return reportIxiVersion;
     }
@@ -91,28 +50,54 @@ public class Neighbor {
         this.reportIxiVersion = reportIxiVersion;
     }
 
-    public void resolveHost() {
-        try {
-            if (!reportSocketAddress.getAddress().equals(InetAddress.getByName(reportSocketAddress.getHostName()))) {
-                reportSocketAddress = new InetSocketAddress(reportSocketAddress.getHostName(), reportSocketAddress.getPort());
-            }
-        } catch (UnknownHostException e) {
-            LOGGER.warn("Failed to resolve host for: " + reportSocketAddress.getHostString());
+    public boolean isSyncableAddress(Address address) {
+        if (getAddress().equals(address)) {
+            // Found a direct match
+            return true;
+        } else if (getAddress().getHostname().equals(address.getHostname()) &&
+                !getAddress().getIp().equals(address.getIp()) &&
+                getAddress().getPort() == address.getPort()) {
+            // Hostname and port is equal, but ip is different.
+            return true;
+        } else if (!getAddress().getHostname().equals(address.getHostname()) &&
+                getAddress().getIp().equals(address.getIp()) &&
+                getAddress().getPort() == address.getPort()) {
+            // Ip and port is equal, but hostname is different.
+            return true;
         }
-        try {
-            if (!ictSocketAddress.getAddress().equals(InetAddress.getByName(ictSocketAddress.getHostName()))) {
-                ictSocketAddress = new InetSocketAddress(ictSocketAddress.getHostName(), ictSocketAddress.getPort());
-            }
-        } catch (UnknownHostException e) {
+        return false;
+    }
+
+    public void syncAddressAndStats(AddressAndStats addressAndStats, boolean applyReportPort) {
+        getAddress().setHostname(addressAndStats.getAddress().getHostname());
+        getAddress().setIp(addressAndStats.getAddress().getIp());
+        getAddress().setPort(addressAndStats.getAddress().getPort());
+        if (applyReportPort) {
+            getAddress().setReportPort(addressAndStats.getAddress().getReportPort());
+        }
+        if (addressAndStats.getAllTx() != null) {
+            setAllTx(addressAndStats.getAllTx());
+        }
+        if (addressAndStats.getNewTx() != null) {
+            setNewTx(addressAndStats.getNewTx());
+        }
+        if (addressAndStats.getIgnoredTx() != null) {
+            setIgnoredTx(addressAndStats.getIgnoredTx());
+        }
+        if (addressAndStats.getInvalidTx() != null) {
+            setInvalidTx(addressAndStats.getInvalidTx());
+        }
+        if (addressAndStats.getRequestedTx() != null) {
+            setRequestedTx(addressAndStats.getRequestedTx());
         }
     }
 
     @Override
     public String toString() {
         return "Neighbor{" +
-                "address=" + address +
-                ", reportSocketAddress=" + reportSocketAddress +
-                ", ictSocketAddress=" + ictSocketAddress +
+                "address=" + getAddress() +
+                ", reportSocketAddress=" + getAddress().getReportSocketAddress() +
+                ", ictSocketAddress=" + getAddress().getIctSocketAddress() +
                 ", uuid='" + uuid + '\'' +
                 ", reportIxiVersion='" + reportIxiVersion + '\'' +
                 '}';

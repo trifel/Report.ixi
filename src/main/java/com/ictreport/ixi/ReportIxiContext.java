@@ -1,8 +1,9 @@
 package com.ictreport.ixi;
 
+import com.ictreport.ixi.model.Address;
+import com.ictreport.ixi.model.AddressAndStats;
 import com.ictreport.ixi.model.Neighbor;
 import com.ictreport.ixi.utils.IctRestCaller;
-import com.ictreport.ixi.utils.SyncedNeighbors;
 import org.iota.ict.ixi.ReportIxi;
 import org.iota.ict.ixi.context.ConfigurableIxiContext;
 import org.json.JSONArray;
@@ -38,8 +39,6 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     private static final int              DEFAULT_REPORT_PORT          = 1338;
     private static final Integer          DEFAULT_EXTERNAL_REPORT_PORT = null;
     private static final String           DEFAULT_NAME                 = "YOUR_NAME (ict-0)";
-    private static final String           DEFAULT_NEIGHBOR_ADDRESS     = "missing";
-    private static final int              DEFAULT_NEIGHBOR_REPORT_PORT = 1338;
     private static final JSONArray        DEFAULT_NEIGHBORS            = new JSONArray();
 
     // Context properties
@@ -48,11 +47,9 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     private int                           reportPort                   = DEFAULT_REPORT_PORT;
     private Integer                       externalReportPort           = DEFAULT_EXTERNAL_REPORT_PORT;
     private String                        name                         = DEFAULT_NAME;
-    private JSONArray                     neighbors                    = DEFAULT_NEIGHBORS;
 
     // Other
     private String                        ictVersion                   = "";
-    private final SyncedNeighbors         syncedNeighbors              = new SyncedNeighbors();
 
     static {
         DEFAULT_CONFIGURATION.put(ICT_REST_PASSWORD, DEFAULT_ICT_REST_PASSWORD);
@@ -74,11 +71,13 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     @Override
     public JSONObject getConfiguration() {
 
-        syncedNeighbors.syncFromIctRest(getIctRestPassword());
+        reportIxi.syncNeighborsFromIctRest();
+
         final List<JSONObject> jsonNeighbor = new LinkedList<>();
-        for (SyncedNeighbors.Address address : syncedNeighbors.getNeighbors()) {
+        for (Neighbor neighbor : reportIxi.getNeighbors()) {
+            final Address address = neighbor.getAddress();
             jsonNeighbor.add(new JSONObject()
-                    .put(NEIGHBOR_ADDRESS, address.asInetSocketAddress().toString())
+                    .put(NEIGHBOR_ADDRESS, address.getIctSocketAddress().toString())
                     .put(NEIGHBOR_REPORT_PORT, address.getReportPort()));
         }
         final JSONArray jsonNeighbors = new JSONArray(jsonNeighbor);
@@ -128,11 +127,6 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         }
         if (configuration.has(EXTERNAL_REPORT_PORT)) {
             setExternalReportPort(configuration.getInt(EXTERNAL_REPORT_PORT));
-        }
-
-        LOGGER.info("Applied configuration...");
-        for (Neighbor neighbor : reportIxi.getNeighbors()) {
-            LOGGER.info(" - Neighbor: " + neighbor.toString());
         }
     }
 
@@ -213,20 +207,6 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         }
     }
 
-    private String getHostFromAddressString(final String address) {
-        int portColonIndex;
-        for (portColonIndex = address.length() - 1; address.charAt(portColonIndex) != ':'; portColonIndex--);
-        return address.substring(0, portColonIndex);
-    }
-
-    public static InetSocketAddress inetSocketAddressFromString(final String address) {
-        int portColonIndex;
-        for (portColonIndex = address.length() - 1; address.charAt(portColonIndex) != ':'; portColonIndex--);
-        final String hostString = address.substring(0, portColonIndex);
-        final int port = Integer.parseInt(address.substring(portColonIndex + 1, address.length()));
-        return new InetSocketAddress(hostString, port);
-    }
-
     public String getIctRestPassword() {
         return ictRestPassword;
     }
@@ -264,33 +244,21 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         this.reportPort = reportPort;
     }
 
-    public JSONArray getNeighbors() {
-        return neighbors;
-    }
-
     public void setNeighbors(JSONArray neighbors) {
-        LOGGER.info("Setting neighbors: " + neighbors.toString());
-        this.neighbors = neighbors;
 
-        List<SyncedNeighbors.Address> addressesToSync = new ArrayList<>();
+        List<AddressAndStats> addressesAndStatsToSync = new ArrayList<>();
 
         for (int i=0; i<neighbors.length(); i++) {
             JSONObject neighbor = neighbors.getJSONObject(i);
             String neighborAddress = neighbor.getString(NEIGHBOR_ADDRESS);
             int neighborReportPort = neighbor.getInt(NEIGHBOR_REPORT_PORT);
 
-            final SyncedNeighbors.Address address = syncedNeighbors.parseAddress(neighborAddress);
+            final Address address = Address.parse(neighborAddress);
             address.setReportPort(neighborReportPort);
-            addressesToSync.add(address);
+            addressesAndStatsToSync.add(new AddressAndStats(address));
         }
 
-        syncedNeighbors.syncAddresses(addressesToSync, true);
-
-        reportIxi.getNeighbors().clear();
-
-        for (SyncedNeighbors.Address address : syncedNeighbors.getNeighbors()) {
-            reportIxi.getNeighbors().add(new Neighbor(address));
-        }
+        reportIxi.syncNeighbors(addressesAndStatsToSync, true);
     }
 
     public Integer getExternalReportPort() {
@@ -321,26 +289,6 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         if (ictInfo != null) {
             String version = ictInfo.getString("version");
             this.ictVersion = version;
-        }
-    }
-
-    private static Integer getIp(InetSocketAddress addr) {
-        byte[] a = addr.getAddress().getAddress();
-        return ((a[0] & 0xff) << 24) | ((a[1] & 0xff) << 16) | ((a[2] & 0xff) << 8) | (a[3] & 0xff);
-    }
-    
-    public static int compareInetSocketAddresses(InetSocketAddress o1, InetSocketAddress o2) {
-        //TODO deal with nulls
-        if (o1 == o2) {
-            return 0;
-        } else if(o1.isUnresolved() || o2.isUnresolved()){
-            return o1.toString().compareTo(o2.toString());
-        } else {
-            int compare = getIp(o1).compareTo(getIp(o2));
-            if (compare == 0) {
-                compare = Integer.valueOf(o1.getPort()).compareTo(o2.getPort());
-            }
-            return compare;
         }
     }
 }

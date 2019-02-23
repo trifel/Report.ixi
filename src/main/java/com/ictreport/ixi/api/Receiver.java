@@ -74,7 +74,7 @@ public class Receiver extends Thread {
         } catch (final Exception e) {
             if (neighbor != null) {
                 LOGGER.info(String.format("Received invalid packet from Neighbor[%s]",
-                        neighbor.getReportSocketAddress()));
+                        neighbor.getAddress().getReportSocketAddress()));
             } else {
                 LOGGER.info(String.format("Received invalid packet from RCS"));
             }
@@ -99,7 +99,7 @@ public class Receiver extends Thread {
                 !neighbor.getReportIxiVersion().equals(metadataPayload.getReportIxiVersion())) {
             neighbor.setReportIxiVersion(metadataPayload.getReportIxiVersion());
             LOGGER.info(String.format("Neighbor[%s] operates Report.ixi version: %s",
-                    neighbor.getReportSocketAddress(),
+                    neighbor.getAddress().getReportSocketAddress(),
                     neighbor.getReportIxiVersion()));
         }
 
@@ -107,7 +107,7 @@ public class Receiver extends Thread {
                 !neighbor.getUuid().equals(metadataPayload.getUuid())) {
             neighbor.setUuid(metadataPayload.getUuid());
             LOGGER.info(String.format("Received new uuid from neighbor[%s]",
-                    neighbor.getReportSocketAddress()));
+                    neighbor.getAddress().getReportSocketAddress()));
         }
     }
 

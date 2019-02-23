@@ -45,8 +45,7 @@ public class Sender {
                     final MetadataPayload metadataPayload =
                             new MetadataPayload(reportIxi.getMetadata().getUuid(), Constants.VERSION);
 
-                    neighbor.resolveHost();
-                    send (metadataPayload, neighbor.getReportSocketAddress());
+                    send (metadataPayload, neighbor.getAddress().getReportSocketAddress());
                 }
             }
         }, 0, 60000);
@@ -57,34 +56,17 @@ public class Sender {
             public void run() {
                 if (!reportIxi.isRunning()) return;
 
-                final JSONArray ictNeighbors = IctRestCaller.getNeighbors(reportIxi.getReportIxiContext().getIctRestPassword());
+                reportIxi.syncNeighborsFromIctRest();
 
-                final List<NeighborPayload> neighbors = new LinkedList<>();
-                for (final Neighbor neighbor : reportIxi.getNeighbors()) {
-                    // Ensure that the neighbor's host is resolved
-                    neighbor.resolveHost();
+                final List<NeighborPayload> neighborPayloads = new LinkedList<>();
 
-                    // Find the neighbor in the json array from ict-rest
-                    boolean foundNeighbor = false;
-                    for (int i=0; i<ictNeighbors.length(); i++) {
-                        JSONObject ictNeighbor = (JSONObject)ictNeighbors.get(i);
-
-                        if (ReportIxiContext.compareInetSocketAddresses(ReportIxiContext.inetSocketAddressFromString(ictNeighbor.getString("address")), neighbor.getIctSocketAddress()) == 0) {
-                            JSONObject stats = (JSONObject)ictNeighbor.getJSONArray("stats").get(ictNeighbor.getJSONArray("stats").length()-1);
-                            neighbors.add(new NeighborPayload(neighbor.getUuid(),
-                                stats.getInt("all"),
-                                stats.getInt("new"),
-                                stats.getInt("ignored"),
-                                stats.getInt("invalid"),
-                                stats.getInt("requested")));
-                            foundNeighbor = true;
-                        }
-                    }
-
-                    if (!foundNeighbor) {
-                        LOGGER.warn(String.format("Failed to match neighbor (%s) with (getNeighbors)-array from ict-rest.",
-                                neighbor.getIctSocketAddress().toString()));
-                    }
+                for (Neighbor neighbor : reportIxi.getNeighbors()) {
+                    neighborPayloads.add(new NeighborPayload(neighbor.getUuid(),
+                            neighbor.getAllTx(),
+                            neighbor.getNewTx(),
+                            neighbor.getIgnoredTx(),
+                            neighbor.getInvalidTx(),
+                            neighbor.getRequestedTx()));
                 }
 
                 final StatusPayload statusPayload = new StatusPayload(
@@ -92,7 +74,7 @@ public class Sender {
                     reportIxi.getReportIxiContext().getName(),
                     reportIxi.getReportIxiContext().getIctVersion(),
                     Constants.VERSION,
-                    neighbors);
+                    neighborPayloads);
 
                 send(statusPayload, Constants.RCS_HOST, Constants.RCS_PORT);
             }
