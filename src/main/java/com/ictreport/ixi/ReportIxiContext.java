@@ -69,7 +69,6 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         this.reportIxi = reportIxi;
 
         applyConfiguration();
-        loadIctInfo();
     }
 
     @Override

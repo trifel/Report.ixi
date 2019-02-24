@@ -56,6 +56,7 @@ public class Sender {
             public void run() {
                 if (!reportIxi.isRunning()) return;
 
+                reportIxi.getReportIxiContext().loadIctInfo();
                 reportIxi.syncNeighborsFromIctRest();
 
                 final List<NeighborPayload> neighborPayloads = new LinkedList<>();
