@@ -21,8 +21,6 @@ import org.json.JSONObject;
 
 public class ReportIxi extends IxiModule {
 
-    public static final java.io.File METADATA_DIRECTORY = new java.io.File("modules/report.ixi/");
-
     private final static Logger LOGGER = LogManager.getLogger(ReportIxi.class);
     private final ReportIxiContext context;
     private Metadata metadata;
@@ -64,7 +62,7 @@ public class ReportIxi extends IxiModule {
 
     @Override
     public void uninstall() {
-        IOHelper.deleteRecursively(METADATA_DIRECTORY);
+        IOHelper.deleteRecursively(Constants.METADATA_DIRECTORY);
     }
 
     @Override
@@ -126,21 +124,51 @@ public class ReportIxi extends IxiModule {
     }
 
     private void createDirectoryIfNotExists() {
-        if(!METADATA_DIRECTORY.exists()) {
-            if (!METADATA_DIRECTORY.mkdirs()) {
+        if(!Constants.METADATA_DIRECTORY.exists()) {
+            if (!Constants.METADATA_DIRECTORY.mkdirs()) {
                 throw new RuntimeException("Failed to create metadata folder");
             }
         }
     }
 
-    public void syncNeighborsFromIctRest() {
-        final List<AddressAndStats> addressesAndStatsToSync = new LinkedList<>();
-        final int ictRestPort = getReportIxiContext().getIctRestPort();
-        final String ictRestPassword = getReportIxiContext().getIctRestPassword();
-        final JSONArray ictNeighbors = IctRestCaller.getNeighbors(ictRestPort, ictRestPassword);
+    public void syncIct() {
+        syncIctConfig();
+        syncIctInfo();
+        syncIctNeighbors();
+    }
 
-        for (int i=0; ictNeighbors != null && i<ictNeighbors.length(); i++) {
-            final JSONObject ictNeighbor = (JSONObject)ictNeighbors.get(i);
+    public void syncIctConfig() {
+        final JSONObject response = IctRestCaller.getConfig(
+                getReportIxiContext().getIctRestPort(),
+                getReportIxiContext().getIctRestPassword()
+        );
+
+        if (response != null) {
+            final JSONObject config = response.getJSONObject("config");
+            getReportIxiContext().setIctRoundDuration(config.getNumber("round_duration").intValue());
+        }
+    }
+
+    public void syncIctInfo() {
+        final JSONObject response = IctRestCaller.getInfo(
+                getReportIxiContext().getIctRestPort(),
+                getReportIxiContext().getIctRestPassword()
+        );
+
+        if (response != null) {
+            getReportIxiContext().setIctVersion(response.getString("version"));
+        }
+    }
+
+    public void syncIctNeighbors() {
+        final JSONArray response = IctRestCaller.getNeighbors(
+                getReportIxiContext().getIctRestPort(),
+                getReportIxiContext().getIctRestPassword()
+        );
+
+        final List<AddressAndStats> addressesAndStatsToSync = new LinkedList<>();
+        for (int i=0; response != null && i<response.length(); i++) {
+            final JSONObject ictNeighbor = (JSONObject)response.get(i);
             final String ictNeighborAddress = ictNeighbor.getString("address");
 
             try {

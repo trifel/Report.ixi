@@ -1,31 +1,29 @@
 package com.ictreport.ixi.api;
 
-import com.ictreport.ixi.ReportIxiContext;
 import com.ictreport.ixi.exchange.*;
-import com.ictreport.ixi.utils.IctRestCaller;
+import com.ictreport.ixi.utils.RandomStringGenerator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.iota.ict.ixi.ReportIxi;
-import org.iota.ict.model.TransactionBuilder;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+
 import com.ictreport.ixi.model.Neighbor;
 import com.ictreport.ixi.utils.Constants;
-import com.ictreport.ixi.utils.RandomStringGenerator;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.iota.ict.model.TransactionBuilder;
 
 public class Sender {
 
     private static final Logger LOGGER = LogManager.getLogger(Sender.class);
     private final ReportIxi reportIxi;
     private final DatagramSocket socket;
-    private final RandomStringGenerator randomStringGenerator = new RandomStringGenerator();
     private final List<Timer> timers = new ArrayList<>();
+    private final RandomStringGenerator randomStringGenerator = new RandomStringGenerator();
 
     public Sender(final ReportIxi reportIxi, final DatagramSocket socket) {
         this.reportIxi = reportIxi;
@@ -33,8 +31,6 @@ public class Sender {
     }
 
     public void start() {
-        timers.add(new Timer());
-
         // Metadata sender
         addTimerTask(new TimerTask() {
             @Override
@@ -46,9 +42,14 @@ public class Sender {
                             new MetadataPayload(reportIxi.getMetadata().getUuid(), Constants.VERSION);
 
                     send (metadataPayload, neighbor.getAddress().getReportSocketAddress());
+                    LOGGER.info(String.format(
+                            "Sent MetadataPayload to neighbor [%s]: %s",
+                            neighbor.getAddress().getReportSocketAddress().toString(),
+                            Payload.serialize(metadataPayload))
+                    );
                 }
             }
-        }, 0, 60000);
+        }, 0, TimeUnit.MINUTES.toMillis(1));
 
         // Status sender
         addTimerTask(new TimerTask() {
@@ -56,8 +57,7 @@ public class Sender {
             public void run() {
                 if (!reportIxi.isRunning()) return;
 
-                reportIxi.getReportIxiContext().loadIctInfo();
-                reportIxi.syncNeighborsFromIctRest();
+                reportIxi.syncIct();
 
                 final List<NeighborPayload> neighborPayloads = new LinkedList<>();
 
@@ -75,11 +75,18 @@ public class Sender {
                     reportIxi.getReportIxiContext().getName(),
                     reportIxi.getReportIxiContext().getIctVersion(),
                     Constants.VERSION,
+                    reportIxi.getReportIxiContext().getIctRoundDuration(),
                     neighborPayloads);
 
                 send(statusPayload, Constants.RCS_HOST, Constants.RCS_PORT);
+
+                LOGGER.info("Sent StatusPayload to RCS:\n" + Payload.serialize(statusPayload));
+                LOGGER.info(String.format(
+                        "Sent StatusPayload to RCS: %s",
+                        Payload.serialize(statusPayload))
+                );
             }
-        }, 0, 60000);
+        }, 0, TimeUnit.MINUTES.toMillis(1));
 
         // Ping sender
         addTimerTask(new TimerTask() {
@@ -101,7 +108,7 @@ public class Sender {
                         new SubmittedPingPayload(reportIxi.getMetadata().getUuid(), pingPayload);
                 send(submittedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
             }
-        }, 0, 60000);
+        }, 0, TimeUnit.MINUTES.toMillis(5));
     }
 
     public void requestUuid() {

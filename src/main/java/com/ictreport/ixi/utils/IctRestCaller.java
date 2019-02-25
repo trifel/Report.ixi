@@ -1,6 +1,5 @@
 package com.ictreport.ixi.utils;
 
-import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;

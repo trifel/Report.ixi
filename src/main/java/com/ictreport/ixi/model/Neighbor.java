@@ -3,8 +3,6 @@ package com.ictreport.ixi.model;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.net.DatagramPacket;
-
 public class Neighbor extends AddressAndStats {
 
     private static final Logger LOGGER = LogManager.getLogger(Neighbor.class);
@@ -15,29 +13,10 @@ public class Neighbor extends AddressAndStats {
         super(address, 0, 0, 0, 0, 0);
     }
 
-    public boolean sentPacket(final DatagramPacket packet) {
-        boolean sameIP = sentPacketFromSameIP(packet);
-        boolean samePort = getAddress().getReportSocketAddress().getPort() == packet.getPort();
-        return sameIP && samePort;
-    }
-
-    public boolean sentPacketFromSameIP(final DatagramPacket packet) {
-        if (getAddress().getReportSocketAddress() == null) {
-            return false;
-        }
-        return getAddress().getReportSocketAddress().getAddress().getHostAddress().equals(packet.getAddress().getHostAddress());
-    }
-
-    /**
-     * @return the uuid
-     */
     public String getUuid() {
         return uuid;
     }
 
-    /**
-     * @param uuid the uuid to set
-     */
     public void setUuid(final String uuid) {
         this.uuid = uuid;
     }

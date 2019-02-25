@@ -3,13 +3,11 @@ package com.ictreport.ixi;
 import com.ictreport.ixi.model.Address;
 import com.ictreport.ixi.model.AddressAndStats;
 import com.ictreport.ixi.model.Neighbor;
-import com.ictreport.ixi.utils.IctRestCaller;
 import org.iota.ict.ixi.ReportIxi;
 import org.iota.ict.ixi.context.ConfigurableIxiContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,6 +32,8 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     private static final String           NEIGHBOR_REPORT_PORT         = "reportPort";
 
     // Property defaults
+    private static final String           DEFAULT_ICT_VERSION          = "";
+    private static final int              DEFAULT_ICT_ROUND_DURATION   = 60000;
     private static final int              DEFAULT_ICT_REST_PORT        = 2187;
     private static final String           DEFAULT_ICT_REST_PASSWORD    = "change_me_now";
     private static final JSONObject       DEFAULT_CONFIGURATION        = new JSONObject();
@@ -44,15 +44,14 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     private static final JSONArray        DEFAULT_NEIGHBORS            = new JSONArray();
 
     // Context properties
+    private String                        ictVersion                   = DEFAULT_ICT_VERSION;
+    private int                           ictRoundDuration             = DEFAULT_ICT_ROUND_DURATION;
     private int                           ictRestPort                  = DEFAULT_ICT_REST_PORT;
     private String                        ictRestPassword              = DEFAULT_ICT_REST_PASSWORD;
     private String                        host                         = DEFAULT_HOST;
     private int                           reportPort                   = DEFAULT_REPORT_PORT;
     private Integer                       externalReportPort           = DEFAULT_EXTERNAL_REPORT_PORT;
     private String                        name                         = DEFAULT_NAME;
-
-    // Other
-    private String                        ictVersion                   = "";
 
     static {
         DEFAULT_CONFIGURATION.put(ICT_REST_PORT, DEFAULT_ICT_REST_PORT);
@@ -74,7 +73,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     @Override
     public JSONObject getConfiguration() {
 
-        reportIxi.syncNeighborsFromIctRest();
+        reportIxi.syncIctNeighbors();
 
         final List<JSONObject> jsonNeighbor = new LinkedList<>();
         for (Neighbor neighbor : reportIxi.getNeighbors()) {
@@ -212,6 +211,22 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         }
     }
 
+    public String getIctVersion() {
+        return ictVersion;
+    }
+
+    public void setIctVersion(String ictVersion) {
+        this.ictVersion = ictVersion;
+    }
+
+    public int getIctRoundDuration() {
+        return ictRoundDuration;
+    }
+
+    public void setIctRoundDuration(int ictRoundDuration) {
+        this.ictRoundDuration = ictRoundDuration;
+    }
+
     public int getIctRestPort() {
         return ictRestPort;
     }
@@ -287,21 +302,9 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         this.externalReportPort = externalReportPort;
     }
 
-    public String getIctVersion() {
-        return ictVersion;
-    }
-
     private class IllegalPropertyException extends IllegalArgumentException {
         private IllegalPropertyException(String field, String cause) {
             super("Invalid property '"+field+"': " + cause + ".");
-        }
-    }
-
-    public void loadIctInfo() {
-        final JSONObject ictInfo = IctRestCaller.getInfo(getIctRestPort(), getIctRestPassword());
-        if (ictInfo != null) {
-            String version = ictInfo.getString("version");
-            this.ictVersion = version;
         }
     }
 }

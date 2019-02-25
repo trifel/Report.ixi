@@ -1,14 +1,12 @@
 package com.ictreport.ixi.api;
 
 import com.ictreport.ixi.exchange.*;
+import com.ictreport.ixi.model.Address;
 import com.ictreport.ixi.utils.Constants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.net.*;
 
 import com.ictreport.ixi.model.Neighbor;
 import org.iota.ict.ixi.ReportIxi;
@@ -111,6 +109,15 @@ public class Receiver extends Thread {
         }
     }
 
+    private void processPingPayload(final PingPayload pingPayload) {
+        final ReceivedPingPayload receivedPingPayload =
+                new ReceivedPingPayload(reportIxi.getMetadata().getUuid(), pingPayload);
+
+        if (reportIxi.getMetadata().getUuid() != null) {
+            reportIxi.getApi().getSender().send(receivedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
+        }
+    }
+
     private boolean isPacketSentFromRCS(final DatagramPacket packet) {
         try {
             final boolean sameIP = InetAddress.getByName(Constants.RCS_HOST).getHostAddress()
@@ -122,22 +129,14 @@ public class Receiver extends Thread {
         }
     }
 
-    private void processPingPayload(final PingPayload pingPayload) {
-        final ReceivedPingPayload receivedPingPayload =
-                new ReceivedPingPayload(reportIxi.getMetadata().getUuid(), pingPayload);
-
-        if (reportIxi.getMetadata().getUuid() != null) {
-            reportIxi.getApi().getSender().send(receivedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
-        }
-    }
-
     private Neighbor determineNeighborWhoSent(final DatagramPacket packet) {
-        for (final Neighbor neighbor : reportIxi.getNeighbors())
-            if (neighbor.sentPacket(packet))
+        for (final Neighbor neighbor : reportIxi.getNeighbors()) {
+            final InetSocketAddress inetSocketAddress = new InetSocketAddress(packet.getAddress(), packet.getPort());
+            final Address address = Address.parse(inetSocketAddress.toString());
+            if (neighbor.isSyncableAddress(address)) {
                 return neighbor;
-        for (final Neighbor neighbor : reportIxi.getNeighbors())
-            if (neighbor.sentPacketFromSameIP(packet))
-                return neighbor;
+            }
+        }
         return null;
     }
 }
