@@ -3,6 +3,7 @@ package com.ictreport.ixi;
 import com.ictreport.ixi.model.Address;
 import com.ictreport.ixi.model.AddressAndStats;
 import com.ictreport.ixi.model.Neighbor;
+import com.ictreport.ixi.utils.IctRestCaller;
 import org.iota.ict.ixi.ReportIxi;
 import org.iota.ict.ixi.context.ConfigurableIxiContext;
 import org.json.JSONArray;
@@ -108,6 +109,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         validateReportPort(newConfiguration);
         validateName(newConfiguration);
         validateNeighbors(newConfiguration);
+        validateIctRestConnectivity(newConfiguration);
     }
 
     @Override
@@ -134,18 +136,21 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         }
     }
 
-    private void validateIctRestPassword(final JSONObject newConfiguration) {
-        if (newConfiguration.has(ICT_REST_PASSWORD)) {
+    private void validateIctRestConnectivity(final JSONObject newConfiguration) {
+        if (!newConfiguration.has(ICT_REST_PASSWORD)) {
             throw new IllegalPropertyException(ICT_REST_PASSWORD, "not defined");
         }
         if (!(newConfiguration.get(ICT_REST_PASSWORD) instanceof String)) {
             throw new IllegalPropertyException(ICT_REST_PASSWORD, "not a string");
         }
-        // TODO: Validate format of string
+        final JSONObject response = IctRestCaller.getInfo(newConfiguration.getInt(ICT_REST_PORT), newConfiguration.getString(ICT_REST_PASSWORD));
+        if (response == null) {
+            throw new IllegalPropertyException("Ict REST API port/password", "Connectivity check with Ict REST API failed");
+        }
     }
 
     private void validateHost(final JSONObject newConfiguration) {
-        if (newConfiguration.has(HOST)) {
+        if (!newConfiguration.has(HOST)) {
             throw new IllegalPropertyException(HOST, "not defined");
         }
         if (!(newConfiguration.get(HOST) instanceof String)) {
@@ -187,6 +192,10 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         }
         if (!newConfiguration.getString(NAME).matches(".+\\s\\(ict-\\d+\\)")) {
             throw new IllegalPropertyException(NAME, "please follow the naming convention: \"<name> (ict-<number>)\"");
+        }
+        if (newConfiguration.getString(NAME).equals(DEFAULT_NAME)) {
+            throw new IllegalPropertyException(NAME,
+                    String.format("please assign your personal ict name instead of '%s'", DEFAULT_NAME));
         }
     }
 
