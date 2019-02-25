@@ -144,8 +144,7 @@ public class ReportIxi extends IxiModule {
         );
 
         if (response != null) {
-            final JSONObject config = response.getJSONObject("config");
-            getReportIxiContext().setIctRoundDuration(config.getNumber("round_duration").intValue());
+            getReportIxiContext().setIctRoundDuration(response.getNumber("round_duration").intValue());
         }
     }
 

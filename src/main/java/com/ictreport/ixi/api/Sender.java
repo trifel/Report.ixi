@@ -80,7 +80,6 @@ public class Sender {
 
                 send(statusPayload, Constants.RCS_HOST, Constants.RCS_PORT);
 
-                LOGGER.info("Sent StatusPayload to RCS:\n" + Payload.serialize(statusPayload));
                 LOGGER.info(String.format(
                         "Sent StatusPayload to RCS: %s",
                         Payload.serialize(statusPayload))
