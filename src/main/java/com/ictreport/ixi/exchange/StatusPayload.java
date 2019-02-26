@@ -10,16 +10,18 @@ public class StatusPayload extends Payload {
     private final String reportIxiVersion;
     private final int    ictRoundDuration;
     private final List<NeighborPayload> neighbors;
+    private final int    systemLoadAverage;
 
     public StatusPayload(final String uuid, final String name, final String ictVersion,
                          final String reportIxiVersion, final int ictRoundDuration,
-                         final List<NeighborPayload> neighbors) {
+                         final List<NeighborPayload> neighbors, final int systemLoadAverage) {
         this.uuid = uuid;
         this.name = name;
         this.ictVersion = ictVersion;
         this.reportIxiVersion = reportIxiVersion;
         this.ictRoundDuration = ictRoundDuration;
         this.neighbors = neighbors;
+        this.systemLoadAverage = systemLoadAverage;
     }
 
     public String getUuid() {
@@ -44,5 +46,9 @@ public class StatusPayload extends Payload {
 
     public List<NeighborPayload> getNeighbors() {
         return neighbors;
+    }
+
+    public int getSystemLoadAverage() {
+        return systemLoadAverage;
     }
 }

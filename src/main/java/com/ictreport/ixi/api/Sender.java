@@ -1,6 +1,7 @@
 package com.ictreport.ixi.api;
 
 import com.ictreport.ixi.exchange.*;
+import com.ictreport.ixi.utils.CPUMonitor;
 import com.ictreport.ixi.utils.RandomStringGenerator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,6 +32,7 @@ public class Sender {
     }
 
     public void start() {
+
         // Metadata sender
         addTimerTask(new TimerTask() {
             @Override
@@ -71,12 +73,13 @@ public class Sender {
                 }
 
                 final StatusPayload statusPayload = new StatusPayload(
-                    reportIxi.getMetadata().getUuid(),
-                    reportIxi.getReportIxiContext().getName(),
-                    reportIxi.getReportIxiContext().getIctVersion(),
-                    Constants.VERSION,
-                    reportIxi.getReportIxiContext().getIctRoundDuration(),
-                    neighborPayloads);
+                        reportIxi.getMetadata().getUuid(),
+                        reportIxi.getReportIxiContext().getName(),
+                        reportIxi.getReportIxiContext().getIctVersion(),
+                        Constants.VERSION,
+                        reportIxi.getReportIxiContext().getIctRoundDuration(),
+                        neighborPayloads,
+                        CPUMonitor.getSystemLoadAverage());
 
                 send(statusPayload, Constants.RCS_HOST, Constants.RCS_PORT);
 
