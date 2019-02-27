@@ -42,7 +42,7 @@ public class ConfigurationMigrator {
                 return false;
             }
 
-            LOGGER.info("Migrating configuration from " + sourceFile.getPath() + " to " + sourceFile.getPath() + "...");
+            LOGGER.info("Migrating configuration from " + sourceFile.getPath() + " to " + destFile.getPath() + "...");
             FileChannel source = null;
             FileChannel destination = null;
 
