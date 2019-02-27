@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName;
 
 public class NeighborPayload extends Payload {
 
+    private final Long timestamp;
     private final String uuid;
     private final int all;
     @SerializedName("new")
@@ -12,13 +13,18 @@ public class NeighborPayload extends Payload {
     private final int invalid;
     private final int requested;
 
-    public NeighborPayload(String uuid, int all, int newTx, int ignored, int invalid, int requested) {
+    public NeighborPayload(Long timestamp, String uuid, int all, int newTx, int ignored, int invalid, int requested) {
+        this.timestamp = timestamp;
         this.uuid = (uuid != null ? uuid : "");
         this.all = all;
         this.newTx = newTx;
         this.ignored = ignored;
         this.invalid = invalid;
         this.requested = requested;
+    }
+
+    public Long getTimestamp() {
+        return timestamp;
     }
 
     public String getUuid() {

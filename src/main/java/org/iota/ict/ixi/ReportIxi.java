@@ -177,8 +177,10 @@ public class ReportIxi extends IxiModule {
 
                 if (statsArray.length() > 0) {
                     final JSONObject stats = statsArray.getJSONObject(statsArray.length() - 1);
+
                     addressesAndStatsToSync.add(new AddressAndStats(
                             address,
+                            stats.getNumber("timestamp").longValue(),
                             stats.getInt("all"),
                             stats.getInt("new"),
                             stats.getInt("ignored"),

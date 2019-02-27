@@ -10,7 +10,7 @@ public class Neighbor extends AddressAndStats {
     private String reportIxiVersion = null;
 
     public Neighbor(final Address address) {
-        super(address, 0, 0, 0, 0, 0);
+        super(address, null, 0, 0, 0, 0, 0);
     }
 
     public String getUuid() {
@@ -53,6 +53,9 @@ public class Neighbor extends AddressAndStats {
         getAddress().setPort(addressAndStats.getAddress().getPort());
         if (applyReportPort) {
             getAddress().setReportPort(addressAndStats.getAddress().getReportPort());
+        }
+        if (addressAndStats.getTimestamp() != null) {
+            setTimestamp(addressAndStats.getTimestamp());
         }
         if (addressAndStats.getAllTx() != null) {
             setAllTx(addressAndStats.getAllTx());

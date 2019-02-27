@@ -64,12 +64,15 @@ public class Sender {
                 final List<NeighborPayload> neighborPayloads = new LinkedList<>();
 
                 for (Neighbor neighbor : reportIxi.getNeighbors()) {
-                    neighborPayloads.add(new NeighborPayload(neighbor.getUuid(),
+                    neighborPayloads.add(new NeighborPayload(
+                            neighbor.getTimestamp(),
+                            neighbor.getUuid(),
                             neighbor.getAllTx(),
                             neighbor.getNewTx(),
                             neighbor.getIgnoredTx(),
                             neighbor.getInvalidTx(),
-                            neighbor.getRequestedTx()));
+                            neighbor.getRequestedTx()
+                    ));
                 }
 
                 final StatusPayload statusPayload = new StatusPayload(

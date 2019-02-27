@@ -2,6 +2,7 @@ package com.ictreport.ixi.model;
 
 public class AddressAndStats {
     private Address address;
+    private Long timestamp;
     private Integer allTx;
     private Integer newTx;
     private Integer ignoredTx;
@@ -10,6 +11,7 @@ public class AddressAndStats {
 
     public AddressAndStats(Address address) {
         this.address = address;
+        this.timestamp = null;
         this.allTx = null;
         this.newTx = null;
         this.ignoredTx = null;
@@ -17,8 +19,9 @@ public class AddressAndStats {
         this.requestedTx = null;
     }
 
-    public AddressAndStats(Address address, int allTx, int newTx, int ignoredTx, int invalidTx, int requestedTx) {
+    public AddressAndStats(Address address, Long timestamp, int allTx, int newTx, int ignoredTx, int invalidTx, int requestedTx) {
         this.address = address;
+        this.timestamp = timestamp;
         this.allTx = allTx;
         this.newTx = newTx;
         this.ignoredTx = ignoredTx;
@@ -32,6 +35,14 @@ public class AddressAndStats {
 
     public void setAddress(Address address) {
         this.address = address;
+    }
+
+    public Long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Long timestamp) {
+        this.timestamp = timestamp;
     }
 
     public Integer getAllTx() {
