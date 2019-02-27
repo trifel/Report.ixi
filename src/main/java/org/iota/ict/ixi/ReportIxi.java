@@ -74,7 +74,7 @@ public class ReportIxi extends IxiModule {
 
     @Override
     public void uninstall() {
-        IOHelper.deleteRecursively(Constants.METADATA_DIRECTORY);
+        
     }
 
     @Override
