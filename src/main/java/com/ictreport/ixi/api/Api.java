@@ -9,7 +9,7 @@ import java.net.SocketException;
 
 public class Api {
 
-    private final static Logger LOGGER = LogManager.getLogger(Api.class);
+    private final static Logger LOGGER = LogManager.getLogger("Api");
     private final InetSocketAddress address;
     private final DatagramSocket socket;
     private final Receiver receiver;

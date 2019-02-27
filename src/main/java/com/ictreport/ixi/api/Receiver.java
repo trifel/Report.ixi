@@ -13,7 +13,7 @@ import org.iota.ict.ixi.ReportIxi;
 
 public class Receiver extends Thread {
 
-    private final static Logger LOGGER = LogManager.getLogger(Receiver.class);
+    private final static Logger LOGGER = LogManager.getLogger("Receiver");
     private final ReportIxi reportIxi;
     private final DatagramSocket socket;
     private boolean isReceiving = false;
@@ -71,10 +71,10 @@ public class Receiver extends Thread {
             processPayload(neighbor, payload);
         } catch (final Exception e) {
             if (neighbor != null) {
-                LOGGER.info(String.format("Received invalid packet from Neighbor[%s]",
+                LOGGER.info(String.format("Received invalid payload from Neighbor[%s]",
                         neighbor.getAddress().getReportSocketAddress()));
             } else {
-                LOGGER.info(String.format("Received invalid packet from RCS"));
+                LOGGER.info(String.format("Received invalid payload from RCS"));
             }
         }
     }
@@ -93,6 +93,10 @@ public class Receiver extends Thread {
     }
 
     private void processMetadataPacket(final Neighbor neighbor, final MetadataPayload metadataPayload) {
+
+        LOGGER.debug(String.format("Received MetadataPayload from neighbor[%s]",
+                neighbor.getAddress().getReportSocketAddress()));
+
         if (neighbor.getReportIxiVersion() == null ||
                 !neighbor.getReportIxiVersion().equals(metadataPayload.getReportIxiVersion())) {
             neighbor.setReportIxiVersion(metadataPayload.getReportIxiVersion());

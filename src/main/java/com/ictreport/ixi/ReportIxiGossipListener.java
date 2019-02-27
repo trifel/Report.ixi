@@ -12,7 +12,7 @@ import org.iota.ict.network.event.GossipListener;
 
 public class ReportIxiGossipListener implements GossipListener {
 
-    private final static Logger LOGGER = LogManager.getLogger(ReportIxiGossipListener.class);
+    private final static Logger LOGGER = LogManager.getLogger("ReportIxiGossipListener");
     private final GossipFilter filter = new GossipFilter();
     private final Api api;
 

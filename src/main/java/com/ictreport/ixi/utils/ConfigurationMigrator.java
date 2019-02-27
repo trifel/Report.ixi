@@ -8,7 +8,7 @@ import java.nio.channels.FileChannel;
 
 public class ConfigurationMigrator {
 
-    private static final Logger LOGGER = LogManager.getLogger(ConfigurationMigrator.class);
+    private static final Logger LOGGER = LogManager.getLogger("ConfigurationMigrator");
 
     public static boolean configurationExists() {
         return new File("modules/report.ixi-" + Constants.VERSION + ".jar.cfg").exists();

@@ -18,7 +18,7 @@ import org.apache.logging.log4j.Logger;
 
 public class ReportIxiContext extends ConfigurableIxiContext {
 
-    private final static Logger LOGGER = LogManager.getLogger(ReportIxiContext.class);
+    private final static Logger LOGGER = LogManager.getLogger("ReportIxiContext");
     private final        ReportIxi        reportIxi;
 
     // Property names

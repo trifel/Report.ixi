@@ -13,14 +13,14 @@ public class NeighborPayload extends Payload {
     private final int invalid;
     private final int requested;
 
-    public NeighborPayload(Long timestamp, String uuid, int all, int newTx, int ignored, int invalid, int requested) {
+    public NeighborPayload(Long timestamp, String uuid, Integer all, Integer newTx, Integer ignored, Integer invalid, Integer requested) {
         this.timestamp = timestamp;
         this.uuid = (uuid != null ? uuid : "");
-        this.all = all;
-        this.newTx = newTx;
-        this.ignored = ignored;
-        this.invalid = invalid;
-        this.requested = requested;
+        this.all = (all != null ? all : -1);
+        this.newTx = (newTx != null ? newTx : -1);
+        this.ignored = (ignored != null ? ignored : -1);
+        this.invalid = (invalid != null ? invalid : -1);
+        this.requested = (requested != null ? requested : -1);
     }
 
     public Long getTimestamp() {

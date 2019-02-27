@@ -17,14 +17,16 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class IctRestCaller {
 
-    private final static Logger LOGGER = LogManager.getLogger(IctRestCaller.class);
+    private final static Logger LOGGER = LogManager.getLogger("IctRestCaller");
 
     public static JSONObject getInfo(final int ictRestPort, final String ictRestPassword) {
+        LOGGER.debug("Fetching data from Ict REST API endpoint: /getInfo");
         String json = call("getInfo", ictRestPort, ictRestPassword);
         if (json != null) {
             return new JSONObject(json);
@@ -33,7 +35,7 @@ public class IctRestCaller {
     }
 
     public static JSONObject getConfig(final int ictRestPort, final String ictRestPassword) {
-
+        LOGGER.debug("Fetching data from Ict REST API endpoint: /getConfig");
         String json = call("getConfig", ictRestPort, ictRestPassword);
         if (json != null) {
             return new JSONObject(json);
@@ -42,7 +44,6 @@ public class IctRestCaller {
     }
 
     public static JSONArray getNeighbors(final int ictRestPort, final String ictRestPassword) {
-
         String json = call("getNeighbors", ictRestPort, ictRestPassword);
         if (json != null) {
             JSONObject rootObject =  new JSONObject(json);
@@ -52,37 +53,50 @@ public class IctRestCaller {
     }
 
     private static String call(final String route, final int ictRestPort, final String ictRestPassword) {
-        try {
-            final CloseableHttpClient httpclient = HttpClients.createDefault();
-            HttpPost httppost = new HttpPost("http://localhost:" + ictRestPort + "/" + route);
+        //try {
+        final String endpoint = "http://localhost:" + ictRestPort + "/" + route;
+        LOGGER.debug("Fetching Ict REST API (" + endpoint + ")...");
 
+        final CloseableHttpClient httpclient = HttpClients.createDefault();
+        HttpPost httppost = new HttpPost(endpoint);
+
+        try {
             // Request parameters and other properties.
             List<NameValuePair> params = new ArrayList<>();
             params.add(new BasicNameValuePair("password", ictRestPassword));
             httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            LOGGER.error("Failed to set request params, error: UnsupportedEncodingException");
+        }
 
-            //Execute and get the response.
-            final CloseableHttpResponse response = httpclient.execute(httppost);
+        //Execute and get the response.
+        CloseableHttpResponse response = null;
+        try {
+            response = httpclient.execute(httppost);
+        } catch (IOException e) {
+            LOGGER.error("Exception thrown when calling Ict REST API (" + endpoint + "), IOException");
+        }
 
-            if (response.getStatusLine().getStatusCode() != 200) {
-                LOGGER.error(String.format("Failed to call ict-rest api, status code: %d.",
-                        response.getStatusLine().getStatusCode()));
+        if (response != null) {
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode != 200) {
+                LOGGER.error("Failed to fetch details from Ict REST API (" + endpoint + "), status code: " + statusCode);
                 return null;
             }
 
             HttpEntity entity = response.getEntity();
-
             if (entity != null) {
                 try (InputStream instream = entity.getContent()) {
-
                     StringWriter writer = new StringWriter();
                     IOUtils.copy(instream, writer, "UTF-8");
                     final String json = writer.toString();
+                    LOGGER.debug("Successfully fetched details from " + endpoint);
                     return json;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    LOGGER.error("Failed to parse response from Ict REST API (" + endpoint + ").");
                 }
             }
-        } catch (IOException e) {
-            LOGGER.warn("Failed to call Ict REST API. Check Report.ixi configuration, especially 'Ict REST API port' and 'Ict REST API password'.");
         }
         return null;
     }

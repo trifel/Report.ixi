@@ -10,7 +10,7 @@ import java.util.*;
 
 public class Metadata extends java.util.Properties {
 
-    private final static Logger LOGGER = LogManager.getLogger(Metadata.class);
+    private final static Logger LOGGER = LogManager.getLogger("Metadata");
 
     // Property names
     private final static String UUID = "uuid";
@@ -50,8 +50,7 @@ public class Metadata extends java.util.Properties {
             LOGGER.info(String.format("Could not read metadata file '%s', therefore a new one will be created.",
                     metadataFilePath));
         } catch (final IOException e) {
-            LOGGER.error(String.format("Failed to open input stream of file: '%s'",
-                    metadataFilePath));
+            LOGGER.error(String.format("Failed to open input stream of file: '%s'", metadataFilePath));
             e.printStackTrace();
         } finally {
             if (inputStream != null) {

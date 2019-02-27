@@ -1,6 +1,7 @@
 package com.ictreport.ixi.api;
 
 import com.ictreport.ixi.exchange.*;
+import com.ictreport.ixi.model.Stats;
 import com.ictreport.ixi.utils.CPUMonitor;
 import com.ictreport.ixi.utils.RandomStringGenerator;
 import org.apache.logging.log4j.LogManager;
@@ -20,7 +21,7 @@ import org.iota.ict.model.TransactionBuilder;
 
 public class Sender {
 
-    private static final Logger LOGGER = LogManager.getLogger(Sender.class);
+    private static final Logger LOGGER = LogManager.getLogger("Sender");
     private final ReportIxi reportIxi;
     private final DatagramSocket socket;
     private final List<Timer> timers = new ArrayList<>();
@@ -44,7 +45,7 @@ public class Sender {
                             new MetadataPayload(reportIxi.getMetadata().getUuid(), Constants.VERSION);
 
                     send (metadataPayload, neighbor.getAddress().getReportSocketAddress());
-                    LOGGER.info(String.format(
+                    LOGGER.debug(String.format(
                             "Sent MetadataPayload to neighbor [%s]: %s",
                             neighbor.getAddress().getReportSocketAddress().toString(),
                             Payload.serialize(metadataPayload))
@@ -64,14 +65,15 @@ public class Sender {
                 final List<NeighborPayload> neighborPayloads = new LinkedList<>();
 
                 for (Neighbor neighbor : reportIxi.getNeighbors()) {
+
                     neighborPayloads.add(new NeighborPayload(
-                            neighbor.getTimestamp(),
+                            neighbor.getStats().getTimestamp(),
                             neighbor.getUuid(),
-                            neighbor.getAllTx(),
-                            neighbor.getNewTx(),
-                            neighbor.getIgnoredTx(),
-                            neighbor.getInvalidTx(),
-                            neighbor.getRequestedTx()
+                            neighbor.getStats().getAllTx(),
+                            neighbor.getStats().getNewTx(),
+                            neighbor.getStats().getIgnoredTx(),
+                            neighbor.getStats().getInvalidTx(),
+                            neighbor.getStats().getRequestedTx()
                     ));
                 }
 
@@ -86,7 +88,7 @@ public class Sender {
 
                 send(statusPayload, Constants.RCS_HOST, Constants.RCS_PORT);
 
-                LOGGER.info(String.format(
+                LOGGER.debug(String.format(
                         "Sent StatusPayload to RCS: %s",
                         Payload.serialize(statusPayload))
                 );
@@ -108,10 +110,21 @@ public class Sender {
                 t.asciiMessage(json);
                 reportIxi.getIxi().submit(t.buildWhileUpdatingTimestamp());
 
+                LOGGER.debug(String.format(
+                        "Broadcasted PingPayload to Ict network: %s",
+                        Payload.serialize(pingPayload))
+                );
+
                 // Send to RCS
                 final SubmittedPingPayload submittedPingPayload =
                         new SubmittedPingPayload(reportIxi.getMetadata().getUuid(), pingPayload);
+
                 send(submittedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
+
+                LOGGER.debug(String.format(
+                        "Sent SubmittedPingPayload to RCS: %s",
+                        Payload.serialize(submittedPingPayload))
+                );
             }
         }, 0, TimeUnit.MINUTES.toMillis(5));
     }

@@ -6,6 +6,7 @@ import com.ictreport.ixi.api.Api;
 import com.ictreport.ixi.model.Address;
 import com.ictreport.ixi.model.AddressAndStats;
 import com.ictreport.ixi.model.Neighbor;
+import com.ictreport.ixi.model.Stats;
 import com.ictreport.ixi.utils.ConfigurationMigrator;
 import com.ictreport.ixi.utils.Constants;
 import com.ictreport.ixi.utils.IctRestCaller;
@@ -22,7 +23,7 @@ import org.json.JSONObject;
 
 public class ReportIxi extends IxiModule {
 
-    private final static Logger LOGGER = LogManager.getLogger(ReportIxi.class);
+    private final static Logger LOGGER = LogManager.getLogger("ReportIxi");
     private final ReportIxiContext context;
     private Metadata metadata;
     private final List<Neighbor> neighbors = new LinkedList<>();
@@ -193,12 +194,14 @@ public class ReportIxi extends IxiModule {
 
                     addressesAndStatsToSync.add(new AddressAndStats(
                             address,
-                            stats.getNumber("timestamp").longValue(),
-                            stats.getInt("all"),
-                            stats.getInt("new"),
-                            stats.getInt("ignored"),
-                            stats.getInt("invalid"),
-                            stats.getInt("requested")
+                            new Stats(
+                                stats.getNumber("timestamp").longValue(),
+                                stats.getInt("all"),
+                                stats.getInt("new"),
+                                stats.getInt("ignored"),
+                                stats.getInt("invalid"),
+                                stats.getInt("requested")
+                            )
                     ));
                 } else {
                     addressesAndStatsToSync.add(new AddressAndStats(address));

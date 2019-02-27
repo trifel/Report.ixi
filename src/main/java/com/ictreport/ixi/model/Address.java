@@ -87,13 +87,12 @@ public class Address {
 
     @Override
     public String toString() {
-        return String.format(
-                "Address{hostname='%s', ip='%s', port=%d, reportPort=%d}",
-                hostname,
-                ip,
-                port,
-                reportPort
-        );
+        return "Address{" +
+                "hostname='" + hostname + '\'' +
+                ", ip='" + ip + '\'' +
+                ", port=" + port +
+                ", reportPort=" + reportPort +
+                '}';
     }
 
     public static Address parse(String inetSocketAddress) {

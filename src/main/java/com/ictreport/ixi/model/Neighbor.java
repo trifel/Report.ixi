@@ -3,14 +3,15 @@ package com.ictreport.ixi.model;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class Neighbor extends AddressAndStats {
+public class Neighbor {
 
-    private static final Logger LOGGER = LogManager.getLogger(Neighbor.class);
+    private static final Logger LOGGER = LogManager.getLogger("Neighbor");
     private String uuid = null;
     private String reportIxiVersion = null;
+    private AddressAndStats addressAndStats;
 
     public Neighbor(final Address address) {
-        super(address, null, 0, 0, 0, 0, 0);
+        addressAndStats = new AddressAndStats(address);
     }
 
     public String getUuid() {
@@ -27,6 +28,22 @@ public class Neighbor extends AddressAndStats {
 
     public void setReportIxiVersion(final String reportIxiVersion) {
         this.reportIxiVersion = reportIxiVersion;
+    }
+
+    public AddressAndStats getAddressAndStats() {
+        return addressAndStats;
+    }
+
+    public void setAddressAndStats(AddressAndStats addressAndStats) {
+        this.addressAndStats = addressAndStats;
+    }
+
+    public Address getAddress() {
+        return getAddressAndStats().getAddress();
+    }
+
+    public Stats getStats() {
+        return getAddressAndStats().getStats();
     }
 
     public boolean isNeighborReportAddress(Address address) {
@@ -74,34 +91,34 @@ public class Neighbor extends AddressAndStats {
         if (applyReportPort) {
             getAddress().setReportPort(addressAndStats.getAddress().getReportPort());
         }
-        if (addressAndStats.getTimestamp() != null) {
-            setTimestamp(addressAndStats.getTimestamp());
+        if (addressAndStats.getStats().getTimestamp() != null) {
+            getStats().setTimestamp(addressAndStats.getStats().getTimestamp());
         }
-        if (addressAndStats.getAllTx() != null) {
-            setAllTx(addressAndStats.getAllTx());
+        if (addressAndStats.getStats().getAllTx() != null) {
+            getStats().setAllTx(addressAndStats.getStats().getAllTx());
         }
-        if (addressAndStats.getNewTx() != null) {
-            setNewTx(addressAndStats.getNewTx());
+        if (addressAndStats.getStats().getNewTx() != null) {
+            getStats().setNewTx(addressAndStats.getStats().getNewTx());
         }
-        if (addressAndStats.getIgnoredTx() != null) {
-            setIgnoredTx(addressAndStats.getIgnoredTx());
+        if (addressAndStats.getStats().getIgnoredTx() != null) {
+            getStats().setIgnoredTx(addressAndStats.getStats().getIgnoredTx());
         }
-        if (addressAndStats.getInvalidTx() != null) {
-            setInvalidTx(addressAndStats.getInvalidTx());
+        if (addressAndStats.getStats().getInvalidTx() != null) {
+            getStats().setInvalidTx(addressAndStats.getStats().getInvalidTx());
         }
-        if (addressAndStats.getRequestedTx() != null) {
-            setRequestedTx(addressAndStats.getRequestedTx());
+        if (addressAndStats.getStats().getRequestedTx() != null) {
+            getStats().setRequestedTx(addressAndStats.getStats().getRequestedTx());
         }
+
+        LOGGER.debug(String.format("Synced: %s", toString()));
     }
 
     @Override
     public String toString() {
         return "Neighbor{" +
-                "address=" + getAddress() +
-                ", reportSocketAddress=" + getAddress().getReportSocketAddress() +
-                ", ictSocketAddress=" + getAddress().getIctSocketAddress() +
-                ", uuid='" + uuid + '\'' +
+                "uuid='" + uuid + '\'' +
                 ", reportIxiVersion='" + reportIxiVersion + '\'' +
+                ", addressAndStats=" + addressAndStats +
                 '}';
     }
 }

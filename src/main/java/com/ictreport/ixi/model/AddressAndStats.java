@@ -2,31 +2,16 @@ package com.ictreport.ixi.model;
 
 public class AddressAndStats {
     private Address address;
-    private Long timestamp;
-    private Integer allTx;
-    private Integer newTx;
-    private Integer ignoredTx;
-    private Integer invalidTx;
-    private Integer requestedTx;
+    private Stats stats;
 
     public AddressAndStats(Address address) {
         this.address = address;
-        this.timestamp = null;
-        this.allTx = null;
-        this.newTx = null;
-        this.ignoredTx = null;
-        this.invalidTx = null;
-        this.requestedTx = null;
+        this.stats = new Stats();
     }
 
-    public AddressAndStats(Address address, Long timestamp, int allTx, int newTx, int ignoredTx, int invalidTx, int requestedTx) {
+    public AddressAndStats(Address address, Stats stats) {
         this.address = address;
-        this.timestamp = timestamp;
-        this.allTx = allTx;
-        this.newTx = newTx;
-        this.ignoredTx = ignoredTx;
-        this.invalidTx = invalidTx;
-        this.requestedTx = requestedTx;
+        this.stats = stats;
     }
 
     public Address getAddress() {
@@ -37,51 +22,19 @@ public class AddressAndStats {
         this.address = address;
     }
 
-    public Long getTimestamp() {
-        return timestamp;
+    public Stats getStats() {
+        return stats;
     }
 
-    public void setTimestamp(Long timestamp) {
-        this.timestamp = timestamp;
+    public void setStats(Stats stats) {
+        this.stats = stats;
     }
 
-    public Integer getAllTx() {
-        return allTx;
-    }
-
-    public void setAllTx(Integer allTx) {
-        this.allTx = allTx;
-    }
-
-    public Integer getNewTx() {
-        return newTx;
-    }
-
-    public void setNewTx(Integer newTx) {
-        this.newTx = newTx;
-    }
-
-    public Integer getIgnoredTx() {
-        return ignoredTx;
-    }
-
-    public void setIgnoredTx(Integer ignoredTx) {
-        this.ignoredTx = ignoredTx;
-    }
-
-    public Integer getInvalidTx() {
-        return invalidTx;
-    }
-
-    public void setInvalidTx(Integer invalidTx) {
-        this.invalidTx = invalidTx;
-    }
-
-    public Integer getRequestedTx() {
-        return requestedTx;
-    }
-
-    public void setRequestedTx(Integer requestedTx) {
-        this.requestedTx = requestedTx;
+    @Override
+    public String toString() {
+        return "AddressAndStats{" +
+                "address=" + address +
+                ", stats=" + stats +
+                '}';
     }
 }
