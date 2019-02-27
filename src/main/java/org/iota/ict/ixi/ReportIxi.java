@@ -119,7 +119,9 @@ public class ReportIxi extends IxiModule {
     }
 
     public List<Neighbor> getNeighbors() {
-        return this.neighbors;
+        synchronized (this.neighbors) {
+            return new LinkedList<>(this.neighbors);
+        }
     }
 
     public Api getApi() {
@@ -235,7 +237,9 @@ public class ReportIxi extends IxiModule {
             }
         }
 
-        getNeighbors().clear();
-        getNeighbors().addAll(keepNeighbors);
+        synchronized (this.neighbors) {
+            neighbors.clear();
+            neighbors.addAll(keepNeighbors);
+        }
     }
 }
