@@ -29,6 +29,26 @@ public class Neighbor extends AddressAndStats {
         this.reportIxiVersion = reportIxiVersion;
     }
 
+    public boolean isNeighborReportAddress(Address address) {
+        if (getAddress().getHostname().equals(address.getHostname()) &&
+            getAddress().getIp().equals(address.getIp()) &&
+            getAddress().getReportPort() == address.getPort()) {
+            // Found a direct match
+            return true;
+        } else if (getAddress().getHostname().equals(address.getHostname()) &&
+                !getAddress().getIp().equals(address.getIp()) &&
+                getAddress().getReportPort() == address.getPort()) {
+            // Hostname and port is equal, but ip is different.
+            return true;
+        } else if (!getAddress().getHostname().equals(address.getHostname()) &&
+                getAddress().getIp().equals(address.getIp()) &&
+                getAddress().getReportPort() == address.getPort()) {
+            // Ip and port is equal, but hostname is different.
+            return true;
+        }
+        return false;
+    }
+
     public boolean isSyncableAddress(Address address) {
         if (getAddress().equals(address)) {
             // Found a direct match

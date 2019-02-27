@@ -133,7 +133,7 @@ public class Receiver extends Thread {
         for (final Neighbor neighbor : reportIxi.getNeighbors()) {
             final InetSocketAddress inetSocketAddress = new InetSocketAddress(packet.getAddress(), packet.getPort());
             final Address address = Address.parse(inetSocketAddress.toString());
-            if (neighbor.isSyncableAddress(address)) {
+            if (neighbor.isNeighborReportAddress(address)) {
                 return neighbor;
             }
         }
