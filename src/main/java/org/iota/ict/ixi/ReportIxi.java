@@ -6,6 +6,7 @@ import com.ictreport.ixi.api.Api;
 import com.ictreport.ixi.model.Address;
 import com.ictreport.ixi.model.AddressAndStats;
 import com.ictreport.ixi.model.Neighbor;
+import com.ictreport.ixi.utils.ConfigurationMigrator;
 import com.ictreport.ixi.utils.Constants;
 import com.ictreport.ixi.utils.IctRestCaller;
 import com.ictreport.ixi.utils.Metadata;
@@ -35,6 +36,16 @@ public class ReportIxi extends IxiModule {
 
     public ReportIxi(final Ixi ixi) {
         super(ixi);
+
+        // Attempt config migration from older Report.ixi version if config is found for the current version.
+        if (!ConfigurationMigrator.configurationExists()) {
+            if (ConfigurationMigrator.migrate("0.5")) {
+                LOGGER.info("Report.ixi config migration completed successfully.");
+            } else {
+                LOGGER.info("Report.ixi config migration failed.");
+            }
+        }
+
         this.context = new ReportIxiContext(this);
         createDirectoryIfNotExists();
     }

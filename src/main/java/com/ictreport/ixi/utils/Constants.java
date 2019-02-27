@@ -9,4 +9,5 @@ public class Constants {
     public static final String PROPERTIES_LOCATION = "modules/report.ixi";
     public static final java.io.File METADATA_DIRECTORY = new java.io.File("modules/report.ixi/");
     public static final String METADATA_FILE = PROPERTIES_LOCATION+"/report.ixi.metadata";
+    public static final String REPORT_IXI_CONFIG_FILE = "modules/report.ixi-" + Constants.VERSION + ".jar.cfg";
 }
