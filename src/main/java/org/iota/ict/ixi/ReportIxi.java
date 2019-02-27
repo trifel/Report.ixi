@@ -40,7 +40,12 @@ public class ReportIxi extends IxiModule {
 
         // Attempt config migration from older Report.ixi version if config is found for the current version.
         if (!ConfigurationMigrator.configurationExists()) {
-            if (ConfigurationMigrator.migrate("0.5")) {
+            boolean migrationResult = ConfigurationMigrator.migrate("0.5-SNAPSHOT");
+            if (!migrationResult) {
+                migrationResult = ConfigurationMigrator.migrate("0.5");
+            }
+
+            if (migrationResult) {
                 LOGGER.info("Report.ixi config migration completed successfully.");
             } else {
                 LOGGER.info("Report.ixi config migration failed.");
@@ -74,7 +79,7 @@ public class ReportIxi extends IxiModule {
 
     @Override
     public void uninstall() {
-        
+
     }
 
     @Override
