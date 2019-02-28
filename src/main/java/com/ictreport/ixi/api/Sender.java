@@ -133,6 +133,11 @@ public class Sender {
         final RequestUuidPayload requestUuidPayload =
                 new RequestUuidPayload(reportIxi.getMetadata().getUuid(), reportIxi.getReportIxiContext().getExternalReportPort());
         send(requestUuidPayload, Constants.RCS_HOST, Constants.RCS_PORT);
+
+        LOGGER.debug(String.format(
+                "Sent RequestUuidPayload to RCS: %s",
+                Payload.serialize(requestUuidPayload))
+        );
     }
 
     public void send(final Payload payload, final InetAddress address, final int port) {
