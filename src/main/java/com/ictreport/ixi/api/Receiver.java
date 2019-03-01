@@ -58,6 +58,7 @@ public class Receiver extends Thread {
     }
 
     private void processPacket(final DatagramPacket packet) {
+        LOGGER.debug("Processing packet from address:" + packet.getAddress() + ", port:" + packet.getPort());
         Neighbor neighbor = determineNeighborWhoSent(packet);
         if (neighbor == null && !isPacketSentFromRCS(packet)) {
             LOGGER.warn("Received packet from unknown address: " + packet.getAddress());

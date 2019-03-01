@@ -38,18 +38,23 @@ public class Sender {
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
-                if (!reportIxi.isRunning()) return;
+                try {
+                    if (!reportIxi.isRunning()) return;
 
-                for (final Neighbor neighbor : reportIxi.getNeighbors()) {
-                    final MetadataPayload metadataPayload =
-                            new MetadataPayload(reportIxi.getMetadata().getUuid(), Constants.VERSION);
+                    for (final Neighbor neighbor : reportIxi.getNeighbors()) {
+                        final MetadataPayload metadataPayload =
+                                new MetadataPayload(reportIxi.getMetadata().getUuid(), Constants.VERSION);
 
-                    send (metadataPayload, neighbor.getAddress().getReportSocketAddress());
-                    LOGGER.debug(String.format(
-                            "Sent MetadataPayload to neighbor [%s]: %s",
-                            neighbor.getAddress().getReportSocketAddress().toString(),
-                            Payload.serialize(metadataPayload))
-                    );
+                        send(metadataPayload, neighbor.getAddress().getReportSocketAddress());
+                        LOGGER.debug(String.format(
+                                "Sent MetadataPayload to neighbor [%s]: %s",
+                                neighbor.getAddress().getReportSocketAddress().toString(),
+                                Payload.serialize(metadataPayload))
+                        );
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    LOGGER.warn("Metadata Sender thread failed unexpectedly", e);
                 }
             }
         }, 0, TimeUnit.MINUTES.toMillis(1));
@@ -58,40 +63,45 @@ public class Sender {
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
-                if (!reportIxi.isRunning()) return;
+                try {
+                    if (!reportIxi.isRunning()) return;
 
-                reportIxi.syncIct();
+                    reportIxi.syncIct();
 
-                final List<NeighborPayload> neighborPayloads = new LinkedList<>();
+                    final List<NeighborPayload> neighborPayloads = new LinkedList<>();
 
-                for (Neighbor neighbor : reportIxi.getNeighbors()) {
+                    for (Neighbor neighbor : reportIxi.getNeighbors()) {
 
-                    neighborPayloads.add(new NeighborPayload(
-                            neighbor.getStats().getTimestamp(),
-                            neighbor.getUuid(),
-                            neighbor.getStats().getAllTx(),
-                            neighbor.getStats().getNewTx(),
-                            neighbor.getStats().getIgnoredTx(),
-                            neighbor.getStats().getInvalidTx(),
-                            neighbor.getStats().getRequestedTx()
-                    ));
+                        neighborPayloads.add(new NeighborPayload(
+                                neighbor.getStats().getTimestamp(),
+                                neighbor.getUuid(),
+                                neighbor.getStats().getAllTx(),
+                                neighbor.getStats().getNewTx(),
+                                neighbor.getStats().getIgnoredTx(),
+                                neighbor.getStats().getInvalidTx(),
+                                neighbor.getStats().getRequestedTx()
+                        ));
+                    }
+
+                    final StatusPayload statusPayload = new StatusPayload(
+                            reportIxi.getMetadata().getUuid(),
+                            reportIxi.getReportIxiContext().getName(),
+                            reportIxi.getReportIxiContext().getIctVersion(),
+                            Constants.VERSION,
+                            reportIxi.getReportIxiContext().getIctRoundDuration(),
+                            neighborPayloads,
+                            CPUMonitor.getSystemLoadAverage());
+
+                    send(statusPayload, Constants.RCS_HOST, Constants.RCS_PORT);
+
+                    LOGGER.debug(String.format(
+                            "Sent StatusPayload to RCS: %s",
+                            Payload.serialize(statusPayload))
+                    );
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    LOGGER.warn("Status Sender thread failed unexpectedly", e);
                 }
-
-                final StatusPayload statusPayload = new StatusPayload(
-                        reportIxi.getMetadata().getUuid(),
-                        reportIxi.getReportIxiContext().getName(),
-                        reportIxi.getReportIxiContext().getIctVersion(),
-                        Constants.VERSION,
-                        reportIxi.getReportIxiContext().getIctRoundDuration(),
-                        neighborPayloads,
-                        CPUMonitor.getSystemLoadAverage());
-
-                send(statusPayload, Constants.RCS_HOST, Constants.RCS_PORT);
-
-                LOGGER.debug(String.format(
-                        "Sent StatusPayload to RCS: %s",
-                        Payload.serialize(statusPayload))
-                );
             }
         }, 0, TimeUnit.MINUTES.toMillis(1));
 
@@ -99,32 +109,37 @@ public class Sender {
         addTimerTask(new TimerTask() {
             @Override
             public void run() {
-                if (!reportIxi.isRunning()) return;
+                try {
+                    if (!reportIxi.isRunning()) return;
 
-                final PingPayload pingPayload = new PingPayload(randomStringGenerator.nextString());
-                final String json = Payload.serialize(pingPayload);
+                    final PingPayload pingPayload = new PingPayload(randomStringGenerator.nextString());
+                    final String json = Payload.serialize(pingPayload);
 
-                // Broadcast to neighbors
-                final TransactionBuilder t = new TransactionBuilder();
-                t.tag = Constants.TAG;
-                t.asciiMessage(json);
-                reportIxi.getIxi().submit(t.buildWhileUpdatingTimestamp());
+                    // Broadcast to neighbors
+                    final TransactionBuilder t = new TransactionBuilder();
+                    t.tag = Constants.TAG;
+                    t.asciiMessage(json);
+                    reportIxi.getIxi().submit(t.buildWhileUpdatingTimestamp());
 
-                LOGGER.debug(String.format(
-                        "Broadcasted PingPayload to Ict network: %s",
-                        Payload.serialize(pingPayload))
-                );
+                    LOGGER.debug(String.format(
+                            "Broadcasted PingPayload to Ict network: %s",
+                            Payload.serialize(pingPayload))
+                    );
 
-                // Send to RCS
-                final SubmittedPingPayload submittedPingPayload =
-                        new SubmittedPingPayload(reportIxi.getMetadata().getUuid(), pingPayload);
+                    // Send to RCS
+                    final SubmittedPingPayload submittedPingPayload =
+                            new SubmittedPingPayload(reportIxi.getMetadata().getUuid(), pingPayload);
 
-                send(submittedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
+                    send(submittedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
 
-                LOGGER.debug(String.format(
-                        "Sent SubmittedPingPayload to RCS: %s",
-                        Payload.serialize(submittedPingPayload))
-                );
+                    LOGGER.debug(String.format(
+                            "Sent SubmittedPingPayload to RCS: %s",
+                            Payload.serialize(submittedPingPayload))
+                    );
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    LOGGER.warn("Ping Sender thread failed unexpectedly", e);
+                }
             }
         }, 0, TimeUnit.MINUTES.toMillis(5));
     }

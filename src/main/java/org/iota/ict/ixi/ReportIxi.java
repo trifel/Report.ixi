@@ -40,7 +40,10 @@ public class ReportIxi extends IxiModule {
 
         // Attempt config migration from older Report.ixi version if config is found for the current version.
         if (!ConfigurationMigrator.configurationExists()) {
-            boolean migrationResult = ConfigurationMigrator.migrate("0.5.1-SNAPSHOT");
+            boolean migrationResult = ConfigurationMigrator.migrate("0.5.1");
+            if (!migrationResult) {
+                migrationResult = ConfigurationMigrator.migrate("0.5.1-SNAPSHOT");
+            }
             if (!migrationResult) {
                 migrationResult = ConfigurationMigrator.migrate("0.5");
             }
