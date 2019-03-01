@@ -135,13 +135,23 @@ public class Receiver extends Thread {
     }
 
     private Neighbor determineNeighborWhoSent(final DatagramPacket packet) {
+        // Strict port matching neighbors
         for (final Neighbor neighbor : reportIxi.getNeighbors()) {
             final InetSocketAddress inetSocketAddress = new InetSocketAddress(packet.getAddress(), packet.getPort());
             final Address address = Address.parse(inetSocketAddress.toString());
-            if (neighbor.isNeighborReportAddress(address)) {
+            if (neighbor.isNeighborReportAddress(address, true)) {
                 return neighbor;
             }
         }
+        // Non-strict matching, port ignored
+        for (final Neighbor neighbor : reportIxi.getNeighbors()) {
+            final InetSocketAddress inetSocketAddress = new InetSocketAddress(packet.getAddress(), packet.getPort());
+            final Address address = Address.parse(inetSocketAddress.toString());
+            if (neighbor.isNeighborReportAddress(address, false)) {
+                return neighbor;
+            }
+        }
+        // No match
         return null;
     }
 }

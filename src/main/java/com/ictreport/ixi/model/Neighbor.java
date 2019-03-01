@@ -46,20 +46,29 @@ public class Neighbor {
         return getAddressAndStats().getStats();
     }
 
-    public boolean isNeighborReportAddress(Address address) {
+    public boolean isNeighborReportAddress(Address address, boolean requirePortMatch) {
         if (getAddress().getHostname().equals(address.getHostname()) &&
-            getAddress().getIp().equals(address.getIp()) &&
-            getAddress().getReportPort() == address.getPort()) {
+            getAddress().getIp().equals(address.getIp())) {
+            if (requirePortMatch && getAddress().getReportPort() != address.getPort()) {
+                // Different port
+                return false;
+            }
             // Found a direct match
             return true;
         } else if (getAddress().getHostname().equals(address.getHostname()) &&
-                !getAddress().getIp().equals(address.getIp()) &&
-                getAddress().getReportPort() == address.getPort()) {
+                !getAddress().getIp().equals(address.getIp())) {
+            if (requirePortMatch && getAddress().getReportPort() != address.getPort()) {
+                // Different port
+                return false;
+            }
             // Hostname and port is equal, but ip is different.
             return true;
         } else if (!getAddress().getHostname().equals(address.getHostname()) &&
-                getAddress().getIp().equals(address.getIp()) &&
-                getAddress().getReportPort() == address.getPort()) {
+                getAddress().getIp().equals(address.getIp())) {
+            if (requirePortMatch && getAddress().getReportPort() != address.getPort()) {
+                // Different port
+                return false;
+            }
             // Ip and port is equal, but hostname is different.
             return true;
         }
