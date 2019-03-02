@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.typeadapters.RuntimeTypeAdapterFactory;
 
+import java.net.DatagramPacket;
+
 public class Payload {
 
     public static String serialize(final Payload payload) {
@@ -38,5 +40,9 @@ public class Payload {
         final Gson gson = new GsonBuilder().registerTypeAdapterFactory(runtimeTypeAdapterFactory).create();
 
         return gson.fromJson(json, Payload.class);
+    }
+
+    public static Payload deserialize(final DatagramPacket packet) {
+        return Payload.deserialize(new String(packet.getData(), 0, packet.getLength()));
     }
 }

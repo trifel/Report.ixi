@@ -47,8 +47,6 @@ public class Receiver extends Thread {
             processPingPayload((PingPayload) payload);
         } else if (payload instanceof MetadataPayload) {
             processMetadataPacket(neighbor, (MetadataPayload) payload);
-        } else if (payload instanceof UuidPayload) {
-            processUuidPayload((UuidPayload) payload);
         }
     }
 
@@ -59,34 +57,43 @@ public class Receiver extends Thread {
     private void processPacket(final DatagramPacket packet) {
         log.debug("Processing packet from address:" + packet.getAddress() + ", port:" + packet.getPort());
 
-        Neighbor neighbor = determineNeighborWhoSent(packet);
-        if (neighbor == null && !isPacketSentFromRCS(packet)) {
-            log.warn("Received packet from unknown address: " + packet.getAddress());
+        // Process RCS packets
+        if (isPacketSentFromRCS(packet)) {
+            try {
+                processUuidPayload((UuidPayload) Payload.deserialize(packet));
+            } catch (Exception e) {
+                log.info("Received invalid payload from RCS");
+            }
             return;
         }
 
-        String data = new String(packet.getData(), 0, packet.getLength());
-
-        try {
-            final Payload payload = Payload.deserialize(data);
-            processPayload(neighbor, payload);
-        } catch (final Exception e) {
-            if (neighbor != null) {
+        // Process Neighbor packets
+        Neighbor neighbor = determineNeighborWhoSent(packet);
+        if (neighbor != null) {
+            try {
+                processPayload(neighbor, Payload.deserialize(packet));
+            } catch (Exception e) {
                 log.info(String.format("Received invalid payload from Neighbor[%s]",
                         neighbor.getAddress().getReportSocketAddress()));
-            } else {
-                log.info(String.format("Received invalid payload from RCS"));
             }
+            return;
         }
+
+        log.warn("Received packet from unknown address: " + packet.getAddress());
     }
 
     private void processUuidPayload(final UuidPayload uuidPayload) {
+        log.debug(String.format(
+                "Received UuidPayload from RCS: %s",
+                Payload.serialize(uuidPayload))
+        );
+
         if (!uuidPayload.getUuid().equals(reportIxi.getMetadata().getUuid())) {
             reportIxi.getMetadata().setUuid(uuidPayload.getUuid());
             reportIxi.getMetadata().store(Constants.METADATA_FILE);
-            log.info(String.format("Received new uuid from RCS"));
+            log.info("Received new uuid from RCS");
         } else {
-            log.info(String.format("Current uuid was successfully validated by RCS"));
+            log.info("Current uuid was successfully validated by RCS");
         }
         synchronized (reportIxi.waitingForUuid) {
             reportIxi.waitingForUuid.notify();
@@ -94,9 +101,11 @@ public class Receiver extends Thread {
     }
 
     private void processMetadataPacket(final Neighbor neighbor, final MetadataPayload metadataPayload) {
-
-        log.debug(String.format("Received MetadataPayload from neighbor[%s]",
-                neighbor.getAddress().getReportSocketAddress()));
+        log.debug(String.format(
+                "Received MetadataPayload from neighbor[%s]: %s",
+                neighbor,
+                Payload.serialize(metadataPayload))
+        );
 
         if (neighbor.getReportIxiVersion() == null ||
                 !neighbor.getReportIxiVersion().equals(metadataPayload.getReportIxiVersion())) {
@@ -147,7 +156,7 @@ public class Receiver extends Thread {
                 return neighbor;
             }
         }
-        log.debug("Failed not match packet with any known neighbor");
+        log.debug("Failed to match packet with any known neighbor");
         return null;
     }
 }
