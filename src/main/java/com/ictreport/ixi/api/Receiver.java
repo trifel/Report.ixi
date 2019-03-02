@@ -1,7 +1,6 @@
 package com.ictreport.ixi.api;
 
 import com.ictreport.ixi.exchange.*;
-import com.ictreport.ixi.model.Address;
 import com.ictreport.ixi.utils.Constants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,7 +12,7 @@ import org.iota.ict.ixi.ReportIxi;
 
 public class Receiver extends Thread {
 
-    private final static Logger LOGGER = LogManager.getLogger("Receiver");
+    private static final Logger log = LogManager.getLogger("ReportIxi/Receiver");
     private final ReportIxi reportIxi;
     private final DatagramSocket socket;
     private boolean isReceiving = false;
@@ -58,10 +57,11 @@ public class Receiver extends Thread {
     }
 
     private void processPacket(final DatagramPacket packet) {
-        LOGGER.debug("Processing packet from address:" + packet.getAddress() + ", port:" + packet.getPort());
+        log.debug("Processing packet from address:" + packet.getAddress() + ", port:" + packet.getPort());
+
         Neighbor neighbor = determineNeighborWhoSent(packet);
         if (neighbor == null && !isPacketSentFromRCS(packet)) {
-            LOGGER.warn("Received packet from unknown address: " + packet.getAddress());
+            log.warn("Received packet from unknown address: " + packet.getAddress());
             return;
         }
 
@@ -72,10 +72,10 @@ public class Receiver extends Thread {
             processPayload(neighbor, payload);
         } catch (final Exception e) {
             if (neighbor != null) {
-                LOGGER.info(String.format("Received invalid payload from Neighbor[%s]",
+                log.info(String.format("Received invalid payload from Neighbor[%s]",
                         neighbor.getAddress().getReportSocketAddress()));
             } else {
-                LOGGER.info(String.format("Received invalid payload from RCS"));
+                log.info(String.format("Received invalid payload from RCS"));
             }
         }
     }
@@ -84,9 +84,9 @@ public class Receiver extends Thread {
         if (!uuidPayload.getUuid().equals(reportIxi.getMetadata().getUuid())) {
             reportIxi.getMetadata().setUuid(uuidPayload.getUuid());
             reportIxi.getMetadata().store(Constants.METADATA_FILE);
-            LOGGER.info(String.format("Received new uuid from RCS"));
+            log.info(String.format("Received new uuid from RCS"));
         } else {
-            LOGGER.info(String.format("Current uuid was successfully validated by RCS"));
+            log.info(String.format("Current uuid was successfully validated by RCS"));
         }
         synchronized (reportIxi.waitingForUuid) {
             reportIxi.waitingForUuid.notify();
@@ -95,13 +95,13 @@ public class Receiver extends Thread {
 
     private void processMetadataPacket(final Neighbor neighbor, final MetadataPayload metadataPayload) {
 
-        LOGGER.debug(String.format("Received MetadataPayload from neighbor[%s]",
+        log.debug(String.format("Received MetadataPayload from neighbor[%s]",
                 neighbor.getAddress().getReportSocketAddress()));
 
         if (neighbor.getReportIxiVersion() == null ||
                 !neighbor.getReportIxiVersion().equals(metadataPayload.getReportIxiVersion())) {
             neighbor.setReportIxiVersion(metadataPayload.getReportIxiVersion());
-            LOGGER.info(String.format("Neighbor[%s] operates Report.ixi version: %s",
+            log.info(String.format("Neighbor[%s] operates Report.ixi version: %s",
                     neighbor.getAddress().getReportSocketAddress(),
                     neighbor.getReportIxiVersion()));
         }
@@ -109,7 +109,7 @@ public class Receiver extends Thread {
         if (neighbor.getUuid() == null ||
                 !neighbor.getUuid().equals(metadataPayload.getUuid())) {
             neighbor.setUuid(metadataPayload.getUuid());
-            LOGGER.info(String.format("Received new uuid from neighbor[%s]",
+            log.info(String.format("Received new uuid from neighbor[%s]",
                     neighbor.getAddress().getReportSocketAddress()));
         }
     }
@@ -135,23 +135,19 @@ public class Receiver extends Thread {
     }
 
     private Neighbor determineNeighborWhoSent(final DatagramPacket packet) {
-        // Strict port matching neighbors
         for (final Neighbor neighbor : reportIxi.getNeighbors()) {
-            final InetSocketAddress inetSocketAddress = new InetSocketAddress(packet.getAddress(), packet.getPort());
-            final Address address = Address.parse(inetSocketAddress.toString());
-            if (neighbor.isNeighborReportAddress(address, true)) {
+            if (Neighbor.isNeighborWhoSent(neighbor, packet, true)) {
+                log.debug("Strict match successful, packet received from neighbor: " + neighbor);
                 return neighbor;
             }
         }
-        // Non-strict matching, port ignored
         for (final Neighbor neighbor : reportIxi.getNeighbors()) {
-            final InetSocketAddress inetSocketAddress = new InetSocketAddress(packet.getAddress(), packet.getPort());
-            final Address address = Address.parse(inetSocketAddress.toString());
-            if (neighbor.isNeighborReportAddress(address, false)) {
+            if (Neighbor.isNeighborWhoSent(neighbor, packet, false)) {
+                log.debug("Non-strict match successful, packet received from neighbor: " + neighbor);
                 return neighbor;
             }
         }
-        // No match
+        log.debug("Failed not match packet with any known neighbor");
         return null;
     }
 }

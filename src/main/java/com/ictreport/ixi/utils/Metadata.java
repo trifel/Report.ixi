@@ -10,13 +10,13 @@ import java.util.*;
 
 public class Metadata extends java.util.Properties {
 
-    private final static Logger LOGGER = LogManager.getLogger("Metadata");
+    private static final Logger log = LogManager.getLogger("ReportIxi/Metadata");
 
     // Property names
-    private final static String UUID = "uuid";
+    private static final String UUID = "uuid";
 
     // Property defaults
-    private final static String DEFAULT_UUID = "";
+    private static final String DEFAULT_UUID = "";
 
     public Metadata() {
         setRequiredProps();
@@ -47,17 +47,17 @@ public class Metadata extends java.util.Properties {
             inputStream = new FileInputStream(metadataFilePath);
             load(inputStream);
         } catch (final FileNotFoundException e) {
-            LOGGER.info(String.format("Could not read metadata file '%s', therefore a new one will be created.",
+            log.info(String.format("Could not read metadata file '%s', therefore a new one will be created.",
                     metadataFilePath));
         } catch (final IOException e) {
-            LOGGER.error(String.format("Failed to open input stream of file: '%s'", metadataFilePath));
+            log.error(String.format("Failed to open input stream of file: '%s'", metadataFilePath));
             e.printStackTrace();
         } finally {
             if (inputStream != null) {
                 try {
                     inputStream.close();
                 } catch (IOException e) {
-                    LOGGER.error(String.format("Failed to close input stream of file: '%s'",
+                    log.error(String.format("Failed to close input stream of file: '%s'",
                             metadataFilePath));
                     e.printStackTrace();
                 }
@@ -71,11 +71,11 @@ public class Metadata extends java.util.Properties {
             outputStream = new FileOutputStream(metadataFilePath);
             store(outputStream, null);
         } catch (final FileNotFoundException e) {
-            LOGGER.error(String.format("Failed to open output stream of file: '%s'",
+            log.error(String.format("Failed to open output stream of file: '%s'",
                     metadataFilePath));
             e.printStackTrace();
         } catch (final IOException e) {
-            LOGGER.error(String.format("Failed to save metdata to file: '%s'",
+            log.error(String.format("Failed to save metdata to file: '%s'",
                     metadataFilePath));
             e.printStackTrace();
         } finally {
@@ -83,7 +83,7 @@ public class Metadata extends java.util.Properties {
                 try {
                     outputStream.close();
                 } catch (IOException e) {
-                    LOGGER.error(String.format("Failed to close output stream of file: '%s'",
+                    log.error(String.format("Failed to close output stream of file: '%s'",
                             metadataFilePath));
                     e.printStackTrace();
                 }

@@ -17,13 +17,12 @@ import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.iota.ict.ixi.context.IxiContext;
-import org.iota.ict.utils.IOHelper;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class ReportIxi extends IxiModule {
 
-    private final static Logger LOGGER = LogManager.getLogger("ReportIxi");
+    private static final Logger log = LogManager.getLogger("ReportIxi");
     private final ReportIxiContext context;
     private Metadata metadata;
     private final List<Neighbor> neighbors = new LinkedList<>();
@@ -38,22 +37,8 @@ public class ReportIxi extends IxiModule {
     public ReportIxi(final Ixi ixi) {
         super(ixi);
 
-        // Attempt config migration from older Report.ixi version if config is found for the current version.
-        if (!ConfigurationMigrator.configurationExists()) {
-            boolean migrationResult = ConfigurationMigrator.migrate("0.5.1");
-            if (!migrationResult) {
-                migrationResult = ConfigurationMigrator.migrate("0.5.1-SNAPSHOT");
-            }
-            if (!migrationResult) {
-                migrationResult = ConfigurationMigrator.migrate("0.5");
-            }
-
-            if (migrationResult) {
-                LOGGER.info("Report.ixi config migration completed successfully.");
-            } else {
-                LOGGER.info("Report.ixi config migration failed.");
-            }
-        }
+        // Attempt config migration from older Report.ixi versions if config is not found for the current version.
+        ConfigurationMigrator.migrateIfConfigurationMissing();
 
         this.context = new ReportIxiContext(this);
         createDirectoryIfNotExists();
@@ -62,7 +47,7 @@ public class ReportIxi extends IxiModule {
     @Override
     public void terminate() {
         state = STATE_TERMINATING;
-        LOGGER.info("Terminating Report.ixi...");
+        log.info("Terminating Report.ixi...");
         if (api != null) api.shutDown();
         try {
             super.terminate();
@@ -72,7 +57,7 @@ public class ReportIxi extends IxiModule {
             // terminating the Ict process causes this exception to throw.
         }
         state = STATE_TERMINATED;
-        LOGGER.info("Report.ixi terminated.");
+        log.info("Report.ixi terminated.");
     }
 
     @Override
@@ -89,27 +74,27 @@ public class ReportIxi extends IxiModule {
     public void run() {
         state = STATE_INITIALIZING;
 
-        LOGGER.info(String.format("Report.ixi %s: Starting...", Constants.VERSION));
+        log.info(String.format("Report.ixi %s: Starting...", Constants.VERSION));
         metadata = new Metadata(Constants.METADATA_FILE);
 
-        LOGGER.info("Initiating API...");
+        log.info("Initiating API...");
         api = new Api(this);
         api.init();
 
-        LOGGER.info("Request uuid from RCS...");
+        log.info("Request uuid from RCS...");
 
         synchronized (waitingForUuid) {
             try {
                 api.getSender().requestUuid();
                 waitingForUuid.wait();
             } catch (InterruptedException e) {
-                LOGGER.error("Failed to receive uuid from RCS.");
+                log.error("Failed to receive uuid from RCS.");
             }
         }
 
         state = STATE_RUNNING;
         ixi.addGossipListener(new ReportIxiGossipListener(api));
-        LOGGER.info(String.format("Report.ixi %s: Started on port: %d",
+        log.info(String.format("Report.ixi %s: Started on port: %d",
                 Constants.VERSION,
                 getReportIxiContext().getReportPort()));
     }
@@ -217,7 +202,7 @@ public class ReportIxi extends IxiModule {
 
             } catch (Exception e) {
                 e.printStackTrace();
-                LOGGER.warn(String.format(
+                log.warn(String.format(
                         "Failed to parse InetSocketAddress from [%s] received from Ict REST API.",
                         ictNeighborAddress
                 ));

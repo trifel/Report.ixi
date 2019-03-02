@@ -5,13 +5,34 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
+import java.util.List;
 
 public class ConfigurationMigrator {
 
-    private static final Logger LOGGER = LogManager.getLogger("ConfigurationMigrator");
+    private static final Logger log = LogManager.getLogger("ReportIxi/ConfigurationMigrator");
+
+    public static void migrateIfConfigurationMissing() {
+        if (!ConfigurationMigrator.configurationExists()) {
+            log.debug("No configuration found for Report.ixi-" + Constants.VERSION);
+            if (ConfigurationMigrator.migrate(Constants.getPreviousVersions())) {
+                log.info("Report.ixi config migration completed successfully.");
+            } else {
+                log.info("Report.ixi config migration failed.");
+            }
+        }
+    }
 
     public static boolean configurationExists() {
         return new File("modules/report.ixi-" + Constants.VERSION + ".jar.cfg").exists();
+    }
+
+    public static boolean migrate(List<String> fromVersions) {
+        for (String previousVersion : fromVersions) {
+            if (ConfigurationMigrator.migrate(previousVersion)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static boolean migrate(String fromVersion) {
@@ -19,11 +40,11 @@ public class ConfigurationMigrator {
         final File toConfig = new File(Constants.REPORT_IXI_CONFIG_FILE);
 
         if (!oldConfig.exists()) {
-            LOGGER.info("Could not migrate from old configuration " + oldConfig.getPath() + " because it doesn't exist.");
+            log.info("Could not migrate from old configuration " + oldConfig.getPath() + " because it doesn't exist.");
             return false;
         }
         if (toConfig.exists()) {
-            LOGGER.info("Destination configuration file " + toConfig.getPath() + " already exists. Aborting migration.");
+            log.info("Destination configuration file " + toConfig.getPath() + " already exists. Aborting migration.");
             return false;
         }
 
@@ -31,6 +52,7 @@ public class ConfigurationMigrator {
             return copyFile(oldConfig, toConfig);
         } catch (IOException e) {
             e.printStackTrace();
+            log.error("Failed to copy configuration " + oldConfig.getPath() + " to " + toConfig.getPath());
         }
         return false;
     }
@@ -38,11 +60,11 @@ public class ConfigurationMigrator {
     public static boolean copyFile(File sourceFile, File destFile) throws IOException {
         if(!destFile.exists()) {
             if (!destFile.createNewFile()) {
-                LOGGER.error("Migration failed, could not create destination file: " + destFile.getPath());
+                log.error("Migration failed, could not create destination file: " + destFile.getPath());
                 return false;
             }
 
-            LOGGER.info("Migrating configuration from " + sourceFile.getPath() + " to " + destFile.getPath() + "...");
+            log.info("Migrating configuration from " + sourceFile.getPath() + " to " + destFile.getPath() + "...");
             FileChannel source = null;
             FileChannel destination = null;
 
@@ -61,7 +83,7 @@ public class ConfigurationMigrator {
             }
             return true;
         } else {
-            LOGGER.info("Aborted migration because the destination file already exists: " + destFile.getPath());
+            log.info("Aborted migration because the destination file already exists: " + destFile.getPath());
             return false;
         }
     }

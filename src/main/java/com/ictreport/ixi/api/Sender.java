@@ -1,7 +1,6 @@
 package com.ictreport.ixi.api;
 
 import com.ictreport.ixi.exchange.*;
-import com.ictreport.ixi.model.Stats;
 import com.ictreport.ixi.utils.CPUMonitor;
 import com.ictreport.ixi.utils.RandomStringGenerator;
 import org.apache.logging.log4j.LogManager;
@@ -21,7 +20,7 @@ import org.iota.ict.model.TransactionBuilder;
 
 public class Sender {
 
-    private static final Logger LOGGER = LogManager.getLogger("Sender");
+    private static final Logger log = LogManager.getLogger("ReportIxi/Sender");
     private final ReportIxi reportIxi;
     private final DatagramSocket socket;
     private final List<Timer> timers = new ArrayList<>();
@@ -46,7 +45,7 @@ public class Sender {
                                 new MetadataPayload(reportIxi.getMetadata().getUuid(), Constants.VERSION);
 
                         send(metadataPayload, neighbor.getAddress().getReportSocketAddress());
-                        LOGGER.debug(String.format(
+                        log.debug(String.format(
                                 "Sent MetadataPayload to neighbor [%s]: %s",
                                 neighbor.getAddress().getReportSocketAddress().toString(),
                                 Payload.serialize(metadataPayload))
@@ -54,7 +53,7 @@ public class Sender {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    LOGGER.warn("Metadata Sender thread failed unexpectedly", e);
+                    log.warn("Metadata Sender thread failed unexpectedly", e);
                 }
             }
         }, 0, TimeUnit.MINUTES.toMillis(1));
@@ -94,13 +93,13 @@ public class Sender {
 
                     send(statusPayload, Constants.RCS_HOST, Constants.RCS_PORT);
 
-                    LOGGER.debug(String.format(
+                    log.debug(String.format(
                             "Sent StatusPayload to RCS: %s",
                             Payload.serialize(statusPayload))
                     );
                 } catch (Exception e) {
                     e.printStackTrace();
-                    LOGGER.warn("Status Sender thread failed unexpectedly", e);
+                    log.warn("Status Sender thread failed unexpectedly", e);
                 }
             }
         }, 0, TimeUnit.MINUTES.toMillis(1));
@@ -121,7 +120,7 @@ public class Sender {
                     t.asciiMessage(json);
                     reportIxi.getIxi().submit(t.buildWhileUpdatingTimestamp());
 
-                    LOGGER.debug(String.format(
+                    log.debug(String.format(
                             "Broadcasted PingPayload to Ict network: %s",
                             Payload.serialize(pingPayload))
                     );
@@ -132,13 +131,13 @@ public class Sender {
 
                     send(submittedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
 
-                    LOGGER.debug(String.format(
+                    log.debug(String.format(
                             "Sent SubmittedPingPayload to RCS: %s",
                             Payload.serialize(submittedPingPayload))
                     );
                 } catch (Exception e) {
                     e.printStackTrace();
-                    LOGGER.warn("Ping Sender thread failed unexpectedly", e);
+                    log.warn("Ping Sender thread failed unexpectedly", e);
                 }
             }
         }, 0, TimeUnit.MINUTES.toMillis(5));
@@ -149,7 +148,7 @@ public class Sender {
                 new RequestUuidPayload(reportIxi.getMetadata().getUuid(), reportIxi.getReportIxiContext().getExternalReportPort());
         send(requestUuidPayload, Constants.RCS_HOST, Constants.RCS_PORT);
 
-        LOGGER.debug(String.format(
+        log.debug(String.format(
                 "Sent RequestUuidPayload to RCS: %s",
                 Payload.serialize(requestUuidPayload))
         );

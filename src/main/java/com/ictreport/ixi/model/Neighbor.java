@@ -3,9 +3,12 @@ package com.ictreport.ixi.model;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.net.DatagramPacket;
+import java.net.InetSocketAddress;
+
 public class Neighbor {
 
-    private static final Logger LOGGER = LogManager.getLogger("Neighbor");
+    private static final Logger log = LogManager.getLogger("ReportIxi/Neighbor");
     private String uuid = null;
     private String reportIxiVersion = null;
     private AddressAndStats addressAndStats;
@@ -119,7 +122,7 @@ public class Neighbor {
             getStats().setRequestedTx(addressAndStats.getStats().getRequestedTx());
         }
 
-        LOGGER.debug(String.format("Synced: %s", toString()));
+        log.debug(String.format("Synced: %s", toString()));
     }
 
     @Override
@@ -129,5 +132,11 @@ public class Neighbor {
                 ", reportIxiVersion='" + reportIxiVersion + '\'' +
                 ", addressAndStats=" + addressAndStats +
                 '}';
+    }
+
+    public static boolean isNeighborWhoSent(Neighbor neighbor, DatagramPacket packet, boolean requirePortMatch) {
+        final InetSocketAddress inetSocketAddress = new InetSocketAddress(packet.getAddress(), packet.getPort());
+        final Address address = Address.parse(inetSocketAddress.toString());
+        return neighbor.isNeighborReportAddress(address, requirePortMatch);
     }
 }

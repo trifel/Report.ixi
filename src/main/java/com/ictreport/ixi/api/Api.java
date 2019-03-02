@@ -9,7 +9,7 @@ import java.net.SocketException;
 
 public class Api {
 
-    private final static Logger LOGGER = LogManager.getLogger("Api");
+    private static final Logger log = LogManager.getLogger("ReportIxi/Api");
     private final InetSocketAddress address;
     private final DatagramSocket socket;
     private final Receiver receiver;
@@ -39,7 +39,8 @@ public class Api {
         try {
             this.socket.close();
         } catch (Exception e) {
-        }        
+            // OK
+        }
 	}
 
     public Receiver getReceiver() {

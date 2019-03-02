@@ -12,9 +12,9 @@ public class StatusPayloadTest {
     @Test
     public void testPingPayload() {
         final List<NeighborPayload> neighbors = new ArrayList<>();
-        neighbors.add(new NeighborPayload("abc", 10, 20, 30, 40, 50));
-        neighbors.add(new NeighborPayload("def", 11, 21, 31, 41, 51));
-        neighbors.add(new NeighborPayload("ghi", 12, 22, 32, 42, 52));
+        neighbors.add(new NeighborPayload(123L, "abc", 10, 20, 30, 40, 50));
+        neighbors.add(new NeighborPayload(123L, "def", 11, 21, 31, 41, 51));
+        neighbors.add(new NeighborPayload(123L, "ghi", 12, 22, 32, 42, 52));
 
         final StatusPayload statusPayload = new StatusPayload("xyz", "ict (ict-1)",
                 "0.5", Constants.VERSION, 60000, neighbors, 43);
