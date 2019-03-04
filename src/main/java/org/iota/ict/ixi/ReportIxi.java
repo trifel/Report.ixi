@@ -182,9 +182,22 @@ public class ReportIxi extends IxiModule {
 
                 final JSONArray statsArray = ictNeighbor.getJSONArray("stats");
 
-                if (statsArray.length() > 0) {
-                    final JSONObject stats = statsArray.getJSONObject(statsArray.length() - 1);
+                JSONObject stats = null;
+                if (getReportIxiContext().getIctVersion().equals("0.5")) {
+                    // If this version of Report.ixi is operated on Ict 0.5, it will always try to get
+                    // the last metrics/stats record from Ict api.
+                    if (statsArray.length() > 0) {
+                        stats = statsArray.getJSONObject(statsArray.length() - 1);
+                    }
+                } else {
+                    // If this version of Report.ixi is on any newer version than Ict 0.5, it will always
+                    // try to get the second to last metrics/stats record from Ict api.
+                    if (statsArray.length() > 1) {
+                        stats = statsArray.getJSONObject(statsArray.length() - 2);
+                    }
+                }
 
+                if (stats != null) {
                     addressesAndStatsToSync.add(new AddressAndStats(
                             address,
                             new Stats(
