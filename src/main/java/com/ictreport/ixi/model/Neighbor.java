@@ -58,7 +58,8 @@ public class Neighbor {
             }
             // Found a direct match
             return true;
-        } else if (getAddress().getHostname().equals(address.getHostname()) &&
+        } else if (!getAddress().getHostname().isEmpty() &&
+                getAddress().getHostname().equals(address.getHostname()) &&
                 !getAddress().getIp().equals(address.getIp())) {
             if (requirePortMatch && getAddress().getReportPort() != address.getPort()) {
                 // Different port
