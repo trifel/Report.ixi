@@ -1,11 +1,11 @@
-package com.ictreport.ixi.exchange;
+package com.ictreport.ixi.exchange.payloads;
 
-public class ReceivedPingPayload extends Payload {
+public class SubmittedPingPayload extends Payload {
 
     private final String uuid;
     private final PingPayload pingPayload;
 
-    public ReceivedPingPayload(final String uuid, final PingPayload pingPayload) {
+    public SubmittedPingPayload(final String uuid, final PingPayload pingPayload) {
         this.uuid = uuid;
         this.pingPayload = pingPayload;
     }

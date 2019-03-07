@@ -1,23 +1,25 @@
 package com.ictreport.ixi;
 
-import com.ictreport.ixi.api.Api;
-import com.ictreport.ixi.exchange.Payload;
+import com.ictreport.ixi.exchange.payloads.Payload;
+import com.ictreport.ixi.exchange.processors.PingPayloadProcessor;
 import com.ictreport.ixi.utils.Constants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.iota.ict.model.Transaction;
-import org.iota.ict.network.event.GossipEvent;
-import org.iota.ict.network.event.GossipFilter;
-import org.iota.ict.network.event.GossipListener;
+import org.iota.ict.ixi.ReportIxi;
+import org.iota.ict.model.transaction.Transaction;
+import org.iota.ict.network.gossip.GossipEvent;
+import org.iota.ict.network.gossip.GossipFilter;
+import org.iota.ict.network.gossip.GossipListener;
 
 public class ReportIxiGossipListener implements GossipListener {
 
     private static final Logger log = LogManager.getLogger("ReportIxiGossipListener");
     private final GossipFilter filter = new GossipFilter();
-    private final Api api;
+    private final ReportIxi reportIxi;
+    private PingPayloadProcessor pingPayloadProcessor = new PingPayloadProcessor();
 
-    public ReportIxiGossipListener(final Api api) {
-        this.api = api;
+    public ReportIxiGossipListener(final ReportIxi reportIxi) {
+        this.reportIxi = reportIxi;
         filter.watchTag(Constants.TAG);
     }
 
@@ -32,10 +34,10 @@ public class ReportIxiGossipListener implements GossipListener {
     }
 
     private void handleInbound(final Transaction transaction) {
-        if (api != null) {
+        if (reportIxi != null) {
             try {
                 final Payload payload = Payload.deserialize(transaction.decodedSignatureFragments());
-                api.getReceiver().processPayload(null, payload);
+                pingPayloadProcessor.process(reportIxi, null, payload);
             } catch (final Exception e) {
                 // Invalid payload received, ignore it...
             }

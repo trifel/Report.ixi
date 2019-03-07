@@ -1,4 +1,4 @@
-package com.ictreport.ixi.exchange;
+package com.ictreport.ixi.exchange.payloads;
 
 public class PingPayload extends Payload {
 

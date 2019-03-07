@@ -1,10 +1,12 @@
 package com.ictreport.ixi.exchange;
 
+import com.ictreport.ixi.exchange.payloads.NeighborPayload;
+import com.ictreport.ixi.exchange.payloads.Payload;
+import com.ictreport.ixi.exchange.payloads.StatusPayload;
 import com.ictreport.ixi.utils.Constants;
 import org.junit.Assert;
 import org.junit.Test;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class StatusPayloadTest {

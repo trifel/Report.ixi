@@ -1,5 +1,7 @@
 package com.ictreport.ixi.exchange;
 
+import com.ictreport.ixi.exchange.payloads.MetadataPayload;
+import com.ictreport.ixi.exchange.payloads.Payload;
 import com.ictreport.ixi.utils.Constants;
 import org.junit.Assert;
 import org.junit.Test;

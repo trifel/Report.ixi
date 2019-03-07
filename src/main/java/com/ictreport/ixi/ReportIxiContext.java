@@ -3,8 +3,8 @@ package com.ictreport.ixi;
 import com.ictreport.ixi.model.Address;
 import com.ictreport.ixi.model.AddressAndStats;
 import com.ictreport.ixi.model.Neighbor;
+import com.ictreport.ixi.model.Stats;
 import com.ictreport.ixi.utils.IctRestCaller;
-import org.iota.ict.ixi.ReportIxi;
 import org.iota.ict.ixi.context.ConfigurableIxiContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -19,7 +19,6 @@ import org.apache.logging.log4j.Logger;
 public class ReportIxiContext extends ConfigurableIxiContext {
 
     private static final Logger log = LogManager.getLogger("ReportIxiContext");
-    private final        ReportIxi        reportIxi;
 
     // Property names
     private static final String           ICT_REST_PORT                = "Ict REST API Port";
@@ -54,6 +53,9 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     private Integer                       externalReportPort           = DEFAULT_EXTERNAL_REPORT_PORT;
     private String                        name                         = DEFAULT_NAME;
 
+    private String                        uuid                         = null;
+    private final List<Neighbor>          neighbors                    = new LinkedList<>();
+
     static {
         DEFAULT_CONFIGURATION.put(ICT_REST_PORT, DEFAULT_ICT_REST_PORT);
         DEFAULT_CONFIGURATION.put(ICT_REST_PASSWORD, DEFAULT_ICT_REST_PASSWORD);
@@ -64,9 +66,8 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         DEFAULT_CONFIGURATION.put(NEIGHBORS, DEFAULT_NEIGHBORS.toString());
     }
 
-    public ReportIxiContext(final ReportIxi reportIxi) {
+    public ReportIxiContext() {
         super(DEFAULT_CONFIGURATION);
-        this.reportIxi = reportIxi;
 
         applyConfiguration();
     }
@@ -74,10 +75,10 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     @Override
     public JSONObject getConfiguration() {
 
-        reportIxi.syncIctNeighbors();
+        syncIctNeighbors();
 
         final List<JSONObject> jsonNeighbor = new LinkedList<>();
-        for (Neighbor neighbor : reportIxi.getNeighbors()) {
+        for (Neighbor neighbor : getNeighbors()) {
             final Address address = neighbor.getAddress();
             jsonNeighbor.add(new JSONObject()
                     .put(NEIGHBOR_ADDRESS, address.getIctSocketAddress().toString())
@@ -281,6 +282,14 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         this.reportPort = reportPort;
     }
 
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(final String uuid) {
+        this.uuid = uuid;
+    }
+
     public void setNeighbors(JSONArray neighbors) {
 
         List<AddressAndStats> addressesAndStatsToSync = new ArrayList<>();
@@ -295,8 +304,15 @@ public class ReportIxiContext extends ConfigurableIxiContext {
             addressesAndStatsToSync.add(new AddressAndStats(address));
         }
 
-        reportIxi.syncNeighbors(addressesAndStatsToSync, true);
+        syncNeighbors(addressesAndStatsToSync, true);
     }
+
+    public List<Neighbor> getNeighbors() {
+        synchronized (this.neighbors) {
+            return new LinkedList<>(this.neighbors);
+        }
+    }
+
 
     public Integer getExternalReportPort() {
         // Optional configuration property
@@ -314,6 +330,111 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     private class IllegalPropertyException extends IllegalArgumentException {
         private IllegalPropertyException(String field, String cause) {
             super("Invalid property '"+field+"': " + cause + ".");
+        }
+    }
+
+    public void syncIct() {
+        syncIctConfig();
+        syncIctInfo();
+        syncIctNeighbors();
+    }
+
+    public void syncIctConfig() {
+        final JSONObject response = IctRestCaller.getConfig(getIctRestPort(), getIctRestPassword());
+
+        if (response != null) {
+            setIctRoundDuration(response.getNumber("round_duration").intValue());
+        }
+    }
+
+    public void syncIctInfo() {
+        final JSONObject response = IctRestCaller.getInfo(getIctRestPort(), getIctRestPassword());
+
+        if (response != null) {
+            setIctVersion(response.getString("version"));
+        }
+    }
+
+    public void syncIctNeighbors() {
+        final JSONArray response = IctRestCaller.getNeighbors(getIctRestPort(), getIctRestPassword());
+
+        final List<AddressAndStats> addressesAndStatsToSync = new LinkedList<>();
+        for (int i=0; response != null && i<response.length(); i++) {
+            final JSONObject ictNeighbor = (JSONObject)response.get(i);
+            final String ictNeighborAddress = ictNeighbor.getString("address");
+
+            try {
+                final Address address = Address.parse(ictNeighborAddress);
+
+                final JSONArray statsArray = ictNeighbor.getJSONArray("stats");
+
+                JSONObject stats = null;
+                if (getIctVersion().equals("0.5")) {
+                    // If this version of Report.ixi is operated on Ict 0.5, it will always try to get
+                    // the last metrics/stats record from Ict api.
+                    if (statsArray.length() > 0) {
+                        stats = statsArray.getJSONObject(statsArray.length() - 1);
+                    }
+                } else {
+                    // If this version of Report.ixi is on any newer version than Ict 0.5, it will always
+                    // try to get the second to last metrics/stats record from Ict api.
+                    if (statsArray.length() > 1) {
+                        stats = statsArray.getJSONObject(statsArray.length() - 2);
+                    }
+                }
+
+                if (stats != null) {
+                    addressesAndStatsToSync.add(new AddressAndStats(
+                            address,
+                            new Stats(
+                                    stats.getNumber("timestamp").longValue(),
+                                    stats.getInt("all"),
+                                    stats.getInt("new"),
+                                    stats.getInt("ignored"),
+                                    stats.getInt("invalid"),
+                                    stats.getInt("requested")
+                            )
+                    ));
+                } else {
+                    addressesAndStatsToSync.add(new AddressAndStats(address));
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.warn(String.format(
+                        "Failed to parse InetSocketAddress from [%s] received from Ict REST API.",
+                        ictNeighborAddress
+                ));
+            }
+        }
+
+        syncNeighbors(addressesAndStatsToSync, false);
+    }
+
+    public void syncNeighbors(List<AddressAndStats> addressesAndStats, boolean applyReportPort) {
+
+        final List<Neighbor> keepNeighbors = new LinkedList<>();
+
+        for (AddressAndStats addressAndStats : addressesAndStats) {
+            Neighbor syncedNeighbor = null;
+            for (Neighbor neighbor : getNeighbors()) {
+                if (neighbor.isSyncableAddress(addressAndStats.getAddress())) {
+                    neighbor.syncAddressAndStats(addressAndStats, applyReportPort);
+                    syncedNeighbor = neighbor;
+                    break;
+                }
+            }
+
+            if (syncedNeighbor != null) {
+                keepNeighbors.add(syncedNeighbor);
+            } else {
+                keepNeighbors.add(new Neighbor(addressAndStats.getAddress()));
+            }
+        }
+
+        synchronized (this.neighbors) {
+            neighbors.clear();
+            neighbors.addAll(keepNeighbors);
         }
     }
 }
