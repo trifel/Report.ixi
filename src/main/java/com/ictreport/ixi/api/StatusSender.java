@@ -63,7 +63,7 @@ public class StatusSender extends RestartableThread {
                         Payload.serialize(statusPayload))
                 );
             } else {
-                log.warn("Report.ixi has no uuid. StatusPayload will not be sent to RCS.");
+                log.info("Report.ixi has no uuid yet. StatusPayload will not be sent to RCS.");
             }
 
             synchronized (waiter) {

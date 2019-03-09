@@ -31,15 +31,19 @@ public class MetadataSender extends RestartableThread {
                     final MetadataPayload metadataPayload =
                             new MetadataPayload(reportIxi.getReportIxiContext().getUuid(), Constants.VERSION);
 
-                    reportIxi.send(metadataPayload, neighbor.getAddress().getReportSocketAddress());
-                    log.debug(String.format(
-                            "Sent MetadataPayload to neighbor [%s]: %s",
-                            neighbor.getAddress().getReportSocketAddress().toString(),
-                            Payload.serialize(metadataPayload))
-                    );
+                    if (neighbor.getReportSocketAddress() != null) {
+                        neighbor.resolveHost();
+                        reportIxi.send(metadataPayload, neighbor.getReportSocketAddress());
+                        log.debug(String.format(
+                                "Sent MetadataPayload to neighbor [address: %s, port: %d]: %s",
+                                neighbor.getAddress(),
+                                neighbor.getReportPort(),
+                                Payload.serialize(metadataPayload))
+                        );
+                    }
                 }
             } else {
-                log.warn("Report.ixi has no uuid. MetadataPayload will not be sent to neighbors.");
+                log.info("Report.ixi has no uuid yet. MetadataPayload will not be sent to neighbors.");
             }
 
             synchronized (waiter) {

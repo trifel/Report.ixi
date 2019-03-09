@@ -56,7 +56,7 @@ public class PingSender extends RestartableThread {
                         Payload.serialize(submittedPingPayload))
                 );
             } else {
-                log.warn("Report.ixi has no uuid. PingPayload will not be broadcasted to ict neighbors.");
+                log.info("Report.ixi has no uuid yet. PingPayload will not be broadcasted to ict neighbors.");
             }
 
             synchronized (waiter) {

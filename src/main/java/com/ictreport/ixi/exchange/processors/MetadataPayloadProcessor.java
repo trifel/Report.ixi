@@ -26,7 +26,7 @@ public class MetadataPayloadProcessor implements IPayloadProcessor {
 
         log.debug(String.format(
                 "Received MetadataPayload from neighbor[%s]: %s",
-                neighbor,
+                neighbor.getReportSocketAddress(),
                 Payload.serialize(metadataPayload))
         );
 
@@ -34,7 +34,7 @@ public class MetadataPayloadProcessor implements IPayloadProcessor {
                 !neighbor.getReportIxiVersion().equals(metadataPayload.getReportIxiVersion())) {
             neighbor.setReportIxiVersion(metadataPayload.getReportIxiVersion());
             log.info(String.format("Neighbor[%s] operates Report.ixi version: %s",
-                    neighbor.getAddress().getReportSocketAddress(),
+                    neighbor.getReportSocketAddress(),
                     neighbor.getReportIxiVersion()));
         }
 
@@ -42,7 +42,7 @@ public class MetadataPayloadProcessor implements IPayloadProcessor {
                 !neighbor.getUuid().equals(metadataPayload.getUuid())) {
             neighbor.setUuid(metadataPayload.getUuid());
             log.info(String.format("Received new uuid from neighbor[%s]",
-                    neighbor.getAddress().getReportSocketAddress()));
+                    neighbor.getReportSocketAddress()));
         }
 
         return true;

@@ -1,7 +1,5 @@
 package com.ictreport.ixi;
 
-import com.ictreport.ixi.model.Address;
-import com.ictreport.ixi.model.AddressAndStats;
 import com.ictreport.ixi.model.Neighbor;
 import com.ictreport.ixi.model.Stats;
 import com.ictreport.ixi.utils.IctRestCaller;
@@ -9,7 +7,6 @@ import org.iota.ict.ixi.context.ConfigurableIxiContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -53,6 +50,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     private Integer                       externalReportPort           = DEFAULT_EXTERNAL_REPORT_PORT;
     private String                        name                         = DEFAULT_NAME;
 
+    // Non-configurable properties
     private String                        uuid                         = null;
     private final List<Neighbor>          neighbors                    = new LinkedList<>();
 
@@ -68,25 +66,23 @@ public class ReportIxiContext extends ConfigurableIxiContext {
 
     public ReportIxiContext() {
         super(DEFAULT_CONFIGURATION);
-
         applyConfiguration();
     }
 
     @Override
     public JSONObject getConfiguration() {
-
         syncIctNeighbors();
 
         final List<JSONObject> jsonNeighbor = new LinkedList<>();
         for (Neighbor neighbor : getNeighbors()) {
-            final Address address = neighbor.getAddress();
+            final String staticAddress = neighbor.getAddress();
             jsonNeighbor.add(new JSONObject()
-                    .put(NEIGHBOR_ADDRESS, address.getIctSocketAddress().toString())
-                    .put(NEIGHBOR_REPORT_PORT, address.getReportPort()));
+                    .put(NEIGHBOR_ADDRESS, staticAddress)
+                    .put(NEIGHBOR_REPORT_PORT, neighbor.getReportPort()));
         }
         final JSONArray jsonNeighbors = new JSONArray(jsonNeighbor);
 
-        JSONObject configuration = new JSONObject()
+        final JSONObject configuration = new JSONObject()
                 .put(ICT_REST_PORT, getIctRestPort())
                 .put(ICT_REST_PASSWORD, getIctRestPassword())
                 .put(REPORT_PORT, getReportPort())
@@ -106,7 +102,6 @@ public class ReportIxiContext extends ConfigurableIxiContext {
 
     @Override
     protected void validateConfiguration(final JSONObject newConfiguration) {
-
         validateReportPort(newConfiguration);
         validateName(newConfiguration);
         validateNeighbors(newConfiguration);
@@ -120,12 +115,28 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         setName(configuration.getString(NAME));
         setReportPort(configuration.getInt(REPORT_PORT));
 
+        // Get new neighbor changes
+        JSONArray newNeighborConfiguration = null;
         if (configuration.get(NEIGHBORS) instanceof String) {
-            setNeighbors(new JSONArray(configuration.getString(NEIGHBORS)));
+            newNeighborConfiguration = new JSONArray(configuration.getString(NEIGHBORS));
         } else if (configuration.get(NEIGHBORS) instanceof JSONArray) {
-            setNeighbors(configuration.getJSONArray(NEIGHBORS));
+            newNeighborConfiguration = configuration.getJSONArray(NEIGHBORS);
         } else {
-            setNeighbors(new JSONArray());
+            newNeighborConfiguration = new JSONArray();
+        }
+
+        // Apply new neighbor changes
+        for (int i=0; i<newNeighborConfiguration.length(); i++) {
+            final JSONObject jsonNeighbor = newNeighborConfiguration.getJSONObject(i);
+            final String staticAddress = jsonNeighbor.getString(NEIGHBOR_ADDRESS);
+            final Neighbor neighbor = getNeighborByStaticAddress(staticAddress);
+            if (neighbor != null) {
+                if (jsonNeighbor.has(NEIGHBOR_REPORT_PORT)) {
+                    final int reportPort = jsonNeighbor.getInt(NEIGHBOR_REPORT_PORT);
+                    neighbor.setReportPort(reportPort);
+                    neighbor.resolveHost();
+                }
+            }
         }
         
         // Optional configuration properties
@@ -290,23 +301,6 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         this.uuid = uuid;
     }
 
-    public void setNeighbors(JSONArray neighbors) {
-
-        List<AddressAndStats> addressesAndStatsToSync = new ArrayList<>();
-
-        for (int i=0; i<neighbors.length(); i++) {
-            JSONObject neighbor = neighbors.getJSONObject(i);
-            String neighborAddress = neighbor.getString(NEIGHBOR_ADDRESS);
-            int neighborReportPort = neighbor.getInt(NEIGHBOR_REPORT_PORT);
-
-            final Address address = Address.parse(neighborAddress);
-            address.setReportPort(neighborReportPort);
-            addressesAndStatsToSync.add(new AddressAndStats(address));
-        }
-
-        syncNeighbors(addressesAndStatsToSync, true);
-    }
-
     public List<Neighbor> getNeighbors() {
         synchronized (this.neighbors) {
             return new LinkedList<>(this.neighbors);
@@ -358,83 +352,78 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     public void syncIctNeighbors() {
         final JSONArray response = IctRestCaller.getNeighbors(getIctRestPort(), getIctRestPassword());
 
-        final List<AddressAndStats> addressesAndStatsToSync = new LinkedList<>();
+        final List<Neighbor> keepNeighbors = new LinkedList<>();
+
         for (int i=0; response != null && i<response.length(); i++) {
             final JSONObject ictNeighbor = (JSONObject)response.get(i);
             final String ictNeighborAddress = ictNeighbor.getString("address");
+            final JSONArray ictNeighborStatsArray = ictNeighbor.getJSONArray("stats");
 
-            try {
-                final Address address = Address.parse(ictNeighborAddress);
-
-                final JSONArray statsArray = ictNeighbor.getJSONArray("stats");
-
-                JSONObject stats = null;
-                if (getIctVersion().equals("0.5")) {
-                    // If this version of Report.ixi is operated on Ict 0.5, it will always try to get
-                    // the last metrics/stats record from Ict api.
-                    if (statsArray.length() > 0) {
-                        stats = statsArray.getJSONObject(statsArray.length() - 1);
-                    }
-                } else {
-                    // If this version of Report.ixi is on any newer version than Ict 0.5, it will always
-                    // try to get the second to last metrics/stats record from Ict api.
-                    if (statsArray.length() > 1) {
-                        stats = statsArray.getJSONObject(statsArray.length() - 2);
-                    }
-                }
-
-                if (stats != null) {
-                    addressesAndStatsToSync.add(new AddressAndStats(
-                            address,
-                            new Stats(
-                                    stats.getNumber("timestamp").longValue(),
-                                    stats.getInt("all"),
-                                    stats.getInt("new"),
-                                    stats.getInt("ignored"),
-                                    stats.getInt("invalid"),
-                                    stats.getInt("requested")
-                            )
+            final Neighbor neighbor = getNeighborByStaticAddress(ictNeighborAddress);
+            if (neighbor != null) {
+                final JSONObject ictNeighborStats = getIctNeighborStats(ictNeighborStatsArray);
+                if (ictNeighborStats != null) {
+                    neighbor.setStats(new Stats(
+                            ictNeighborStats.getNumber("timestamp").longValue(),
+                            ictNeighborStats.getInt("all"),
+                            ictNeighborStats.getInt("new"),
+                            ictNeighborStats.getInt("ignored"),
+                            ictNeighborStats.getInt("invalid"),
+                            ictNeighborStats.getInt("requested")
                     ));
-                } else {
-                    addressesAndStatsToSync.add(new AddressAndStats(address));
                 }
 
-            } catch (Exception e) {
-                e.printStackTrace();
-                log.warn(String.format(
-                        "Failed to parse InetSocketAddress from [%s] received from Ict REST API.",
-                        ictNeighborAddress
-                ));
-            }
-        }
-
-        syncNeighbors(addressesAndStatsToSync, false);
-    }
-
-    public void syncNeighbors(List<AddressAndStats> addressesAndStats, boolean applyReportPort) {
-
-        final List<Neighbor> keepNeighbors = new LinkedList<>();
-
-        for (AddressAndStats addressAndStats : addressesAndStats) {
-            Neighbor syncedNeighbor = null;
-            for (Neighbor neighbor : getNeighbors()) {
-                if (neighbor.isSyncableAddress(addressAndStats.getAddress())) {
-                    neighbor.syncAddressAndStats(addressAndStats, applyReportPort);
-                    syncedNeighbor = neighbor;
-                    break;
-                }
-            }
-
-            if (syncedNeighbor != null) {
-                keepNeighbors.add(syncedNeighbor);
+                keepNeighbors.add(neighbor);
             } else {
-                keepNeighbors.add(new Neighbor(addressAndStats.getAddress()));
+                // Apparently there's a new neighbor in Ict, add it to Report.ixi neighbor list
+                final Neighbor newNeighbor = new Neighbor(ictNeighborAddress);
+
+                final JSONObject ictNeighborStats = getIctNeighborStats(ictNeighborStatsArray);
+                if (ictNeighborStats != null) {
+                    newNeighbor.setStats(new Stats(
+                            ictNeighborStats.getNumber("timestamp").longValue(),
+                            ictNeighborStats.getInt("all"),
+                            ictNeighborStats.getInt("new"),
+                            ictNeighborStats.getInt("ignored"),
+                            ictNeighborStats.getInt("invalid"),
+                            ictNeighborStats.getInt("requested")
+                    ));
+                }
+
+                keepNeighbors.add(newNeighbor);
             }
         }
 
+        // Update the neighbor list. Neighbors that are not represented in Ict are discarded.
         synchronized (this.neighbors) {
             neighbors.clear();
             neighbors.addAll(keepNeighbors);
         }
+    }
+
+    private Neighbor getNeighborByStaticAddress(String staticAddress) {
+        for (Neighbor neighbor : getNeighbors()) {
+            if (neighbor.getAddress().equals(staticAddress)) {
+                return neighbor;
+            }
+        }
+        return null;
+    }
+
+    private JSONObject getIctNeighborStats(JSONArray ictNeighborStatsArray) {
+        if (getIctVersion().equals("0.5")) {
+            // If this version of Report.ixi is operated on Ict 0.5, it will always try to get
+            // the last metrics/stats record from Ict api.
+            if (ictNeighborStatsArray.length() > 0) {
+                return ictNeighborStatsArray.getJSONObject(ictNeighborStatsArray.length() - 1);
+            }
+        } else {
+            // If this version of Report.ixi is on any newer version than Ict 0.5, it will always
+            // try to get the second to last metrics/stats record from Ict api.
+            if (ictNeighborStatsArray.length() > 1) {
+                return ictNeighborStatsArray.getJSONObject(ictNeighborStatsArray.length() - 2);
+            }
+        }
+        return null;
     }
 }

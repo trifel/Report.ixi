@@ -64,20 +64,13 @@ public class Receiver extends RestartableThread {
         return false;
     }
 
-    private Neighbor determineNeighborWhoSent(final DatagramPacket packet) {
-        for (final Neighbor neighbor : reportIxi.getReportIxiContext().getNeighbors()) {
-            if (Neighbor.isNeighborWhoSent(neighbor, packet, true)) {
-                log.debug("Strict match successful, packet received from neighbor: " + neighbor);
-                return neighbor;
-            }
-        }
-        for (final Neighbor neighbor : reportIxi.getReportIxiContext().getNeighbors()) {
-            if (Neighbor.isNeighborWhoSent(neighbor, packet, false)) {
-                log.debug("Non-strict match successful, packet received from neighbor: " + neighbor);
-                return neighbor;
-            }
-        }
-        log.debug("Failed to match packet with any known neighbor");
+    private Neighbor determineNeighborWhoSent(DatagramPacket packet) {
+        for (Neighbor nb : reportIxi.getReportIxiContext().getNeighbors())
+            if (nb.sentPacket(packet))
+                return nb;
+        for (Neighbor nb : reportIxi.getReportIxiContext().getNeighbors())
+            if (nb.sentPacketFromSameIP(packet))
+                return nb;
         return null;
     }
 }
