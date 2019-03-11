@@ -38,13 +38,13 @@ public class StatusSender extends RestartableThread {
 
                 for (Neighbor neighbor : reportIxi.getReportIxiContext().getNeighbors()) {
                     neighborPayloads.add(new NeighborPayload(
-                            neighbor.getStats().getTimestamp(),
+                            neighbor.getTimestamp(),
                             neighbor.getUuid(),
-                            neighbor.getStats().getAllTx(),
-                            neighbor.getStats().getNewTx(),
-                            neighbor.getStats().getIgnoredTx(),
-                            neighbor.getStats().getInvalidTx(),
-                            neighbor.getStats().getRequestedTx()
+                            neighbor.getAllTx(),
+                            neighbor.getNewTx(),
+                            neighbor.getIgnoredTx(),
+                            neighbor.getInvalidTx(),
+                            neighbor.getRequestedTx()
                     ));
                 }
 

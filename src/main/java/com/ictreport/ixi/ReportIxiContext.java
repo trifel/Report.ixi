@@ -1,7 +1,6 @@
 package com.ictreport.ixi;
 
 import com.ictreport.ixi.model.Neighbor;
-import com.ictreport.ixi.model.Stats;
 import com.ictreport.ixi.utils.IctRestCaller;
 import org.iota.ict.ixi.context.ConfigurableIxiContext;
 import org.json.JSONArray;
@@ -68,9 +67,8 @@ public class ReportIxiContext extends ConfigurableIxiContext {
 
         final List<JSONObject> jsonNeighbor = new LinkedList<>();
         for (Neighbor neighbor : getNeighbors()) {
-            final String staticAddress = neighbor.getAddress();
             jsonNeighbor.add(new JSONObject()
-                    .put(NEIGHBOR_ADDRESS, staticAddress)
+                    .put(NEIGHBOR_ADDRESS, neighbor.getAddress())
                     .put(NEIGHBOR_PUBLIC_ADDRESS, neighbor.getPublicAddress()));
         }
         final JSONArray jsonNeighbors = new JSONArray(jsonNeighbor);
@@ -277,14 +275,12 @@ public class ReportIxiContext extends ConfigurableIxiContext {
             if (neighbor != null) {
                 final JSONObject ictNeighborStats = getIctNeighborStats(ictNeighborStatsArray);
                 if (ictNeighborStats != null) {
-                    neighbor.setStats(new Stats(
-                            ictNeighborStats.getNumber("timestamp").longValue(),
-                            ictNeighborStats.getInt("all"),
-                            ictNeighborStats.getInt("new"),
-                            ictNeighborStats.getInt("ignored"),
-                            ictNeighborStats.getInt("invalid"),
-                            ictNeighborStats.getInt("requested")
-                    ));
+                    neighbor.setTimestamp(ictNeighborStats.getNumber("timestamp").longValue());
+                    neighbor.setAllTx(ictNeighborStats.getInt("all"));
+                    neighbor.setNewTx(ictNeighborStats.getInt("new"));
+                    neighbor.setIgnoredTx(ictNeighborStats.getInt("ignored"));
+                    neighbor.setInvalidTx(ictNeighborStats.getInt("invalid"));
+                    neighbor.setRequestedTx(ictNeighborStats.getInt("requested"));
                 }
 
                 keepNeighbors.add(neighbor);
@@ -294,14 +290,12 @@ public class ReportIxiContext extends ConfigurableIxiContext {
 
                 final JSONObject ictNeighborStats = getIctNeighborStats(ictNeighborStatsArray);
                 if (ictNeighborStats != null) {
-                    newNeighbor.setStats(new Stats(
-                            ictNeighborStats.getNumber("timestamp").longValue(),
-                            ictNeighborStats.getInt("all"),
-                            ictNeighborStats.getInt("new"),
-                            ictNeighborStats.getInt("ignored"),
-                            ictNeighborStats.getInt("invalid"),
-                            ictNeighborStats.getInt("requested")
-                    ));
+                    newNeighbor.setTimestamp(ictNeighborStats.getNumber("timestamp").longValue());
+                    newNeighbor.setAllTx(ictNeighborStats.getInt("all"));
+                    newNeighbor.setNewTx(ictNeighborStats.getInt("new"));
+                    newNeighbor.setIgnoredTx(ictNeighborStats.getInt("ignored"));
+                    newNeighbor.setInvalidTx(ictNeighborStats.getInt("invalid"));
+                    newNeighbor.setRequestedTx(ictNeighborStats.getInt("requested"));
                 }
 
                 keepNeighbors.add(newNeighbor);
