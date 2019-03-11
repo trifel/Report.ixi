@@ -4,7 +4,7 @@ import com.ictreport.ixi.exchange.payloads.Payload;
 import com.ictreport.ixi.exchange.payloads.PingPayload;
 import com.ictreport.ixi.exchange.payloads.ReceivedPingPayload;
 import com.ictreport.ixi.model.Neighbor;
-import com.ictreport.ixi.utils.Constants;
+import com.ictreport.ixi.utils.RCSRestCaller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.iota.ict.ixi.ReportIxi;
@@ -35,7 +35,7 @@ public class PingPayloadProcessor implements IPayloadProcessor {
                 new ReceivedPingPayload(reportIxi.getReportIxiContext().getUuid(), pingPayload);
 
         if (reportIxi.getReportIxiContext().getUuid() != null) {
-            reportIxi.send(receivedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
+            RCSRestCaller.send("receivedPingPayload", receivedPingPayload);
         }
 
         return true;

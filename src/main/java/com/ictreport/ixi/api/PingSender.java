@@ -4,6 +4,7 @@ import com.ictreport.ixi.exchange.payloads.Payload;
 import com.ictreport.ixi.exchange.payloads.PingPayload;
 import com.ictreport.ixi.exchange.payloads.SubmittedPingPayload;
 import com.ictreport.ixi.utils.Constants;
+import com.ictreport.ixi.utils.RCSRestCaller;
 import com.ictreport.ixi.utils.RandomStringGenerator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,21 +50,25 @@ public class PingSender extends RestartableThread {
                 final SubmittedPingPayload submittedPingPayload =
                         new SubmittedPingPayload(reportIxi.getReportIxiContext().getUuid(), pingPayload);
 
-                reportIxi.send(submittedPingPayload, Constants.RCS_HOST, Constants.RCS_PORT);
+                final String response = RCSRestCaller.send("submittedPingPayload", submittedPingPayload);
 
-                log.debug(String.format(
-                        "Sent SubmittedPingPayload to RCS: %s",
-                        Payload.serialize(submittedPingPayload))
-                );
+                if (response != null) {
+                    log.debug(String.format(
+                            "Sent SubmittedPingPayload to RCS: %s",
+                            Payload.serialize(submittedPingPayload))
+                    );
+                }
             } else {
                 log.info("Report.ixi has no uuid yet. PingPayload will not be broadcasted to ict neighbors.");
             }
 
-            synchronized (waiter) {
-                try {
-                    waiter.wait(TimeUnit.MINUTES.toMillis(5));
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            if (isRunning()) {
+                synchronized (waiter) {
+                    try {
+                        waiter.wait(TimeUnit.MINUTES.toMillis(5));
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }

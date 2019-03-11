@@ -11,13 +11,11 @@ public class Payload {
     public static String serialize(final Payload payload) {
         final RuntimeTypeAdapterFactory<Payload> runtimeTypeAdapterFactory = RuntimeTypeAdapterFactory
                 .of(Payload.class, "type")
-                .registerSubtype(MetadataPayload.class, "MetadataPayload")
                 .registerSubtype(PingPayload.class, "PingPayload")
                 .registerSubtype(StatusPayload.class, "StatusPayload")
                 .registerSubtype(ReceivedPingPayload.class, "ReceivedPingPayload")
                 .registerSubtype(SubmittedPingPayload.class, "SubmittedPingPayload")
                 .registerSubtype(RequestUuidPayload.class, "RequestUuidPayload")
-                .registerSubtype(UuidPayload.class, "UuidPayload")
                 .registerSubtype(NeighborPayload.class, "NeighborPayload");
 
         final Gson gson = new GsonBuilder().registerTypeAdapterFactory(runtimeTypeAdapterFactory).create();
@@ -28,13 +26,11 @@ public class Payload {
     public static Payload deserialize(final String json) {
         final RuntimeTypeAdapterFactory<Payload> runtimeTypeAdapterFactory = RuntimeTypeAdapterFactory
                 .of(Payload.class, "type")
-                .registerSubtype(MetadataPayload.class, "MetadataPayload")
                 .registerSubtype(PingPayload.class, "PingPayload")
                 .registerSubtype(StatusPayload.class, "StatusPayload")
                 .registerSubtype(ReceivedPingPayload.class, "ReceivedPingPayload")
                 .registerSubtype(SubmittedPingPayload.class, "SubmittedPingPayload")
                 .registerSubtype(RequestUuidPayload.class, "RequestUuidPayload")
-                .registerSubtype(UuidPayload.class, "UuidPayload")
                 .registerSubtype(NeighborPayload.class, "NeighborPayload");
 
         final Gson gson = new GsonBuilder().registerTypeAdapterFactory(runtimeTypeAdapterFactory).create();

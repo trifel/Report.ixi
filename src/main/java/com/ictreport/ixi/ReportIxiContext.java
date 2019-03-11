@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,13 +21,11 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     // Property names
     private static final String           ICT_REST_PORT                = "Ict REST API Port";
     private static final String           ICT_REST_PASSWORD            = "Ict REST API Password";
-    private static final String           HOST                         = "Ict Host";
-    private static final String           REPORT_PORT                  = "Report.ixi Port";
-    private static final String           EXTERNAL_REPORT_PORT         = "External Report.ixi Port";
     private static final String           NAME                         = "Name";
     private static final String           NEIGHBORS                    = "Neighbors";
     private static final String           NEIGHBOR_ADDRESS             = "_address";
-    private static final String           NEIGHBOR_REPORT_PORT         = "reportPort";
+    private static final String           NEIGHBOR_PUBLIC_ADDRESS      = "publicAddress";
+    private static final String           PUBLIC_ADDRESS               = "Public address";
 
     // Property defaults
     private static final String           DEFAULT_ICT_VERSION          = "";
@@ -34,34 +33,28 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     private static final int              DEFAULT_ICT_REST_PORT        = 2187;
     private static final String           DEFAULT_ICT_REST_PASSWORD    = "change_me_now";
     private static final JSONObject       DEFAULT_CONFIGURATION        = new JSONObject();
-    private static final String           DEFAULT_HOST                 = null;
-    private static final int              DEFAULT_REPORT_PORT          = 1338;
-    private static final Integer          DEFAULT_EXTERNAL_REPORT_PORT = null;
     private static final String           DEFAULT_NAME                 = "YOUR_NAME (ict-0)";
     private static final JSONArray        DEFAULT_NEIGHBORS            = new JSONArray();
+    private static final String           DEFAULT_PUBLIC_ADDRESS       = "your.public.ict.address:1337";
 
     // Context properties
     private String                        ictVersion                   = DEFAULT_ICT_VERSION;
     private int                           ictRoundDuration             = DEFAULT_ICT_ROUND_DURATION;
     private int                           ictRestPort                  = DEFAULT_ICT_REST_PORT;
     private String                        ictRestPassword              = DEFAULT_ICT_REST_PASSWORD;
-    private String                        host                         = DEFAULT_HOST;
-    private int                           reportPort                   = DEFAULT_REPORT_PORT;
-    private Integer                       externalReportPort           = DEFAULT_EXTERNAL_REPORT_PORT;
     private String                        name                         = DEFAULT_NAME;
+    private String                        publicAddress                = DEFAULT_PUBLIC_ADDRESS;
 
     // Non-configurable properties
-    private String                        uuid                         = null;
+    private String                        uuid                         = UUID.randomUUID().toString(); // Mock uuid
     private final List<Neighbor>          neighbors                    = new LinkedList<>();
 
     static {
         DEFAULT_CONFIGURATION.put(ICT_REST_PORT, DEFAULT_ICT_REST_PORT);
         DEFAULT_CONFIGURATION.put(ICT_REST_PASSWORD, DEFAULT_ICT_REST_PASSWORD);
-        DEFAULT_CONFIGURATION.put(HOST, DEFAULT_HOST);
-        DEFAULT_CONFIGURATION.put(REPORT_PORT, DEFAULT_REPORT_PORT);
-        DEFAULT_CONFIGURATION.put(EXTERNAL_REPORT_PORT, DEFAULT_EXTERNAL_REPORT_PORT);
         DEFAULT_CONFIGURATION.put(NAME, DEFAULT_NAME);
         DEFAULT_CONFIGURATION.put(NEIGHBORS, DEFAULT_NEIGHBORS.toString());
+        DEFAULT_CONFIGURATION.put(PUBLIC_ADDRESS, DEFAULT_PUBLIC_ADDRESS);
     }
 
     public ReportIxiContext() {
@@ -78,31 +71,22 @@ public class ReportIxiContext extends ConfigurableIxiContext {
             final String staticAddress = neighbor.getAddress();
             jsonNeighbor.add(new JSONObject()
                     .put(NEIGHBOR_ADDRESS, staticAddress)
-                    .put(NEIGHBOR_REPORT_PORT, neighbor.getReportPort()));
+                    .put(NEIGHBOR_PUBLIC_ADDRESS, neighbor.getPublicAddress()));
         }
         final JSONArray jsonNeighbors = new JSONArray(jsonNeighbor);
 
         final JSONObject configuration = new JSONObject()
                 .put(ICT_REST_PORT, getIctRestPort())
                 .put(ICT_REST_PASSWORD, getIctRestPassword())
-                .put(REPORT_PORT, getReportPort())
                 .put(NAME, getName())
-                .put(NEIGHBORS, jsonNeighbors.toString());
-
-        // Optional configuration properties
-        if (!getHost().equals("0.0.0.0")) {
-            configuration.put(HOST, getHost());
-        }
-        if (getExternalReportPort() != -1) {
-            configuration.put(EXTERNAL_REPORT_PORT, getExternalReportPort());
-        }
+                .put(NEIGHBORS, jsonNeighbors.toString())
+                .put(PUBLIC_ADDRESS, getPublicAddress());
 
         return configuration;
     }
 
     @Override
     protected void validateConfiguration(final JSONObject newConfiguration) {
-        validateReportPort(newConfiguration);
         validateName(newConfiguration);
         validateNeighbors(newConfiguration);
         validateIctRestConnectivity(newConfiguration);
@@ -113,7 +97,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         setIctRestPort(configuration.getInt(ICT_REST_PORT));
         setIctRestPassword(configuration.getString(ICT_REST_PASSWORD));
         setName(configuration.getString(NAME));
-        setReportPort(configuration.getInt(REPORT_PORT));
+        setPublicAddress(configuration.getString(PUBLIC_ADDRESS));
 
         // Get new neighbor changes
         JSONArray newNeighborConfiguration = null;
@@ -128,23 +112,14 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         // Apply new neighbor changes
         for (int i=0; i<newNeighborConfiguration.length(); i++) {
             final JSONObject jsonNeighbor = newNeighborConfiguration.getJSONObject(i);
-            final String staticAddress = jsonNeighbor.getString(NEIGHBOR_ADDRESS);
-            final Neighbor neighbor = getNeighborByStaticAddress(staticAddress);
+            final String _address = jsonNeighbor.getString(NEIGHBOR_ADDRESS);
+            final Neighbor neighbor = getNeighborByStaticAddress(_address);
             if (neighbor != null) {
-                if (jsonNeighbor.has(NEIGHBOR_REPORT_PORT)) {
-                    final int reportPort = jsonNeighbor.getInt(NEIGHBOR_REPORT_PORT);
-                    neighbor.setReportPort(reportPort);
-                    neighbor.resolveHost();
+                if (jsonNeighbor.has(NEIGHBOR_PUBLIC_ADDRESS)) {
+                    final String publicAddress = jsonNeighbor.getString(NEIGHBOR_PUBLIC_ADDRESS);
+                    neighbor.setPublicAddress(publicAddress);
                 }
             }
-        }
-        
-        // Optional configuration properties
-        if (configuration.has(HOST)) {
-            setHost(configuration.getString(HOST));
-        }
-        if (configuration.has(EXTERNAL_REPORT_PORT)) {
-            setExternalReportPort(configuration.getInt(EXTERNAL_REPORT_PORT));
         }
     }
 
@@ -158,40 +133,6 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         final JSONObject response = IctRestCaller.getInfo(newConfiguration.getInt(ICT_REST_PORT), newConfiguration.getString(ICT_REST_PASSWORD));
         if (response == null) {
             throw new IllegalPropertyException("Ict REST API port/password", "Connectivity check with Ict REST API failed");
-        }
-    }
-
-    private void validateHost(final JSONObject newConfiguration) {
-        if (!newConfiguration.has(HOST)) {
-            throw new IllegalPropertyException(HOST, "not defined");
-        }
-        if (!(newConfiguration.get(HOST) instanceof String)) {
-            throw new IllegalPropertyException(HOST, "not a string");
-        }
-        // TODO: Validate format of string
-    }
-
-    private void validateReportPort(final JSONObject newConfiguration) {
-        if (!newConfiguration.has(REPORT_PORT)) {
-            throw new IllegalPropertyException(REPORT_PORT, "not defined");
-        }
-        /*if (!(newConfiguration.get(REPORT_PORT) instanceof Integer)) {
-            throw new IllegalPropertyException(REPORT_PORT, "not an integer");
-        }*/
-        if (newConfiguration.getInt(REPORT_PORT) < 0 || newConfiguration.getInt(REPORT_PORT) > 65535) {
-            throw new IllegalPropertyException(REPORT_PORT, "port must be within range 0-65535");
-        }
-    }
-
-    private void validateExternalReportPort(final JSONObject newConfiguration) {
-        if (!newConfiguration.has(EXTERNAL_REPORT_PORT)) {
-            throw new IllegalPropertyException(EXTERNAL_REPORT_PORT, "not defined");
-        }
-        /*if (!(newConfiguration.get(EXTERNAL_REPORT_PORT) instanceof Integer)) {
-            throw new IllegalPropertyException(EXTERNAL_REPORT_PORT, "not an integer");
-        }*/
-        if (newConfiguration.getInt(EXTERNAL_REPORT_PORT) < 0 || newConfiguration.getInt(EXTERNAL_REPORT_PORT) > 65535) {
-            throw new IllegalPropertyException(EXTERNAL_REPORT_PORT, "port must be within range 0-65535");
         }
     }
 
@@ -264,19 +205,6 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         this.ictRestPassword = ictRestPassword;
     }
 
-    public String getHost() {
-        // Optional configuration property
-        if (host == null) {
-            return "0.0.0.0";
-        }
-
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
     public String getName() {
         return name;
     }
@@ -285,12 +213,12 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         this.name = name;
     }
 
-    public int getReportPort() {
-        return reportPort;
+    public String getPublicAddress() {
+        return publicAddress;
     }
 
-    public void setReportPort(int reportPort) {
-        this.reportPort = reportPort;
+    public void setPublicAddress(String publicAddress) {
+        this.publicAddress = publicAddress;
     }
 
     public String getUuid() {
@@ -305,20 +233,6 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         synchronized (this.neighbors) {
             return new LinkedList<>(this.neighbors);
         }
-    }
-
-
-    public Integer getExternalReportPort() {
-        // Optional configuration property
-        if (externalReportPort == null) {
-            return -1;
-        }
-
-        return externalReportPort;
-    }
-
-    public void setExternalReportPort(Integer externalReportPort) {
-        this.externalReportPort = externalReportPort;
     }
 
     private class IllegalPropertyException extends IllegalArgumentException {

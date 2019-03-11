@@ -1,5 +1,6 @@
-package com.ictreport.ixi.utils;
+package com.ictreport.ixi.configuration;
 
+import com.ictreport.ixi.utils.Constants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -7,14 +8,14 @@ import java.io.*;
 import java.nio.channels.FileChannel;
 import java.util.List;
 
-public class ConfigurationMigrator {
+public class Migrator {
 
-    private static final Logger log = LogManager.getLogger("ReportIxi/ConfigurationMigrator");
+    private static final Logger log = LogManager.getLogger("ReportIxi/Migrator");
 
     public static void migrateIfConfigurationMissing() {
-        if (!ConfigurationMigrator.configurationExists()) {
+        if (!Migrator.configurationExists()) {
             log.debug("No configuration found for Report.ixi-" + Constants.VERSION);
-            if (ConfigurationMigrator.migrate(Constants.getPreviousVersions())) {
+            if (Migrator.migrate(Constants.getPreviousVersions())) {
                 log.info("Report.ixi config migration completed successfully.");
             } else {
                 log.info("Report.ixi config migration failed.");
@@ -28,7 +29,7 @@ public class ConfigurationMigrator {
 
     public static boolean migrate(List<String> fromVersions) {
         for (String previousVersion : fromVersions) {
-            if (ConfigurationMigrator.migrate(previousVersion)) {
+            if (Migrator.migrate(previousVersion)) {
                 return true;
             }
         }

@@ -6,6 +6,7 @@ import com.ictreport.ixi.exchange.payloads.StatusPayload;
 import com.ictreport.ixi.model.Neighbor;
 import com.ictreport.ixi.utils.CPUMonitor;
 import com.ictreport.ixi.utils.Constants;
+import com.ictreport.ixi.utils.RCSRestCaller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.iota.ict.ixi.ReportIxi;
@@ -56,21 +57,25 @@ public class StatusSender extends RestartableThread {
                         neighborPayloads,
                         CPUMonitor.getSystemLoadAverage());
 
-                reportIxi.send(statusPayload, Constants.RCS_HOST, Constants.RCS_PORT);
+                final String response = RCSRestCaller.send("statusPayload", statusPayload);
 
-                log.debug(String.format(
-                        "Sent StatusPayload to RCS: %s",
-                        Payload.serialize(statusPayload))
-                );
+                if (response != null) {
+                    log.debug(String.format(
+                            "Sent StatusPayload to RCS: %s",
+                            Payload.serialize(statusPayload))
+                    );
+                }
             } else {
                 log.info("Report.ixi has no uuid yet. StatusPayload will not be sent to RCS.");
             }
 
-            synchronized (waiter) {
-                try {
-                    waiter.wait(TimeUnit.MINUTES.toMillis(1));
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            if (isRunning()) {
+                synchronized (waiter) {
+                    try {
+                        waiter.wait(TimeUnit.MINUTES.toMillis(1));
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
