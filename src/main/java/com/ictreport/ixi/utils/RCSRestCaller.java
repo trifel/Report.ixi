@@ -27,7 +27,7 @@ public class RCSRestCaller {
 
     public static String send(final String route, final Payload payload) {
 
-        final String endpoint = String.format("http://%s:%d/%s", Constants.RCS_HOST, Constants.RCS_PORT, route);
+        final String endpoint = String.format("%s/%s", Constants.RCS_API, route);
 
         final RequestConfig config = RequestConfig.custom()
                 .setConnectTimeout(Constants.REQUEST_TIMEOUT * 1000)
