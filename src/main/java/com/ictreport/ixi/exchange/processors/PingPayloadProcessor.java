@@ -20,11 +20,6 @@ public class PingPayloadProcessor implements IPayloadProcessor {
 
         final PingPayload pingPayload = (PingPayload)payload;
 
-        log.trace(String.format(
-                "Received PingPayload from neighbor: %s",
-                Payload.serialize(pingPayload))
-        );
-
         final ReceivedPingPayload receivedPingPayload =
                 new ReceivedPingPayload(reportIxi.getReportIxiContext().getUuid(), pingPayload);
 
