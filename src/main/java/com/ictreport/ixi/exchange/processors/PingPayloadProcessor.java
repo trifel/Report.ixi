@@ -24,7 +24,7 @@ public class PingPayloadProcessor implements IPayloadProcessor {
                 new ReceivedPingPayload(reportIxi.getReportIxiContext().getUuid(), pingPayload);
 
         if (reportIxi.getReportIxiContext().getUuid() != null) {
-            RCSRestCaller.send("receivedPingPayload", receivedPingPayload);
+            RCSRestCaller.send("receivedPingPayload", receivedPingPayload, false);
         }
 
         return true;

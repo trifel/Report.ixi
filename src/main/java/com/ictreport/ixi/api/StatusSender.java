@@ -57,7 +57,7 @@ public class StatusSender extends RestartableThread {
                         neighborPayloads,
                         CPUMonitor.getSystemLoadAverage());
 
-                final String response = RCSRestCaller.send("statusPayload", statusPayload);
+                final String response = RCSRestCaller.send("statusPayload", statusPayload, true);
 
                 if (response != null) {
                     log.debug(String.format(

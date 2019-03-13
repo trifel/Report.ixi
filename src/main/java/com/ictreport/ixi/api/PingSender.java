@@ -50,7 +50,7 @@ public class PingSender extends RestartableThread {
                 final SubmittedPingPayload submittedPingPayload =
                         new SubmittedPingPayload(reportIxi.getReportIxiContext().getUuid(), pingPayload);
 
-                final String response = RCSRestCaller.send("submittedPingPayload", submittedPingPayload);
+                final String response = RCSRestCaller.send("submittedPingPayload", submittedPingPayload, false);
 
                 if (response != null) {
                     log.debug(String.format(
@@ -58,8 +58,6 @@ public class PingSender extends RestartableThread {
                             Payload.serialize(submittedPingPayload))
                     );
                 }
-            } else {
-                log.info("Report.ixi has no uuid yet. PingPayload will not be broadcasted to ict neighbors.");
             }
 
             if (isRunning()) {

@@ -25,7 +25,7 @@ public class RCSRestCaller {
 
     private static final Logger log = LogManager.getLogger("ReportIxi/RCSRestCaller");
 
-    public static String send(final String route, final Payload payload) {
+    public static String send(final String route, final Payload payload, boolean doLog) {
 
         final String endpoint = String.format("%s/%s", Constants.RCS_API, route);
 
@@ -76,7 +76,9 @@ public class RCSRestCaller {
                     final StringWriter writer = new StringWriter();
                     IOUtils.copy(instream, writer, "UTF-8");
                     final String json = writer.toString();
-                    log.debug(String.format("Successfully received response from (%s).", endpoint));
+                    if (doLog) {
+                        log.debug(String.format("Successfully received response from (%s).", endpoint));
+                    }
                     return json;
                 } catch (IOException e) {
                     e.printStackTrace();
