@@ -2,13 +2,13 @@ package com.ictreport.ixi;
 
 import com.ictreport.ixi.model.Neighbor;
 import com.ictreport.ixi.utils.IctRestCaller;
+import com.ictreport.ixi.utils.UuidGenerator;
 import org.iota.ict.ixi.context.ConfigurableIxiContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,7 +45,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
     private String                        publicAddress                = DEFAULT_PUBLIC_ADDRESS;
 
     // Non-configurable properties
-    private String                        uuid                         = UUID.randomUUID().toString(); // Mock uuid
+    private String                        uuid                         = null;
     private final List<Neighbor>          neighbors                    = new LinkedList<>();
 
     static {
@@ -88,6 +88,7 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         validateName(newConfiguration);
         validateNeighbors(newConfiguration);
         validateIctRestConnectivity(newConfiguration);
+        validatePublicAddress(newConfiguration);
     }
 
     @Override
@@ -95,7 +96,11 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         setIctRestPort(configuration.getInt(ICT_REST_PORT));
         setIctRestPassword(configuration.getString(ICT_REST_PASSWORD));
         setName(configuration.getString(NAME));
-        setPublicAddress(configuration.getString(PUBLIC_ADDRESS));
+
+        if (configuration.has(PUBLIC_ADDRESS)) {
+            setPublicAddress(configuration.getString(PUBLIC_ADDRESS));
+            setUuid(UuidGenerator.generate(configuration.getString(PUBLIC_ADDRESS)));
+        }
 
         // Get new neighbor changes
         JSONArray newNeighborConfiguration = null;
@@ -110,11 +115,18 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         // Apply new neighbor changes
         for (int i=0; i<newNeighborConfiguration.length(); i++) {
             final JSONObject jsonNeighbor = newNeighborConfiguration.getJSONObject(i);
+
             final String _address = jsonNeighbor.getString(NEIGHBOR_ADDRESS);
-            final Neighbor neighbor = getNeighborByStaticAddress(_address);
-            if (neighbor != null) {
-                if (jsonNeighbor.has(NEIGHBOR_PUBLIC_ADDRESS)) {
-                    final String publicAddress = jsonNeighbor.getString(NEIGHBOR_PUBLIC_ADDRESS);
+
+            Neighbor neighbor = getNeighborByStaticAddress(_address);
+            if (neighbor == null) {
+                neighbor = new Neighbor(_address);
+                neighbors.add(neighbor);
+            }
+
+            if (jsonNeighbor.has(NEIGHBOR_PUBLIC_ADDRESS)) {
+                final String publicAddress = jsonNeighbor.getString(NEIGHBOR_PUBLIC_ADDRESS);
+                if (!publicAddress.isEmpty()) {
                     neighbor.setPublicAddress(publicAddress);
                 }
             }
@@ -147,6 +159,24 @@ public class ReportIxiContext extends ConfigurableIxiContext {
         if (newConfiguration.getString(NAME).equals(DEFAULT_NAME)) {
             throw new IllegalPropertyException(NAME,
                     String.format("please assign your personal ict name instead of '%s'", DEFAULT_NAME));
+        }
+    }
+
+    private void validatePublicAddress(final JSONObject newConfiguration) {
+        if (!newConfiguration.has(PUBLIC_ADDRESS)) {
+            return;
+        }
+        if (!(newConfiguration.get(PUBLIC_ADDRESS) instanceof String)) {
+            throw new IllegalPropertyException(PUBLIC_ADDRESS, "not a string");
+        }
+        if (newConfiguration.getString(PUBLIC_ADDRESS).isEmpty()) {
+            throw new IllegalPropertyException(PUBLIC_ADDRESS, "the public ict \"address:port\" must be specified");
+        }
+        if (newConfiguration.getString(PUBLIC_ADDRESS).equals("your.public.ict.address:1337")) {
+            throw new IllegalPropertyException(PUBLIC_ADDRESS, "set your own ict public address \"address:port\"");
+        }
+        if (!newConfiguration.getString(PUBLIC_ADDRESS).matches("^.{4,253}:.{1,5}")) {
+            throw new IllegalPropertyException(PUBLIC_ADDRESS, "public address incorrectly formatted, expected format: \"address:port\"");
         }
     }
 
@@ -271,35 +301,40 @@ public class ReportIxiContext extends ConfigurableIxiContext {
             final String ictNeighborAddress = ictNeighbor.getString("address");
             final JSONArray ictNeighborStatsArray = ictNeighbor.getJSONArray("stats");
 
-            final Neighbor neighbor = getNeighborByStaticAddress(ictNeighborAddress);
-            if (neighbor != null) {
-                final JSONObject ictNeighborStats = getIctNeighborStats(ictNeighborStatsArray);
-                if (ictNeighborStats != null) {
-                    neighbor.setTimestamp(ictNeighborStats.getNumber("timestamp").longValue());
-                    neighbor.setAllTx(ictNeighborStats.getInt("all"));
-                    neighbor.setNewTx(ictNeighborStats.getInt("new"));
-                    neighbor.setIgnoredTx(ictNeighborStats.getInt("ignored"));
-                    neighbor.setInvalidTx(ictNeighborStats.getInt("invalid"));
-                    neighbor.setRequestedTx(ictNeighborStats.getInt("requested"));
-                }
-
-                keepNeighbors.add(neighbor);
-            } else {
-                // Apparently there's a new neighbor in Ict, add it to Report.ixi neighbor list
-                final Neighbor newNeighbor = new Neighbor(ictNeighborAddress);
-
-                final JSONObject ictNeighborStats = getIctNeighborStats(ictNeighborStatsArray);
-                if (ictNeighborStats != null) {
-                    newNeighbor.setTimestamp(ictNeighborStats.getNumber("timestamp").longValue());
-                    newNeighbor.setAllTx(ictNeighborStats.getInt("all"));
-                    newNeighbor.setNewTx(ictNeighborStats.getInt("new"));
-                    newNeighbor.setIgnoredTx(ictNeighborStats.getInt("ignored"));
-                    newNeighbor.setInvalidTx(ictNeighborStats.getInt("invalid"));
-                    newNeighbor.setRequestedTx(ictNeighborStats.getInt("requested"));
-                }
-
-                keepNeighbors.add(newNeighbor);
+            Neighbor neighbor = getNeighborByStaticAddress(ictNeighborAddress);
+            if (neighbor == null) {
+                neighbor = new Neighbor(ictNeighborAddress);
             }
+
+            final JSONObject ictNeighborStats = getIctNeighborStats(ictNeighborStatsArray);
+            if (ictNeighborStats != null) {
+                neighbor.setTimestamp(ictNeighborStats.getNumber("timestamp").longValue());
+                neighbor.setAllTx(ictNeighborStats.getInt("all"));
+                neighbor.setNewTx(ictNeighborStats.getInt("new"));
+                neighbor.setIgnoredTx(ictNeighborStats.getInt("ignored"));
+                neighbor.setInvalidTx(ictNeighborStats.getInt("invalid"));
+                neighbor.setRequestedTx(ictNeighborStats.getInt("requested"));
+            }
+
+            if (!neighbor.getPublicAddress().isEmpty()) {
+                // The user has intentionally specified a publicAddress for this neighbor
+                neighbor.setUuid(UuidGenerator.generate(neighbor.getPublicAddress()));
+                log.debug(String.format(
+                        "Assigned uuid %s to neighbor %s based upon the publicAddress specified by the user",
+                        neighbor.getUuid(),
+                        neighbor)
+                );
+            } else {
+                // No public address was specified for this neighbor, assume that address is the publicAddress
+                neighbor.setUuid(UuidGenerator.generate(neighbor.getAddress()));
+                log.debug(String.format(
+                        "Assigned uuid %s to neighbor %s based upon the address received from Ict REST API",
+                        neighbor.getUuid(),
+                        neighbor)
+                );
+            }
+
+            keepNeighbors.add(neighbor);
         }
 
         // Update the neighbor list. Neighbors that are not represented in Ict are discarded.
