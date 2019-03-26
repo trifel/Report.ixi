@@ -11,10 +11,7 @@ public class Payload {
     public static String serialize(final Payload payload) {
         final RuntimeTypeAdapterFactory<Payload> runtimeTypeAdapterFactory = RuntimeTypeAdapterFactory
                 .of(Payload.class, "type")
-                .registerSubtype(PingPayload.class, "PingPayload")
                 .registerSubtype(StatusPayload.class, "StatusPayload")
-                .registerSubtype(ReceivedPingPayload.class, "ReceivedPingPayload")
-                .registerSubtype(SubmittedPingPayload.class, "SubmittedPingPayload")
                 .registerSubtype(RequestUuidPayload.class, "RequestUuidPayload")
                 .registerSubtype(NeighborPayload.class, "NeighborPayload");
 
@@ -26,10 +23,7 @@ public class Payload {
     public static Payload deserialize(final String json) {
         final RuntimeTypeAdapterFactory<Payload> runtimeTypeAdapterFactory = RuntimeTypeAdapterFactory
                 .of(Payload.class, "type")
-                .registerSubtype(PingPayload.class, "PingPayload")
                 .registerSubtype(StatusPayload.class, "StatusPayload")
-                .registerSubtype(ReceivedPingPayload.class, "ReceivedPingPayload")
-                .registerSubtype(SubmittedPingPayload.class, "SubmittedPingPayload")
                 .registerSubtype(RequestUuidPayload.class, "RequestUuidPayload")
                 .registerSubtype(NeighborPayload.class, "NeighborPayload");
 

@@ -1,21 +1,17 @@
 package org.iota.ict.ixi;
 
 import com.ictreport.ixi.ReportIxiContext;
-import com.ictreport.ixi.ReportIxiGossipListener;
-import com.ictreport.ixi.api.PingSender;
 import com.ictreport.ixi.api.StatusSender;
 import com.ictreport.ixi.configuration.Migrator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.iota.ict.ixi.context.IxiContext;
-import org.iota.ict.network.gossip.GossipListener;
 
 public class ReportIxi extends IxiModule {
 
     private static final Logger log = LogManager.getLogger("ReportIxi");
 
     private final ReportIxiContext context = new ReportIxiContext();
-    private final GossipListener gossipListener = new ReportIxiGossipListener(this);
 
     public ReportIxi(Ixi ixi) {
         super(ixi);
@@ -38,9 +34,6 @@ public class ReportIxi extends IxiModule {
         log.info("Starting ReportIxi ...");
 
         subWorkers.add(new StatusSender(this));
-        subWorkers.add(new PingSender(this));
-
-        getIxi().addGossipListener(gossipListener);
     }
 
     @Override
@@ -61,7 +54,6 @@ public class ReportIxi extends IxiModule {
 
     @Override
     public void onTerminate() {
-        getIxi().removeGossipListener(gossipListener);
         log.info("Stopped ReportIxi.");
     }
 

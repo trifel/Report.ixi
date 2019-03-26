@@ -13,7 +13,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.github.iotaledger:ict:20b7fbbaa7ec3b3629e5e5c1ba7478daa994d50a'
+    compile 'com.github.iotaledger:ict:33c4673748b829c32310ff26ee8912ea29a9636f'
     compile 'com.google.code.gson:gson:2.8.5'
     compile group: 'org.danilopianini', name: 'gson-extras', version: '0.2.1'
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.1'
